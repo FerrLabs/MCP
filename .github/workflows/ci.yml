@@ -15,7 +15,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ferrflow-k8s
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -35,29 +35,26 @@ jobs:
     name: Build Docker image
     needs: test
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ferrflow-k8s
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }}
-            ghcr.io/ferrflow-org/mcp:latest
+      - name: Build and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          buildah login -u ${{ github.actor }} -p ${GITHUB_TOKEN} ghcr.io
+          buildah build -t ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} .
+          buildah tag ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} ghcr.io/ferrflow-org/mcp:latest
+          buildah push ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }}
+          buildah push ghcr.io/ferrflow-org/mcp:latest
 
   release:
     name: Release
     needs: [test, build]
-    runs-on: ubuntu-latest
+    runs-on: ferrflow-k8s
     if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
@@ -74,18 +71,18 @@ jobs:
           dry_run: ${{ inputs.dry_run }}
         env:
           GITHUB_TOKEN: ${{ secrets.FERRFLOW_TOKEN }}
-      - uses: docker/login-action@v3
+      - name: Login to GHCR
         if: inputs.dry_run != 'true'
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: buildah login -u ${{ github.actor }} -p ${GITHUB_TOKEN} ghcr.io
       - name: Retag image with semver version
         if: inputs.dry_run != 'true'
         run: |
           version=$(git tag --list "mcp@v*" --sort=-version:refname | head -1 | sed 's/.*@v//')
           if [ -n "$version" ]; then
-            docker pull ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} 2>/dev/null || true
-            docker tag ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} ghcr.io/ferrflow-org/mcp:${version} || true
-            docker push ghcr.io/ferrflow-org/mcp:${version} || true
+            buildah pull ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} 2>/dev/null || true
+            buildah tag ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} ghcr.io/ferrflow-org/mcp:${version} || true
+            buildah push ghcr.io/ferrflow-org/mcp:${version} || true
+            echo "Pushed mcp:${version}"
           fi
