@@ -13,6 +13,11 @@ const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefi
 await server.connect(transport);
 
 const httpServer = createServer((req, res) => {
+  if (req.method === "GET" && req.url === "/health") {
+    res.writeHead(200);
+    res.end("ok");
+    return;
+  }
   transport.handleRequest(req, res);
 });
 
