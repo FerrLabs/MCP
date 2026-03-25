@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Report a bug in the MCP server
-title: 'fix: '
+title: ''
 labels: bug
 assignees: ''
 ---

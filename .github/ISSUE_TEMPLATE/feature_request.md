@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest a new tool or improvement for the MCP server
-title: 'feat: '
+title: ''
 labels: enhancement
 assignees: ''
 ---
