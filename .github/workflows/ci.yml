@@ -31,29 +31,19 @@ jobs:
       - name: Build
         run: pnpm build
 
-  build:
-    name: Build Docker image
+  build-check:
+    name: Build Docker image (check)
     needs: test
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'pull_request'
     runs-on: ferrflow-k8s
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
-      - name: Build and push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          buildah login -u ${{ github.actor }} -p ${GITHUB_TOKEN} ghcr.io
-          buildah build -t ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} .
-          buildah tag ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} ghcr.io/ferrflow-org/mcp:latest
-          buildah push ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }}
-          buildah push ghcr.io/ferrflow-org/mcp:latest
+      - name: Build
+        run: buildah build -t ghcr.io/ferrflow-org/mcp:check .
 
   release:
     name: Release
-    needs: [test, build]
+    needs: test
     runs-on: ferrflow-k8s
     if: github.event_name == 'workflow_dispatch'
     permissions:
@@ -71,18 +61,25 @@ jobs:
           dry_run: ${{ inputs.dry_run }}
         env:
           GITHUB_TOKEN: ${{ secrets.FERRFLOW_TOKEN }}
-      - name: Login to GHCR
+      - name: Build and push Docker image
         if: inputs.dry_run != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: buildah login -u ${{ github.actor }} -p ${GITHUB_TOKEN} ghcr.io
-      - name: Retag image with semver version
-        if: inputs.dry_run != 'true'
         run: |
           version=$(git tag --list "mcp@v*" --sort=-version:refname | head -1 | sed 's/.*@v//')
-          if [ -n "$version" ]; then
-            buildah pull ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} 2>/dev/null || true
-            buildah tag ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }} ghcr.io/ferrflow-org/mcp:${version} || true
-            buildah push ghcr.io/ferrflow-org/mcp:${version} || true
-            echo "Pushed mcp:${version}"
+          if [ -z "$version" ]; then
+            echo "No version tag found, skipping image push"
+            exit 0
           fi
+          major_minor=$(echo ${version} | cut -d. -f1-2)
+
+          buildah login -u ${{ github.actor }} -p ${GITHUB_TOKEN} ghcr.io
+          buildah build -t ghcr.io/ferrflow-org/mcp:${version} .
+          buildah tag ghcr.io/ferrflow-org/mcp:${version} ghcr.io/ferrflow-org/mcp:${major_minor}
+          buildah tag ghcr.io/ferrflow-org/mcp:${version} ghcr.io/ferrflow-org/mcp:latest
+
+          buildah push ghcr.io/ferrflow-org/mcp:${version}
+          buildah push ghcr.io/ferrflow-org/mcp:${major_minor}
+          buildah push ghcr.io/ferrflow-org/mcp:latest
+
+          echo "Pushed mcp:${version}, ${major_minor}, latest"
