@@ -1,0 +1,12 @@
+{
+  "packages": [
+    {
+      "name": "mcp",
+      "path": ".",
+      "changelog": "CHANGELOG.md",
+      "versioned_files": [
+        { "path": "package.json", "format": "json" }
+      ]
+    }
+  ]
+}
