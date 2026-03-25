@@ -50,7 +50,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }}
+          tags: |
+            ghcr.io/ferrflow-org/mcp:sha-${{ github.sha }}
+            ghcr.io/ferrflow-org/mcp:latest
 
   release:
     name: Release

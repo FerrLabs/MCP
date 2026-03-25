@@ -1,14 +1,21 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { createServer } from "node:http";
+
+const PORT = parseInt(process.env.PORT ?? "3001", 10);
 
 const server = new McpServer({
   name: "ferrflow",
   version: "0.1.0",
 });
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-}
+const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+await server.connect(transport);
 
-main().catch(console.error);
+const httpServer = createServer((req, res) => {
+  transport.handleRequest(req, res);
+});
+
+httpServer.listen(PORT, () => {
+  console.log(`MCP server listening on port ${PORT}`);
+});
