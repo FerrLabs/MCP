@@ -1,5 +1,8 @@
 # FerrFlow MCP Server
 
+[![CI](https://github.com/FerrFlow-Org/MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/FerrFlow-Org/MCP/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/FerrFlow-Org/MCP)](LICENSE)
+
 MCP Server for AI agents — TypeScript.
 
 ## Quick Start
