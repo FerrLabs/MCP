@@ -34,7 +34,8 @@ pnpm dev
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Server listen port | `3001` |
-| `API_URL` | FerrFlow API base URL | `http://localhost:3000` |
+| `API_URL` | FerrFlow API base URL | `https://api.ferrflow.com` |
+| `FERRFLOW_API_TOKEN` | FerrFlow API authentication token (required for authenticated tools and token operations) | `required` |
 
 ## License
 
