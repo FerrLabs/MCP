@@ -5,8 +5,10 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "tsx": "^4.19.0",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=22.0.0",
@@ -19,6 +21,8 @@
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",
