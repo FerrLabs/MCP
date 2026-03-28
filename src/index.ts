@@ -3,6 +3,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { createServer } from "node:http";
 import { registerStatsTools } from "./tools/stats.js";
 import { registerEventsTools } from "./tools/events.js";
+import { registerTokenTools } from "./tools/tokens.js";
 
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
 
@@ -13,6 +14,7 @@ const server = new McpServer({
 
 registerStatsTools(server);
 registerEventsTools(server);
+registerTokenTools(server);
 
 const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 await server.connect(transport);
