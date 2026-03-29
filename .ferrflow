@@ -1,15 +1,16 @@
 {
   "workspace": {
     "remote": "origin",
-    "branch": "main"
+    "branch": "main",
+    "tagTemplate": "v{version}"
   },
   "package": [
     {
       "name": "mcp",
       "path": ".",
       "changelog": "CHANGELOG.md",
-      "shared_paths": ["src/"],
-      "versioned_files": [
+      "sharedPaths": ["src/"],
+      "versionedFiles": [
         { "path": "package.json", "format": "json" }
       ]
     }
