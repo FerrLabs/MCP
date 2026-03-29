@@ -54,7 +54,6 @@ jobs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success') || (github.event_name == 'workflow_dispatch' && needs.test.result == 'success')
     permissions:
       contents: write
-      packages: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -67,25 +66,3 @@ jobs:
           dry_run: ${{ inputs.dry_run }}
         env:
           GITHUB_TOKEN: ${{ secrets.FERRFLOW_TOKEN }}
-      - name: Build and push Docker image
-        if: inputs.dry_run != 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          version=$(git tag --list "mcp@v*" --sort=-version:refname | head -1 | sed 's/.*@v//')
-          if [ -z "$version" ]; then
-            echo "No version tag found, skipping image push"
-            exit 0
-          fi
-          major_minor=$(echo ${version} | cut -d. -f1-2)
-
-          echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker build -t ghcr.io/ferrflow-org/mcp:${version} .
-          docker tag ghcr.io/ferrflow-org/mcp:${version} ghcr.io/ferrflow-org/mcp:${major_minor}
-          docker tag ghcr.io/ferrflow-org/mcp:${version} ghcr.io/ferrflow-org/mcp:latest
-
-          docker push ghcr.io/ferrflow-org/mcp:${version}
-          docker push ghcr.io/ferrflow-org/mcp:${major_minor}
-          docker push ghcr.io/ferrflow-org/mcp:latest
-
-          echo "Pushed mcp:${version}, ${major_minor}, latest"
