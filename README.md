@@ -3,6 +3,7 @@
 [![CI](https://github.com/FerrFlow-Org/MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/FerrFlow-Org/MCP/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@ferrflow/mcp)](https://www.npmjs.com/package/@ferrflow/mcp)
 [![Coverage](https://codecov.io/gh/FerrFlow-Org/MCP/branch/main/graph/badge.svg)](https://codecov.io/gh/FerrFlow-Org/MCP)
+[![CodeQL](https://github.com/FerrFlow-Org/MCP/actions/workflows/codeql.yml/badge.svg)](https://github.com/FerrFlow-Org/MCP/actions/workflows/codeql.yml)
 [![License](https://img.shields.io/github/license/FerrFlow-Org/MCP)](LICENSE)
 
 [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with FerrFlow.
