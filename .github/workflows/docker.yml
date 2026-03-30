@@ -50,7 +50,7 @@ jobs:
           echo "Pushed mcp:${VERSION}, ${MAJOR_MINOR}, latest"
       - name: Attest build provenance
         if: steps.build.outputs.digest != ''
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ghcr.io/ferrflow-org/mcp
           subject-digest: ${{ steps.build.outputs.digest }}
