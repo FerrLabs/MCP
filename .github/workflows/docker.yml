@@ -16,6 +16,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v6
       - name: Extract version
@@ -27,6 +29,7 @@ jobs:
             echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
           fi
       - name: Build and push
+        id: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -42,4 +45,13 @@ jobs:
           docker push ghcr.io/ferrflow-org/mcp:${MAJOR_MINOR}
           docker push ghcr.io/ferrflow-org/mcp:latest
 
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/ferrflow-org/mcp:${VERSION} | cut -d@ -f2)
+          echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
           echo "Pushed mcp:${VERSION}, ${MAJOR_MINOR}, latest"
+      - name: Attest build provenance
+        if: steps.build.outputs.digest != ''
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/ferrflow-org/mcp
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
