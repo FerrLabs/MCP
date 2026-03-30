@@ -40,4 +40,4 @@ pnpm dev
 
 ## License
 
-MIT
+MPL-2.0
