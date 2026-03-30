@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.1] - 2026-03-29
+
+### Bug Fixes
+
+- fix(ci): trigger Docker builds on tag creation and use v* tag format (#29)
+
 ## [0.3.0] - 2026-03-28
 
 ### Features
