@@ -78,3 +78,37 @@ export async function fetchRepoFile(
 
   return data.content;
 }
+
+interface GitHubRefResponse {
+  ref: string;
+}
+
+export async function fetchMatchingTags(
+  owner: string,
+  repo: string,
+  packageName: string,
+): Promise<string[]> {
+  const safeOwner = validateOwnerOrRepoSegment(owner, "owner");
+  const safeRepo = validateOwnerOrRepoSegment(repo, "repo");
+  const prefix = encodeURIComponent(`${packageName}@v`);
+
+  const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/git/matching-refs/tags/${prefix}`;
+
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "ferrflow-mcp/0.3.1",
+  };
+
+  if (GITHUB_TOKEN) {
+    headers["Authorization"] = `Bearer ${GITHUB_TOKEN}`;
+  }
+
+  const res = await fetch(url, { headers });
+
+  if (!res.ok) {
+    throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as GitHubRefResponse[];
+  return data.map((ref) => ref.ref.replace("refs/tags/", ""));
+}
