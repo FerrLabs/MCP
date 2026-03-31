@@ -21,6 +21,7 @@ pnpm dev
 | `get_stats` | Get public usage statistics |
 | `health_check` | Check API health status |
 | `record_event` | Record an analytics event |
+| `list_release_tags` | List release tags for a package |
 
 ## Stack
 
