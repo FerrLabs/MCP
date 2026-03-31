@@ -9,6 +9,21 @@
 
 ## Quick Start
 
+**Local (stdio) — for Claude Code, Cursor, etc.:**
+
+```json
+{
+  "mcpServers": {
+    "ferrflow": {
+      "command": "npx",
+      "args": ["-y", "@ferrflow/mcp", "--stdio"]
+    }
+  }
+}
+```
+
+**Server (HTTP) — for shared/deployed usage:**
+
 ```bash
 pnpm install
 pnpm dev
