@@ -6,6 +6,7 @@ import { registerTokenTools } from "./tools/tokens.js";
 import { registerConfigTools } from "./tools/config.js";
 import { registerTagsTools } from "./tools/tags.js";
 import { registerChangelogTools } from "./tools/changelog.js";
+import { registerDryRunTools } from "./tools/dry-run.js";
 
 const server = new McpServer({
   name: "ferrflow",
@@ -18,6 +19,7 @@ registerTokenTools(server);
 registerConfigTools(server);
 registerTagsTools(server);
 registerChangelogTools(server);
+registerDryRunTools(server);
 
 const useStdio = process.argv.includes("--stdio");
 
