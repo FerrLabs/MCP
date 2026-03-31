@@ -6,6 +6,7 @@ import { registerEventsTools } from "./tools/events.js";
 import { registerTokenTools } from "./tools/tokens.js";
 import { registerConfigTools } from "./tools/config.js";
 import { registerTagsTools } from "./tools/tags.js";
+import { registerChangelogTools } from "./tools/changelog.js";
 
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
 
@@ -19,6 +20,7 @@ registerEventsTools(server);
 registerTokenTools(server);
 registerConfigTools(server);
 registerTagsTools(server);
+registerChangelogTools(server);
 
 const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 await server.connect(transport);
