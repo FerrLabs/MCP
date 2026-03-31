@@ -4,6 +4,23 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.0] - 2026-03-31
+
+### Breaking Changes
+
+- chore!: switch license from MIT to MPL-2.0 (#38)
+
+### Features
+
+- feat: add stdio transport for local usage (#52)
+- feat(tools): add read_changelog tool (#49)
+- feat(tools): add list_release_tags tool (#46)
+
+### Bug Fixes
+
+- fix(ci): use release event to trigger Docker builds (#35)
+- fix(ci): trigger Docker builds on tag creation and use v* tag format (#29)
+
 ## [1.1.0] - 2026-04-01
 
 ### Features
