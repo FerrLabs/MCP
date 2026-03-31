@@ -9,7 +9,7 @@ import { registerChangelogTools } from "./tools/changelog.js";
 
 const server = new McpServer({
   name: "ferrflow",
-  version: "1.0.0",
+  version: "1.1.0",
 });
 
 registerStatsTools(server);

@@ -4,6 +4,14 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-04-01
+
+### Features
+
+- feat: add stdio transport for local usage (#52)
+- feat(tools): add read_changelog tool (#49)
+- feat(tools): add list_release_tags tool (#46)
+
 ## [0.3.1] - 2026-03-29
 
 ### Bug Fixes
