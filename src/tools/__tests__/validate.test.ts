@@ -13,7 +13,7 @@ import { readFile, access } from "node:fs/promises";
 const mockReadFile = vi.mocked(readFile);
 const mockAccess = vi.mocked(access);
 
-import { resolveConfig } from "../validate.js";
+import { resolveConfig, validateSchema } from "../validate.js";
 
 function makeResponse(body: unknown, status = 200): Response {
   return {
@@ -70,5 +70,41 @@ describe("resolveConfig", () => {
 
     const result = await resolveConfig("local", { path: "/repo" });
     expect(result.error).toBeDefined();
+  });
+});
+
+describe("validateSchema", () => {
+  it("returns no errors for a valid config", () => {
+    const config = {
+      package: [{ name: "app", path: ".", versionedFiles: [{ path: "package.json", format: "json" }] }],
+    };
+    const errors = validateSchema(config);
+    expect(errors).toEqual([]);
+  });
+
+  it("returns errors for missing required fields", () => {
+    const config = {
+      package: [{ name: "app" }], // missing 'path'
+    };
+    const errors = validateSchema(config);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].message).toMatch(/path/i);
+  });
+
+  it("returns errors for invalid enum values", () => {
+    const config = {
+      workspace: { versioning: "invalid-strategy" },
+      package: [{ name: "app", path: "." }],
+    };
+    const errors = validateSchema(config);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it("returns errors for additional properties", () => {
+    const config = {
+      package: [{ name: "app", path: ".", unknownField: true }],
+    };
+    const errors = validateSchema(config);
+    expect(errors.length).toBeGreaterThan(0);
   });
 });
