@@ -176,6 +176,69 @@ export async function checkPaths(
   return { errors, warnings, suggestions };
 }
 
+interface ValidationResponse {
+  valid: boolean;
+  errors?: ValidationEntry[];
+  warnings?: ValidationEntry[];
+  suggestions?: ValidationEntry[];
+}
+
+function formatResponse(result: ValidationResponse) {
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify(result, null, 2),
+      },
+    ],
+  };
+}
+
+export function registerValidateTools(server: McpServer) {
+  server.tool(
+    "validate_config",
+    "Validate a FerrFlow configuration file against the JSON schema and check that referenced paths exist. Supports local repositories and GitHub repositories.",
+    {
+      source: z.enum(["local", "github"]).describe("Where to read the config from"),
+      path: z.string().optional().describe("Local path to the repository root (local mode, defaults to cwd)"),
+      owner: z.string().optional().describe("GitHub repository owner (required for github mode)"),
+      repo: z.string().optional().describe("GitHub repository name (required for github mode)"),
+      ref: z.string().optional().describe("Git ref — branch, tag, or commit SHA (github mode, defaults to default branch)"),
+    },
+    async ({ source, path, owner, repo, ref }) => {
+      if (source === "github" && (!owner || !repo)) {
+        return formatResponse({
+          valid: false,
+          errors: [{ path: "(params)", message: "owner and repo are required for github mode" }],
+        });
+      }
+
+      const resolved = await resolveConfig(source, { path, owner, repo, ref });
+      if (resolved.error) {
+        return formatResponse({
+          valid: false,
+          errors: [{ path: "(config)", message: resolved.error }],
+        });
+      }
+
+      const schemaErrors = validateSchema(resolved.config!);
+      if (schemaErrors.length > 0) {
+        return formatResponse({ valid: false, errors: schemaErrors });
+      }
+
+      const checks = await checkPaths(resolved.config!, source, { path, owner, repo, ref });
+      const valid = checks.errors.length === 0;
+
+      return formatResponse({
+        valid,
+        ...(checks.errors.length > 0 && { errors: checks.errors }),
+        ...(checks.warnings.length > 0 && { warnings: checks.warnings }),
+        ...(checks.suggestions.length > 0 && { suggestions: checks.suggestions }),
+      });
+    },
+  );
+}
+
 function parseConfig(raw: string, filename: string): Record<string, unknown> {
   if (filename.endsWith(".toml")) {
     throw new Error("TOML parsing not yet supported");

@@ -13,7 +13,8 @@ import { readFile, access } from "node:fs/promises";
 const mockReadFile = vi.mocked(readFile);
 const mockAccess = vi.mocked(access);
 
-import { resolveConfig, validateSchema, checkPaths } from "../validate.js";
+import { resolveConfig, validateSchema, checkPaths, registerValidateTools } from "../validate.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 function makeResponse(body: unknown, status = 200): Response {
   return {
@@ -303,5 +304,84 @@ describe("checkPaths — github mode", () => {
     const result = await checkPaths(config, "github", { owner: "org", repo: "repo" });
     expect(result.errors).toEqual([]);
     expect(result.warnings).toEqual([]);
+  });
+});
+
+describe("validate_config tool", () => {
+  let toolHandler: (params: Record<string, unknown>) => Promise<unknown>;
+
+  const mockServer = {
+    tool: vi.fn((_name: string, _desc: string, _schema: unknown, handler: (params: Record<string, unknown>) => Promise<unknown>) => {
+      toolHandler = handler;
+    }),
+  } as unknown as McpServer;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    registerValidateTools(mockServer);
+  });
+
+  it("registers the tool with correct name", () => {
+    expect(mockServer.tool).toHaveBeenCalledWith(
+      "validate_config",
+      expect.any(String),
+      expect.any(Object),
+      expect.any(Function),
+    );
+  });
+
+  it("returns valid result for correct local config", async () => {
+    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
+    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
+    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
+    mockReadFile.mockResolvedValueOnce(
+      JSON.stringify({
+        package: [{ name: "app", path: ".", versionedFiles: [{ path: "package.json", format: "json" }] }],
+        workspace: { tagTemplate: "v{version}", orphanedTagStrategy: "warn" },
+      }),
+    );
+    mockAccess.mockResolvedValue(undefined);
+
+    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.valid).toBe(true);
+  });
+
+  it("returns error when no config found", async () => {
+    mockReadFile.mockRejectedValue(new Error("ENOENT"));
+
+    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.valid).toBe(false);
+    expect(parsed.errors.length).toBeGreaterThan(0);
+  });
+
+  it("returns schema errors for invalid config", async () => {
+    mockReadFile.mockResolvedValueOnce(
+      JSON.stringify({ package: [{ name: "app" }] }),
+    );
+
+    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.valid).toBe(false);
+    expect(parsed.errors.length).toBeGreaterThan(0);
+  });
+
+  it("rejects github mode without owner or repo", async () => {
+    const result = (await toolHandler({ source: "github" })) as { content: { text: string }[] };
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.valid).toBe(false);
+    expect(parsed.errors[0].message).toMatch(/owner.*repo/i);
+  });
+
+  it("skips path checks when schema errors exist", async () => {
+    mockReadFile.mockResolvedValueOnce(
+      JSON.stringify({ package: [{ name: "app", unknownField: true }] }),
+    );
+
+    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.valid).toBe(false);
+    expect(mockAccess).not.toHaveBeenCalled();
   });
 });

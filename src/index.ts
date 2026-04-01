@@ -7,6 +7,7 @@ import { registerConfigTools } from "./tools/config.js";
 import { registerTagsTools } from "./tools/tags.js";
 import { registerChangelogTools } from "./tools/changelog.js";
 import { registerDryRunTools } from "./tools/dry-run.js";
+import { registerValidateTools } from "./tools/validate.js";
 
 const server = new McpServer({
   name: "ferrflow",
@@ -20,6 +21,7 @@ registerConfigTools(server);
 registerTagsTools(server);
 registerChangelogTools(server);
 registerDryRunTools(server);
+registerValidateTools(server);
 
 const { StdioServerTransport } = await import(
   "@modelcontextprotocol/sdk/server/stdio.js"
