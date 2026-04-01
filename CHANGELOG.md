@@ -4,6 +4,8 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.1] - 2026-04-01
+
 ## [3.2.0] - 2026-04-01
 
 ### Features
