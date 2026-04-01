@@ -64,6 +64,118 @@ export function validateSchema(config: Record<string, unknown>): ValidationEntry
   }));
 }
 
+interface CheckResult {
+  errors: ValidationEntry[];
+  warnings: ValidationEntry[];
+  suggestions: ValidationEntry[];
+}
+
+interface PackageDef {
+  name: string;
+  path: string;
+  changelog?: string | null;
+  versionedFiles?: Array<{ path: string; format: string }>;
+  sharedPaths?: string[];
+}
+
+async function pathExists(filepath: string): Promise<boolean> {
+  try {
+    await access(filepath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function githubPathExists(
+  owner: string,
+  repo: string,
+  path: string,
+  ref?: string,
+): Promise<boolean> {
+  const content = await fetchRepoFile(owner, repo, path, ref);
+  return content !== null;
+}
+
+export async function checkPaths(
+  config: Record<string, unknown>,
+  source: string,
+  params: { path?: string; owner?: string; repo?: string; ref?: string },
+): Promise<CheckResult> {
+  const errors: ValidationEntry[] = [];
+  const warnings: ValidationEntry[] = [];
+  const suggestions: ValidationEntry[] = [];
+
+  const packages = (config.package || []) as PackageDef[];
+  const workspace = (config.workspace || {}) as Record<string, unknown>;
+
+  const exists = source === "local"
+    ? (p: string) => pathExists(join(params.path || process.cwd(), p))
+    : (p: string) => githubPathExists(params.owner!, params.repo!, p, params.ref);
+
+  for (let i = 0; i < packages.length; i++) {
+    const pkg = packages[i];
+    const prefix = `package[${i}]`;
+
+    if (!(await exists(pkg.path))) {
+      errors.push({ path: `${prefix}.path`, message: `directory not found: ${pkg.path}` });
+    }
+
+    if (pkg.versionedFiles) {
+      for (let j = 0; j < pkg.versionedFiles.length; j++) {
+        const vf = pkg.versionedFiles[j];
+        if (!(await exists(vf.path))) {
+          errors.push({
+            path: `${prefix}.versionedFiles[${j}].path`,
+            message: `file not found: ${vf.path}`,
+          });
+        }
+      }
+    }
+
+    if (pkg.changelog && !(await exists(pkg.changelog))) {
+      warnings.push({
+        path: `${prefix}.changelog`,
+        message: `${pkg.changelog} does not exist yet, will be created on first release`,
+      });
+    }
+
+    if (pkg.sharedPaths) {
+      for (let j = 0; j < pkg.sharedPaths.length; j++) {
+        const sp = pkg.sharedPaths[j];
+        if (!(await exists(sp))) {
+          warnings.push({
+            path: `${prefix}.sharedPaths[${j}]`,
+            message: `path not found: ${sp}`,
+          });
+        }
+      }
+    }
+
+    if (!pkg.versionedFiles || pkg.versionedFiles.length === 0) {
+      suggestions.push({
+        path: `${prefix}.versionedFiles`,
+        message: "no versionedFiles declared — version won't be written to any file",
+      });
+    }
+  }
+
+  if (!workspace.orphanedTagStrategy) {
+    suggestions.push({
+      path: "workspace.orphanedTagStrategy",
+      message: "not set, defaults to 'warn'",
+    });
+  }
+  if (!workspace.tagTemplate) {
+    suggestions.push({
+      path: "workspace.tagTemplate",
+      message: "not set, defaults to 'v{version}' (single repo) or '{name}@v{version}' (monorepo)",
+    });
+  }
+
+  return { errors, warnings, suggestions };
+}
+
 function parseConfig(raw: string, filename: string): Record<string, unknown> {
   if (filename.endsWith(".toml")) {
     throw new Error("TOML parsing not yet supported");

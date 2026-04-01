@@ -13,7 +13,7 @@ import { readFile, access } from "node:fs/promises";
 const mockReadFile = vi.mocked(readFile);
 const mockAccess = vi.mocked(access);
 
-import { resolveConfig, validateSchema } from "../validate.js";
+import { resolveConfig, validateSchema, checkPaths } from "../validate.js";
 
 function makeResponse(body: unknown, status = 200): Response {
   return {
@@ -106,5 +106,138 @@ describe("validateSchema", () => {
     };
     const errors = validateSchema(config);
     expect(errors.length).toBeGreaterThan(0);
+  });
+});
+
+describe("checkPaths — local mode", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns error when package path does not exist", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+
+    const config = {
+      package: [{ name: "app", path: "packages/app", versionedFiles: [] }],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("packages/app") }),
+      ]),
+    );
+  });
+
+  it("returns error when versioned file does not exist", async () => {
+    mockAccess.mockResolvedValueOnce(undefined); // package path exists
+    mockAccess.mockRejectedValueOnce(new Error("ENOENT")); // versioned file missing
+
+    const config = {
+      package: [
+        {
+          name: "app",
+          path: "packages/app",
+          versionedFiles: [{ path: "packages/app/Cargo.toml", format: "toml" }],
+        },
+      ],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("Cargo.toml") }),
+      ]),
+    );
+  });
+
+  it("returns warning when changelog does not exist", async () => {
+    mockAccess.mockResolvedValueOnce(undefined); // package path
+    mockAccess.mockRejectedValueOnce(new Error("ENOENT")); // changelog
+
+    const config = {
+      package: [{ name: "app", path: ".", changelog: "CHANGELOG.md" }],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("CHANGELOG.md") }),
+      ]),
+    );
+  });
+
+  it("returns warning when sharedPaths dir does not exist", async () => {
+    mockAccess.mockResolvedValueOnce(undefined); // package path
+    mockAccess.mockRejectedValueOnce(new Error("ENOENT")); // sharedPaths
+
+    const config = {
+      package: [{ name: "app", path: ".", sharedPaths: ["packages/shared"] }],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("packages/shared") }),
+      ]),
+    );
+  });
+
+  it("returns suggestion when no versionedFiles declared", async () => {
+    mockAccess.mockResolvedValue(undefined);
+
+    const config = {
+      package: [{ name: "app", path: "." }],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.suggestions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ message: expect.stringContaining("versionedFiles") }),
+      ]),
+    );
+  });
+
+  it("returns suggestion when orphanedTagStrategy not set", async () => {
+    mockAccess.mockResolvedValue(undefined);
+
+    const config = {
+      package: [{ name: "app", path: "." }],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.suggestions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: "workspace.orphanedTagStrategy" }),
+      ]),
+    );
+  });
+
+  it("returns suggestion when tagTemplate not set", async () => {
+    mockAccess.mockResolvedValue(undefined);
+
+    const config = {
+      package: [{ name: "app", path: "." }],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.suggestions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: "workspace.tagTemplate" }),
+      ]),
+    );
+  });
+
+  it("returns no issues for fully valid config with all paths existing", async () => {
+    mockAccess.mockResolvedValue(undefined);
+
+    const config = {
+      workspace: { tagTemplate: "v{version}", orphanedTagStrategy: "warn" },
+      package: [
+        {
+          name: "app",
+          path: ".",
+          versionedFiles: [{ path: "package.json", format: "json" }],
+          changelog: "CHANGELOG.md",
+        },
+      ],
+    };
+    const result = await checkPaths(config, "local", { path: "/repo" });
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+    expect(result.suggestions).toEqual([]);
   });
 });
