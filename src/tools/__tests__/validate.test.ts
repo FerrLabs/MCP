@@ -66,11 +66,21 @@ describe("resolveConfig", () => {
     expect(result.config).toEqual({ package: [{ name: "api", path: "packages/api" }] });
   });
 
-  it("returns error for invalid JSON", async () => {
+  it("returns error for invalid JSON instead of skipping to next file", async () => {
     mockReadFile.mockResolvedValueOnce("not valid json {{{");
 
     const result = await resolveConfig("local", { path: "/repo" });
-    expect(result.error).toBeDefined();
+    expect(result.error).toMatch(/Failed to parse ferrflow\.json/);
+    expect(result.config).toBeUndefined();
+  });
+
+  it("returns error for TOML config file", async () => {
+    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.json
+    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.json5
+    mockReadFile.mockResolvedValueOnce("[package]\nname = 'app'"); // ferrflow.toml
+
+    const result = await resolveConfig("local", { path: "/repo" });
+    expect(result.error).toMatch(/TOML parsing not yet supported/);
   });
 });
 

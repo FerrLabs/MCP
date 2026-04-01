@@ -20,12 +20,17 @@ export async function resolveConfig(
   if (source === "local") {
     const root = params.path || process.cwd();
     for (const filename of CONFIG_FILES) {
+      let raw: string;
       try {
-        const raw = await readFile(join(root, filename), "utf-8");
-        const config = parseConfig(raw, filename);
-        return { config, filename };
+        raw = await readFile(join(root, filename), "utf-8");
       } catch {
         continue;
+      }
+      try {
+        const config = parseConfig(raw, filename);
+        return { config, filename };
+      } catch (e) {
+        return { error: `Failed to parse ${filename}: ${(e as Error).message}` };
       }
     }
     return { error: "No FerrFlow configuration file found. Looked for: " + CONFIG_FILES.join(", ") };
