@@ -2,6 +2,19 @@
   "bin": {
     "ferrflow-mcp": "./dist/index.js"
   },
+  "description": "Model Context Protocol server for the FerrFlow ecosystem",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FerrFlow-Org/MCP.git"
+  },
+  "keywords": [
+    "mcp",
+    "ferrflow",
+    "model-context-protocol",
+    "ai",
+    "release-management"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "zod": "^4.3.6"
@@ -17,9 +30,14 @@
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
   },
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "name": "@ferrflow/mcp",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
