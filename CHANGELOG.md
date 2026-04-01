@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.0] - 2026-04-01
+
+### Features
+
+- feat(tools): add validate_config tool (#67)
+
 ## [3.1.0] - 2026-04-01
 
 ### Features
