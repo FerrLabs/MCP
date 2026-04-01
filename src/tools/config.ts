@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { fetchRepoFile } from "./github.js";
 
-const CONFIG_FILES = [
+export const CONFIG_FILES = [
   "ferrflow.json",
   "ferrflow.json5",
   "ferrflow.toml",
