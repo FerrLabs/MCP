@@ -4,6 +4,16 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.0.0] - 2026-04-01
+
+### Breaking Changes
+
+- chore!: remove Docker and HTTP transport, stdio only (#58)
+
+### Features
+
+- feat(tools): add dry_run tool (#55)
+
 ## [2.1.0] - 2026-03-31
 
 ### Features
