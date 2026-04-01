@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ferrflow.com/schema/ferrflow.json",
+  "title": "FerrFlow Configuration",
+  "description": "Configuration file for FerrFlow — universal semantic versioning for monorepos and classic repos.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor autocompletion."
+    },
+    "workspace": {
+      "type": "object",
+      "description": "Workspace-level settings.",
+      "properties": {
+        "remote": {
+          "type": "string",
+          "description": "Git remote name.",
+          "default": "origin"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Main branch name.",
+          "default": "main"
+        },
+        "anonymous_telemetry": {
+          "type": "boolean",
+          "description": "Send anonymous usage statistics to improve FerrFlow. No identifying data is collected.",
+          "default": true
+        },
+        "telemetry": {
+          "type": "boolean",
+          "description": "Deprecated: use anonymous_telemetry instead.",
+          "default": true
+        },
+        "versioning": {
+          "type": "string",
+          "description": "Default versioning strategy for all packages.",
+          "enum": ["semver", "calver", "calver-short", "calver-seq", "sequential", "zerover"],
+          "default": "semver"
+        },
+        "tagTemplate": {
+          "type": "string",
+          "description": "Tag template. Use {name} for package name and {version} for version. Default: 'v{version}' for single repos, '{name}@v{version}' for monorepos.",
+          "examples": ["v{version}", "{name}@v{version}", "{name}/v{version}", "release-{version}"]
+        },
+        "recoverMissedReleases": {
+          "type": "boolean",
+          "description": "Compare files against the last tag instead of just the last commit, recovering missed releases in monorepos.",
+          "default": false
+        },
+        "releaseCommitMode": {
+          "type": "string",
+          "description": "How to commit version bumps and changelog updates. 'commit' pushes directly to the branch, 'pr' creates a pull request, 'none' skips committing entirely.",
+          "enum": ["commit", "pr", "none"],
+          "default": "commit"
+        },
+        "autoMergeReleases": {
+          "type": "boolean",
+          "description": "Automatically merge release PRs when releaseCommitMode is 'pr'.",
+          "default": true
+        },
+        "skipCi": {
+          "type": "boolean",
+          "description": "Append [skip ci] to the release commit message. Defaults to true in 'commit' mode, false in 'pr' mode."
+        },
+        "floatingTags": {
+          "type": "array",
+          "description": "Floating tag levels to create/move on each release. Each level produces a tag pointing to the latest matching release (e.g. 'major' creates a v1 tag for v1.2.3).",
+          "items": {
+            "type": "string",
+            "enum": ["major", "minor"]
+          },
+          "default": []
+        },
+        "orphanedTagStrategy": {
+          "type": "string",
+          "enum": ["warn", "treeHash", "message"],
+          "description": "How to handle tags pointing to orphaned commits (after rebase + force-push). 'warn' logs a warning and skips. 'treeHash' attempts recovery by matching the commit's tree hash. 'message' attempts recovery by matching the commit message.",
+          "default": "warn"
+        },
+        "hooks": {
+          "$ref": "#/$defs/hooks"
+        }
+      },
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "array",
+      "description": "List of packages to version. Use one entry for single repos, multiple for monorepos.",
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Package name, used in tags and changelog headers."
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to the package root, relative to the repo root. Use \".\" for single repos."
+          },
+          "changelog": {
+            "type": ["string", "null"],
+            "description": "Path to the changelog file, relative to the repo root."
+          },
+          "versionedFiles": {
+            "type": "array",
+            "description": "Files that contain the package version to update on release.",
+            "items": {
+              "type": "object",
+              "required": ["path", "format"],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Path to the version file, relative to the repo root."
+                },
+                "format": {
+                  "type": "string",
+                  "description": "File format used to locate and update the version field.",
+                  "enum": ["csproj", "toml", "json", "xml", "gradle", "gomod", "helm", "txt"]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "sharedPaths": {
+            "type": "array",
+            "description": "Paths whose changes should trigger a version bump for this package (monorepo only).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "versioning": {
+            "type": "string",
+            "description": "Versioning strategy for this package. Overrides workspace default.",
+            "enum": ["semver", "calver", "calver-short", "calver-seq", "sequential", "zerover"]
+          },
+          "tagTemplate": {
+            "type": "string",
+            "description": "Tag template for this package. Use {name} for package name and {version} for version. Overrides workspace default.",
+            "examples": ["v{version}", "{name}@v{version}", "{name}/v{version}", "release-{version}"]
+          },
+          "floatingTags": {
+            "type": "array",
+            "description": "Floating tag levels for this package. Overrides workspace default.",
+            "items": {
+              "type": "string",
+              "enum": ["major", "minor"]
+            }
+          },
+          "hooks": {
+            "$ref": "#/$defs/hooks"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "hooks": {
+      "type": "object",
+      "description": "Shell commands executed at lifecycle points during release.",
+      "properties": {
+        "preBump": {
+          "type": "string",
+          "description": "Run after bump calculation, before writing version files."
+        },
+        "postBump": {
+          "type": "string",
+          "description": "Run after writing version files, before changelog generation."
+        },
+        "preCommit": {
+          "type": "string",
+          "description": "Run after changelog generation, before git commit."
+        },
+        "prePublish": {
+          "type": "string",
+          "description": "Run after commit and tag, before push."
+        },
+        "postPublish": {
+          "type": "string",
+          "description": "Run after push and release creation."
+        },
+        "onFailure": {
+          "type": "string",
+          "description": "Behavior when a hook exits non-zero.",
+          "enum": ["abort", "continue"],
+          "default": "abort"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
