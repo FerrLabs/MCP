@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.1.0] - 2026-04-01
+
+### Features
+
+- feat: publish @ferrflow/mcp to npm on release (#64)
+
 ## [3.0.0] - 2026-04-01
 
 ### Breaking Changes
