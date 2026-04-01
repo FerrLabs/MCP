@@ -5,6 +5,7 @@
 [![Coverage](https://codecov.io/gh/FerrFlow-Org/MCP/branch/main/graph/badge.svg)](https://codecov.io/gh/FerrFlow-Org/MCP)
 [![License](https://img.shields.io/github/license/FerrFlow-Org/MCP)](LICENSE)
 [![Socket Badge](https://badge.socket.dev/npm/package/@ferrflow/mcp/latest)](https://badge.socket.dev/npm/package/@ferrflow/mcp/latest)
+[![Known Vulnerabilities](https://snyk.io/test/npm/@ferrflow/mcp/badge.svg)](https://snyk.io/test/npm/@ferrflow/mcp)
 
 [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with FerrFlow. Runs locally via stdio transport.
 
