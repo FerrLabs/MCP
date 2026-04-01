@@ -1,331 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CONFIG_FILES } from "../config.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { registerValidateTools } from "../validate.js";
 
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn(),
-  access: vi.fn(),
+vi.mock("node:child_process", () => ({
+  execFile: vi.fn(),
 }));
 
-const mockFetch = vi.fn();
-vi.stubGlobal("fetch", mockFetch);
+import { execFile } from "node:child_process";
+const mockExecFile = vi.mocked(execFile);
 
-import { readFile, access } from "node:fs/promises";
-const mockReadFile = vi.mocked(readFile);
-const mockAccess = vi.mocked(access);
+let toolHandler: (params: Record<string, unknown>) => Promise<unknown>;
 
-import { resolveConfig, validateSchema, checkPaths, registerValidateTools } from "../validate.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+const mockServer = {
+  tool: vi.fn((_name: string, _desc: string, _schema: unknown, handler: (params: Record<string, unknown>) => Promise<unknown>) => {
+    toolHandler = handler;
+  }),
+} as unknown as McpServer;
 
-function makeResponse(body: unknown, status = 200): Response {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    statusText: status === 200 ? "OK" : "Not Found",
-    json: () => Promise.resolve(body),
-  } as unknown as Response;
-}
-
-describe("CONFIG_FILES", () => {
-  it("is exported and contains expected filenames", () => {
-    expect(CONFIG_FILES).toContain("ferrflow.json");
-    expect(CONFIG_FILES).toContain(".ferrflow");
-    expect(CONFIG_FILES.length).toBeGreaterThanOrEqual(3);
-  });
-});
-
-describe("resolveConfig", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("resolves local config from first matching file", async () => {
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.json
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.json5
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.toml
-    mockReadFile.mockResolvedValueOnce(
-      JSON.stringify({ package: [{ name: "app", path: "." }] }),
-    ); // .ferrflow
-
-    const result = await resolveConfig("local", { path: "/repo" });
-    expect(result.config).toEqual({ package: [{ name: "app", path: "." }] });
-    expect(result.filename).toBe(".ferrflow");
-  });
-
-  it("returns error when no local config found", async () => {
-    mockReadFile.mockRejectedValue(new Error("ENOENT"));
-
-    const result = await resolveConfig("local", { path: "/repo" });
-    expect(result.error).toMatch(/no FerrFlow configuration file found/i);
-  });
-
-  it("resolves github config via fetch", async () => {
-    const configContent = JSON.stringify({ package: [{ name: "api", path: "packages/api" }] });
-    mockFetch.mockResolvedValueOnce(makeResponse({ content: Buffer.from(configContent).toString("base64"), encoding: "base64" }));
-
-    const result = await resolveConfig("github", { owner: "org", repo: "repo" });
-    expect(result.config).toEqual({ package: [{ name: "api", path: "packages/api" }] });
-  });
-
-  it("returns error for invalid JSON instead of skipping to next file", async () => {
-    mockReadFile.mockResolvedValueOnce("not valid json {{{");
-
-    const result = await resolveConfig("local", { path: "/repo" });
-    expect(result.error).toMatch(/Failed to parse ferrflow\.json/);
-    expect(result.config).toBeUndefined();
-  });
-
-  it("returns error for TOML config file", async () => {
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.json
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT")); // ferrflow.json5
-    mockReadFile.mockResolvedValueOnce("[package]\nname = 'app'"); // ferrflow.toml
-
-    const result = await resolveConfig("local", { path: "/repo" });
-    expect(result.error).toMatch(/TOML parsing not yet supported/);
-  });
-});
-
-describe("validateSchema", () => {
-  it("returns no errors for a valid config", () => {
-    const config = {
-      package: [{ name: "app", path: ".", versionedFiles: [{ path: "package.json", format: "json" }] }],
-    };
-    const errors = validateSchema(config);
-    expect(errors).toEqual([]);
-  });
-
-  it("returns errors for missing required fields", () => {
-    const config = {
-      package: [{ name: "app" }], // missing 'path'
-    };
-    const errors = validateSchema(config);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].message).toMatch(/path/i);
-  });
-
-  it("returns errors for invalid enum values", () => {
-    const config = {
-      workspace: { versioning: "invalid-strategy" },
-      package: [{ name: "app", path: "." }],
-    };
-    const errors = validateSchema(config);
-    expect(errors.length).toBeGreaterThan(0);
-  });
-
-  it("returns errors for additional properties", () => {
-    const config = {
-      package: [{ name: "app", path: ".", unknownField: true }],
-    };
-    const errors = validateSchema(config);
-    expect(errors.length).toBeGreaterThan(0);
-  });
-});
-
-describe("checkPaths — local mode", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("returns error when package path does not exist", async () => {
-    mockAccess.mockRejectedValue(new Error("ENOENT"));
-
-    const config = {
-      package: [{ name: "app", path: "packages/app", versionedFiles: [] }],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("packages/app") }),
-      ]),
-    );
-  });
-
-  it("returns error when versioned file does not exist", async () => {
-    mockAccess.mockResolvedValueOnce(undefined); // package path exists
-    mockAccess.mockRejectedValueOnce(new Error("ENOENT")); // versioned file missing
-
-    const config = {
-      package: [
-        {
-          name: "app",
-          path: "packages/app",
-          versionedFiles: [{ path: "packages/app/Cargo.toml", format: "toml" }],
-        },
-      ],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("Cargo.toml") }),
-      ]),
-    );
-  });
-
-  it("returns warning when changelog does not exist", async () => {
-    mockAccess.mockResolvedValueOnce(undefined); // package path
-    mockAccess.mockRejectedValueOnce(new Error("ENOENT")); // changelog
-
-    const config = {
-      package: [{ name: "app", path: ".", changelog: "CHANGELOG.md" }],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("CHANGELOG.md") }),
-      ]),
-    );
-  });
-
-  it("returns warning when sharedPaths dir does not exist", async () => {
-    mockAccess.mockResolvedValueOnce(undefined); // package path
-    mockAccess.mockRejectedValueOnce(new Error("ENOENT")); // sharedPaths
-
-    const config = {
-      package: [{ name: "app", path: ".", sharedPaths: ["packages/shared"] }],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("packages/shared") }),
-      ]),
-    );
-  });
-
-  it("returns suggestion when no versionedFiles declared", async () => {
-    mockAccess.mockResolvedValue(undefined);
-
-    const config = {
-      package: [{ name: "app", path: "." }],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("versionedFiles") }),
-      ]),
-    );
-  });
-
-  it("returns suggestion when orphanedTagStrategy not set", async () => {
-    mockAccess.mockResolvedValue(undefined);
-
-    const config = {
-      package: [{ name: "app", path: "." }],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ path: "workspace.orphanedTagStrategy" }),
-      ]),
-    );
-  });
-
-  it("returns suggestion when tagTemplate not set", async () => {
-    mockAccess.mockResolvedValue(undefined);
-
-    const config = {
-      package: [{ name: "app", path: "." }],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.suggestions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ path: "workspace.tagTemplate" }),
-      ]),
-    );
-  });
-
-  it("returns no issues for fully valid config with all paths existing", async () => {
-    mockAccess.mockResolvedValue(undefined);
-
-    const config = {
-      workspace: { tagTemplate: "v{version}", orphanedTagStrategy: "warn" },
-      package: [
-        {
-          name: "app",
-          path: ".",
-          versionedFiles: [{ path: "package.json", format: "json" }],
-          changelog: "CHANGELOG.md",
-        },
-      ],
-    };
-    const result = await checkPaths(config, "local", { path: "/repo" });
-    expect(result.errors).toEqual([]);
-    expect(result.warnings).toEqual([]);
-    expect(result.suggestions).toEqual([]);
-  });
-});
-
-describe("checkPaths — github mode", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("returns error when package path does not exist on GitHub", async () => {
-    mockFetch.mockResolvedValue(makeResponse(null, 404));
-
-    const config = {
-      package: [{ name: "app", path: "packages/app", versionedFiles: [] }],
-    };
-    const result = await checkPaths(config, "github", { owner: "org", repo: "repo" });
-    expect(result.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("packages/app") }),
-      ]),
-    );
-  });
-
-  it("returns error when versioned file missing on GitHub", async () => {
-    mockFetch.mockResolvedValueOnce(
-      makeResponse({ content: "", encoding: "base64" }),
-    );
-    mockFetch.mockResolvedValueOnce(makeResponse(null, 404));
-
-    const config = {
-      package: [
-        {
-          name: "app",
-          path: "packages/app",
-          versionedFiles: [{ path: "packages/app/package.json", format: "json" }],
-        },
-      ],
-    };
-    const result = await checkPaths(config, "github", { owner: "org", repo: "repo" });
-    expect(result.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining("package.json") }),
-      ]),
-    );
-  });
-
-  it("returns no errors when all paths exist on GitHub", async () => {
-    mockFetch.mockResolvedValue(
-      makeResponse({ content: Buffer.from("content").toString("base64"), encoding: "base64" }),
-    );
-
-    const config = {
-      workspace: { tagTemplate: "v{version}", orphanedTagStrategy: "warn" },
-      package: [
-        {
-          name: "app",
-          path: ".",
-          versionedFiles: [{ path: "package.json", format: "json" }],
-          changelog: "CHANGELOG.md",
-        },
-      ],
-    };
-    const result = await checkPaths(config, "github", { owner: "org", repo: "repo" });
-    expect(result.errors).toEqual([]);
-    expect(result.warnings).toEqual([]);
-  });
-});
-
-describe("validate_config tool", () => {
-  let toolHandler: (params: Record<string, unknown>) => Promise<unknown>;
-
-  const mockServer = {
-    tool: vi.fn((_name: string, _desc: string, _schema: unknown, handler: (params: Record<string, unknown>) => Promise<unknown>) => {
-      toolHandler = handler;
-    }),
-  } as unknown as McpServer;
-
+describe("validate_config", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     registerValidateTools(mockServer);
@@ -340,58 +32,119 @@ describe("validate_config tool", () => {
     );
   });
 
-  it("returns valid result for correct local config", async () => {
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
-    mockReadFile.mockRejectedValueOnce(new Error("ENOENT"));
-    mockReadFile.mockResolvedValueOnce(
-      JSON.stringify({
-        package: [{ name: "app", path: ".", versionedFiles: [{ path: "package.json", format: "json" }] }],
-        workspace: { tagTemplate: "v{version}", orphanedTagStrategy: "warn" },
-      }),
-    );
-    mockAccess.mockResolvedValue(undefined);
+  it("returns parsed JSON from ferrflow validate", async () => {
+    const output = JSON.stringify({
+      valid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [{ path: "workspace.tagTemplate", message: "not set" }],
+    });
 
-    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(null, output, "");
+      return undefined as never;
+    });
+
+    const result = (await toolHandler({})) as { content: { text: string }[] };
     const parsed = JSON.parse(result.content[0].text);
+
     expect(parsed.valid).toBe(true);
+    expect(parsed.errors).toHaveLength(0);
+    expect(parsed.suggestions).toHaveLength(1);
   });
 
-  it("returns error when no config found", async () => {
-    mockReadFile.mockRejectedValue(new Error("ENOENT"));
+  it("returns validation errors on non-zero exit with stdout", async () => {
+    const output = JSON.stringify({
+      valid: false,
+      errors: [{ path: "package[0].path", message: "directory not found: packages/app" }],
+      warnings: [],
+      suggestions: [],
+    });
 
-    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
+    const err = Object.assign(new Error("exit 1"), { code: 1 });
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(err, output, "");
+      return undefined as never;
+    });
+
+    const result = (await toolHandler({})) as { content: { text: string }[] };
     const parsed = JSON.parse(result.content[0].text);
+
     expect(parsed.valid).toBe(false);
-    expect(parsed.errors.length).toBeGreaterThan(0);
+    expect(parsed.errors).toHaveLength(1);
   });
 
-  it("returns schema errors for invalid config", async () => {
-    mockReadFile.mockResolvedValueOnce(
-      JSON.stringify({ package: [{ name: "app" }] }),
+  it("uses provided path as cwd", async () => {
+    const output = JSON.stringify({ valid: true, errors: [], warnings: [], suggestions: [] });
+
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(null, output, "");
+      return undefined as never;
+    });
+
+    await toolHandler({ path: "/tmp/my-repo" });
+
+    expect(mockExecFile).toHaveBeenCalledWith(
+      "ferrflow",
+      ["validate", "--json"],
+      expect.objectContaining({ cwd: "/tmp/my-repo" }),
+      expect.any(Function),
     );
-
-    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
-    const parsed = JSON.parse(result.content[0].text);
-    expect(parsed.valid).toBe(false);
-    expect(parsed.errors.length).toBeGreaterThan(0);
   });
 
-  it("rejects github mode without owner or repo", async () => {
-    const result = (await toolHandler({ source: "github" })) as { content: { text: string }[] };
-    const parsed = JSON.parse(result.content[0].text);
-    expect(parsed.valid).toBe(false);
-    expect(parsed.errors[0].message).toMatch(/owner.*repo/i);
-  });
+  it("passes --repo and --ref flags", async () => {
+    const output = JSON.stringify({ valid: true, errors: [], warnings: [], suggestions: [] });
 
-  it("skips path checks when schema errors exist", async () => {
-    mockReadFile.mockResolvedValueOnce(
-      JSON.stringify({ package: [{ name: "app", unknownField: true }] }),
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(null, output, "");
+      return undefined as never;
+    });
+
+    await toolHandler({ repo: "org/repo", ref: "main" });
+
+    expect(mockExecFile).toHaveBeenCalledWith(
+      "ferrflow",
+      ["validate", "--json", "--repo", "org/repo", "--ref", "main"],
+      expect.any(Object),
+      expect.any(Function),
     );
+  });
 
-    const result = (await toolHandler({ source: "local", path: "/repo" })) as { content: { text: string }[] };
-    const parsed = JSON.parse(result.content[0].text);
-    expect(parsed.valid).toBe(false);
-    expect(mockAccess).not.toHaveBeenCalled();
+  it("passes --repo without --ref", async () => {
+    const output = JSON.stringify({ valid: true, errors: [], warnings: [], suggestions: [] });
+
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(null, output, "");
+      return undefined as never;
+    });
+
+    await toolHandler({ repo: "gitlab:group/project" });
+
+    expect(mockExecFile).toHaveBeenCalledWith(
+      "ferrflow",
+      ["validate", "--json", "--repo", "gitlab:group/project"],
+      expect.any(Object),
+      expect.any(Function),
+    );
+  });
+
+  it("throws when ferrflow is not found", async () => {
+    const err = Object.assign(new Error("not found"), { code: "ENOENT" });
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(err, "", "");
+      return undefined as never;
+    });
+
+    await expect(toolHandler({})).rejects.toThrow("ferrflow CLI not found");
+  });
+
+  it("throws on non-zero exit with no stdout", async () => {
+    const err = Object.assign(new Error("exit 1"), { code: 1 });
+    mockExecFile.mockImplementation((_cmd: unknown, _args: unknown, _opts: unknown, callback: unknown) => {
+      (callback as Function)(err, "", "No ferrflow config found");
+      return undefined as never;
+    });
+
+    await expect(toolHandler({})).rejects.toThrow("No ferrflow config found");
   });
 });
