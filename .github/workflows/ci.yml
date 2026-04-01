@@ -37,16 +37,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-  build-check:
-    name: Build Docker image (check)
-    needs: test
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Build
-        run: docker build -t ghcr.io/ferrflow-org/mcp:check .
-
   release:
     name: Release
     needs: test

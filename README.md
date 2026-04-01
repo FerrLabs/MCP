@@ -5,28 +5,21 @@
 [![Coverage](https://codecov.io/gh/FerrFlow-Org/MCP/branch/main/graph/badge.svg)](https://codecov.io/gh/FerrFlow-Org/MCP)
 [![License](https://img.shields.io/github/license/FerrFlow-Org/MCP)](LICENSE)
 
-[Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with FerrFlow.
+[Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with FerrFlow. Runs locally via stdio transport.
 
 ## Quick Start
 
-**Local (stdio) — for Claude Code, Cursor, etc.:**
+Add to your MCP client configuration (Claude Code, Cursor, etc.):
 
 ```json
 {
   "mcpServers": {
     "ferrflow": {
       "command": "npx",
-      "args": ["-y", "@ferrflow/mcp", "--stdio"]
+      "args": ["-y", "@ferrflow/mcp"]
     }
   }
 }
-```
-
-**Server (HTTP) — for shared/deployed usage:**
-
-```bash
-pnpm install
-pnpm dev
 ```
 
 ## Available Tools
@@ -50,7 +43,6 @@ pnpm dev
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PORT` | Server listen port | `3001` |
 | `API_URL` | FerrFlow API base URL | `https://api.ferrflow.com` |
 | `FERRFLOW_API_TOKEN` | FerrFlow API authentication token (required for authenticated tools and token operations) | — |
 
