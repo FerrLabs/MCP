@@ -50,4 +50,4 @@ Add to your MCP client configuration (Claude Code, Cursor, etc.):
 
 ## License
 
-MPL-2.0
+MIT
