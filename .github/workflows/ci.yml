@@ -49,7 +49,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.FERRFLOW_TOKEN }}
-      - uses: FerrFlow-Org/ferrflow@v2
+      - uses: FerrFlow-Org/ferrflow@v3
         with:
           dry_run: ${{ inputs.dry_run }}
         env:
