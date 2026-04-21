@@ -4,6 +4,14 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.2] - 2026-04-21
+
+### Bug Fixes
+
+- fix(ci): downgrade release.yml pnpm action v6->v5 + FERRFLOW_TOKEN fallback (#94)
+- fix(ci): downgrade pnpm/action-setup v6 -> v5 with pinned version (#93)
+- fix(ci): rebrand GHCR + GitHub URLs from ferrflow-org to ferrlabs (#91)
+
 ## [3.2.1] - 2026-04-01
 
 ## [3.2.0] - 2026-04-01
