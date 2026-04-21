@@ -15,7 +15,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ferrlabs-k8s
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -40,7 +40,7 @@ jobs:
   release:
     name: Release
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ferrlabs-k8s
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success') || (github.event_name == 'workflow_dispatch' && needs.test.result == 'success')
     permissions:
       contents: write
