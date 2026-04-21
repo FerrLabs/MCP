@@ -1,9 +1,9 @@
 # FerrFlow MCP Server
 
-[![CI](https://github.com/FerrFlow-Org/MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/FerrFlow-Org/MCP/actions/workflows/ci.yml)
+[![CI](https://github.com/FerrLabs/MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/FerrLabs/MCP/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@ferrflow/mcp)](https://www.npmjs.com/package/@ferrflow/mcp)
-[![Coverage](https://codecov.io/gh/FerrFlow-Org/MCP/branch/main/graph/badge.svg)](https://codecov.io/gh/FerrFlow-Org/MCP)
-[![License](https://img.shields.io/github/license/FerrFlow-Org/MCP)](LICENSE)
+[![Coverage](https://codecov.io/gh/FerrLabs/MCP/branch/main/graph/badge.svg)](https://codecov.io/gh/FerrLabs/MCP)
+[![License](https://img.shields.io/github/license/FerrLabs/MCP)](LICENSE)
 [![Socket Badge](https://badge.socket.dev/npm/package/@ferrflow/mcp/latest)](https://badge.socket.dev/npm/package/@ferrflow/mcp/latest)
 [![Known Vulnerabilities](https://snyk.io/test/npm/@ferrflow/mcp/badge.svg)](https://snyk.io/test/npm/@ferrflow/mcp)
 
