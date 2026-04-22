@@ -44,13 +44,12 @@ jobs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success') || (github.event_name == 'workflow_dispatch' && needs.test.result == 'success')
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.FERRFLOW_TOKEN || secrets.GITHUB_TOKEN }}
       - uses: FerrLabs/ferrflow@v4
         with:
           dry_run: ${{ inputs.dry_run }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.FERRFLOW_TOKEN || secrets.GITHUB_TOKEN }}
+          bot: true
