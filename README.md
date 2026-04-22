@@ -1,11 +1,10 @@
 # FerrFlow MCP Server
 
-[![CI](https://github.com/FerrLabs/MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/FerrLabs/MCP/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@ferrflow/mcp)](https://www.npmjs.com/package/@ferrflow/mcp)
 [![Coverage](https://codecov.io/gh/FerrLabs/MCP/branch/main/graph/badge.svg)](https://codecov.io/gh/FerrLabs/MCP)
 [![License](https://img.shields.io/github/license/FerrLabs/MCP)](LICENSE)
 [![Socket Badge](https://badge.socket.dev/npm/package/@ferrflow/mcp/latest)](https://badge.socket.dev/npm/package/@ferrflow/mcp/latest)
-[![Known Vulnerabilities](https://snyk.io/test/npm/@ferrflow/mcp/badge.svg)](https://snyk.io/test/npm/@ferrflow/mcp)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/FerrLabs/MCP/badge)](https://scorecard.dev/viewer/?uri=github.com/FerrLabs/MCP)
 
 [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with FerrFlow. Runs locally via stdio transport.
 
