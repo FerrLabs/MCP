@@ -15,27 +15,15 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ferrlabs-k8s
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5
-        with:
-          version: 10
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-      - run: pnpm install
-      - name: Typecheck
-        run: pnpm typecheck
-      - name: Test with coverage
-        run: pnpm test:coverage
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Build
-        run: pnpm build
+    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@main
+    with:
+      runner: ferrlabs-k8s
+      install-args: ''
+      enable-lint: false
+      enable-knip: false
+      enable-madge: false
+      enable-audit: false
+    secrets: inherit
 
   release:
     name: Release
