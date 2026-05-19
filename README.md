@@ -64,6 +64,19 @@ Create a token from `app.ferrlabs.com` (Settings → API Tokens) and assign the 
 | `FERRLABS_API_TOKEN` | FerrLabs API token (required for authenticated tools)                        | —                          |
 | `FERRFLOW_API_TOKEN` | **Deprecated** — accepted as a fallback for backward compatibility with v3.x | —                          |
 
+## Smoke test
+
+`pnpm smoke` builds the server, spawns it over stdio, runs the MCP `initialize`/`tools/list` handshake, then calls `health_check` and `get_stats` against the real `api.ferrlabs.com`. Useful to confirm the server boots, registers all tools, and the API is reachable. Exits non-zero on any failure.
+
+```
+[PASS] initialize handshake — serverInfo: ferrlabs@4.0.0
+[PASS] tools/list — 17 tools registered
+[PASS] tools/call health_check — {"status":"ready", ...}
+[PASS] tools/call get_stats — total_releases=N
+
+Smoke: 4/4 OK
+```
+
 ## Migrating from `@ferrflow/mcp` v3.x
 
 v4.0.0 renames the package and points the MCP at the unified FerrLabs API. To migrate:
