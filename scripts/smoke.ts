@@ -120,6 +120,7 @@ async function run(): Promise<void> {
   const expected = [
     'get_stats',
     'health_check',
+    'fetch_docs',
     'get_me',
     'list_tokens',
     'list_orgs',

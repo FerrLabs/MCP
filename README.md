@@ -28,25 +28,22 @@ Create a token from `app.ferrlabs.com` (Settings → API Tokens) and assign the 
 
 ## Available Tools
 
-| Tool                 | Scope         | Description                                                        |
-| -------------------- | ------------- | ------------------------------------------------------------------ |
-| `get_stats`          | public        | Public usage statistics                                            |
-| `health_check`       | public        | API health status                                                  |
-| `get_me`             | auth          | Current user profile                                               |
-| `list_tokens`        | auth          | List your API tokens                                               |
-| `create_token`       | session       | Create a new API token (requires interactive session, not a token) |
-| `revoke_token`       | auth          | Revoke an API token                                                |
-| `list_orgs`          | auth          | List FerrLabs organizations you belong to                          |
-| `list_projects`      | auth          | List projects inside an organization                               |
-| `list_subscriptions` | auth          | List product subscriptions for an organization                     |
-| `list_vaults`        | auth          | List FerrVault vaults inside a project                             |
-| `list_issues`        | auth          | List FerrTrack issues inside a project                             |
-| `list_release_tags`  | public        | List release tags for a package on GitHub                          |
-| `record_event`       | public (HMAC) | Record a FerrFlow analytics event                                  |
-| `read_changelog`     | local         | Read FerrFlow's CHANGELOG.md                                       |
-| `dry_run`            | local         | Run `ferrflow check --dry-run` locally                             |
-| `validate_config`    | local         | Validate a `.ferrflow.toml` against the JSON schema                |
-| `read_config`        | local         | Read a `.ferrflow.toml` config                                     |
+| Tool                 | Scope   | Description                                                                    |
+| -------------------- | ------- | ------------------------------------------------------------------------------ |
+| `get_stats`          | public  | Public usage statistics from `api.ferrlabs.com`                                |
+| `health_check`       | public  | API health status                                                              |
+| `fetch_docs`         | public  | Fetch a page from a product marketing site (ferrflow, ferrvault, ferrtrack, …) |
+| `get_me`             | auth    | Current user profile                                                           |
+| `list_tokens`        | auth    | List your API tokens                                                           |
+| `create_token`       | session | Create a new API token (requires interactive session, not a token)             |
+| `revoke_token`       | auth    | Revoke an API token                                                            |
+| `list_orgs`          | auth    | List FerrLabs organizations you belong to                                      |
+| `list_projects`      | auth    | List projects inside an organization                                           |
+| `list_subscriptions` | auth    | List product subscriptions for an organization                                 |
+| `list_vaults`        | auth    | List FerrVault vaults inside a project                                         |
+| `list_issues`        | auth    | List FerrTrack issues inside a project                                         |
+
+FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event`) were removed in v4.0.0 — they required either a local FerrFlow CLI install or HMAC signing the MCP doesn't do. Use the FerrFlow CLI directly or fetch docs via `fetch_docs("ferrflow", "docs/...")`.
 
 ## Stack
 

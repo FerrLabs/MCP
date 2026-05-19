@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - feat!: prefer `FERRLABS_API_TOKEN`; `FERRFLOW_API_TOKEN` accepted as a fallback for one release (#111)
 - feat!: authenticated endpoint paths now use the `/v1` prefix to match the unified FerrLabs API router (#111)
 - feat!: `revoke_token` switched from `POST /tokens/{id}/revoke` to `DELETE /v1/auth/tokens/{id}` (#111)
+- feat!: drop FerrFlow CLI-specific tools — `dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event` removed. They required either a local FerrFlow CLI install or HMAC-signed payloads the MCP doesn't produce. The MCP is now platform-focused; product-specific docs are reachable via `fetch_docs`. (#111)
 
 ### Features
 
@@ -20,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - feat(tools): add `list_vaults` (FerrVault — secrets management) (#111)
 - feat(tools): add `list_issues` (FerrTrack — issue tracker) (#111)
 - feat(tools): add `list_subscriptions` (per-product subscription status) (#111)
+- feat(tools): add `fetch_docs(product, slug)` — fetch documentation/marketing pages from any FerrLabs product site (ferrflow, ferrvault, ferrtrack, ferrgrowth, ferrfleet, ferrlens, ferrlabs) (#111)
 
 ## [3.2.2] - 2026-04-21
 
