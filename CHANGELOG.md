@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.1.0] - 2026-05-19
+
+### Features
+
+- feat(auth): OAuth 2.0 loopback PKCE flow + persistence (closes #113) (#117)
+
 ## [Unreleased]
 
 ### Features
