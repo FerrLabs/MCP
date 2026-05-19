@@ -1,4 +1,4 @@
-# Contributing to FerrFlow MCP
+# Contributing to FerrLabs MCP
 
 Thanks for your interest in contributing! Here's how to get started.
 
@@ -56,7 +56,7 @@ fix: handle missing token gracefully
 
 - Follow existing TypeScript conventions
 - Write tests for new tools and functionality
-- Keep MCP tools in sync with the FerrFlow CLI and API
+- Keep MCP tools in sync with the FerrLabs unified API and per-product surfaces (FerrFlow, FerrVault, FerrTrack, FerrGrowth, FerrFleet, FerrLens)
 
 ## Reporting Bugs
 

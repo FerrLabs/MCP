@@ -1,12 +1,14 @@
-import { z } from "zod";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { apiRequest } from "./api-client.js";
+import { z } from 'zod';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { apiRequest } from './api-client.js';
 
-const API_TOKEN = process.env.FERRFLOW_API_TOKEN;
+const API_TOKEN = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
 
 function requireToken(): string {
   if (!API_TOKEN) {
-    throw new Error("FERRFLOW_API_TOKEN environment variable is required for authenticated operations.");
+    throw new Error(
+      'FERRLABS_API_TOKEN environment variable is required for authenticated operations (FERRFLOW_API_TOKEN is accepted as a fallback for backward compatibility).',
+    );
   }
   return API_TOKEN;
 }
@@ -31,32 +33,31 @@ interface ApiTokenResponse {
   created_at: string;
 }
 
-interface CreateTokenResponse {
-  token: ApiTokenResponse;
-  plaintext_token: string;
-}
+type CreateTokenResponse = ApiTokenResponse & {
+  plaintext: string;
+};
 
 export function registerTokenTools(server: McpServer) {
-  server.tool("get_me", "Get the current authenticated user profile", {}, async () => {
+  server.tool('get_me', 'Get the current authenticated FerrLabs user profile', {}, async () => {
     const token = requireToken();
-    const user = await apiRequest<UserProfile>("/auth/me", { token });
+    const user = await apiRequest<UserProfile>('/v1/auth/me', { token });
     return {
       content: [
         {
-          type: "text" as const,
+          type: 'text' as const,
           text: JSON.stringify(user, null, 2),
         },
       ],
     };
   });
 
-  server.tool("list_tokens", "List all API tokens for the authenticated user", {}, async () => {
+  server.tool('list_tokens', 'List all API tokens for the authenticated user', {}, async () => {
     const token = requireToken();
-    const tokens = await apiRequest<ApiTokenResponse[]>("/tokens", { token });
+    const tokens = await apiRequest<ApiTokenResponse[]>('/v1/auth/tokens', { token });
     return {
       content: [
         {
-          type: "text" as const,
+          type: 'text' as const,
           text: JSON.stringify(tokens, null, 2),
         },
       ],
@@ -64,25 +65,26 @@ export function registerTokenTools(server: McpServer) {
   });
 
   server.tool(
-    "create_token",
-    "Create a new API token",
+    'create_token',
+    'Create a new FerrLabs API token (requires an interactive session, not a token)',
     {
-      name: z.string().min(1).max(100).describe("Token name"),
+      name: z.string().min(1).max(100).describe('Token name'),
       scopes: z.array(z.string()).describe('Token scopes (e.g. ["*"] for all)'),
-      expires_at: z.string().optional().describe("Expiration date (ISO 8601)"),
+      expires_at: z.string().optional().describe('Expiration date (ISO 8601)'),
     },
     async ({ name, scopes, expires_at }) => {
       const token = requireToken();
-      const result = await apiRequest<CreateTokenResponse>("/tokens", {
-        method: "POST",
+      const result = await apiRequest<CreateTokenResponse>('/v1/auth/tokens', {
+        method: 'POST',
         body: { name, scopes, expires_at },
         token,
       });
+      const { plaintext, ...meta } = result;
       return {
         content: [
           {
-            type: "text" as const,
-            text: `Token created: ${result.plaintext_token}\n\nThis is the only time the full token will be shown. Store it securely.\n\n${JSON.stringify(result.token, null, 2)}`,
+            type: 'text' as const,
+            text: `Token created: ${plaintext}\n\nThis is the only time the full token will be shown. Store it securely.\n\n${JSON.stringify(meta, null, 2)}`,
           },
         ],
       };
@@ -90,21 +92,21 @@ export function registerTokenTools(server: McpServer) {
   );
 
   server.tool(
-    "revoke_token",
-    "Revoke an API token by ID",
+    'revoke_token',
+    'Revoke a FerrLabs API token by ID',
     {
-      token_id: z.string().uuid().describe("Token ID to revoke"),
+      token_id: z.string().uuid().describe('Token ID to revoke'),
     },
     async ({ token_id }) => {
       const token = requireToken();
-      await apiRequest<{ message: string }>(`/tokens/${token_id}/revoke`, {
-        method: "POST",
+      await apiRequest<{ message: string }>(`/v1/auth/tokens/${token_id}`, {
+        method: 'DELETE',
         token,
       });
       return {
         content: [
           {
-            type: "text" as const,
+            type: 'text' as const,
             text: `Token ${token_id} revoked successfully.`,
           },
         ],

@@ -1,4 +1,4 @@
-const API_URL = process.env.API_URL ?? "https://api.ferrflow.com";
+const API_URL = process.env.API_URL ?? 'https://api.ferrlabs.com';
 
 interface RequestOptions {
   method?: string;
@@ -7,15 +7,15 @@ interface RequestOptions {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, token } = options;
+  const { method = 'GET', body, token } = options;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "User-Agent": "ferrflow-mcp/0.2.0",
+    'Content-Type': 'application/json',
+    'User-Agent': 'ferrlabs-mcp/4.0.0',
   };
 
   if (token) {
-    headers["x-api-token"] = token;
+    headers['x-api-token'] = token;
   }
 
   const res = await fetch(`${API_URL}${path}`, {
