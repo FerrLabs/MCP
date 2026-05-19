@@ -4,6 +4,15 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Features
+
+- feat(auth): OAuth 2.0 loopback PKCE flow on first authenticated tool call — the MCP opens `auth.ferrlabs.com` in the user's browser, captures the callback on a loopback port, and persists the token. No more manual `FERRLABS_API_TOKEN` paste for desktop users (#113)
+- feat(auth): token persistence per OS conventions (`%APPDATA%\ferrlabs\mcp\token.json` on Windows, `~/.config/ferrlabs/mcp/token.json` on Linux, `~/Library/Application Support/...` on macOS). File mode `0600` on Unix.
+- feat(auth): new env knobs — `FERRLABS_AUTH_URL` (override auth host), `FERRLABS_MCP_NO_OAUTH=1` (disable OAuth fallback for CI), `FERRLABS_MCP_TOKEN_PATH` (override persistence path), `FERRLABS_MCP_NO_PERSIST=1` (in-memory only)
+- `FERRLABS_API_TOKEN` still works and short-circuits the OAuth dance — safe to keep in CI configs
+
 ## [5.0.0] - 2026-05-19
 
 ### Breaking Changes

@@ -1,17 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { apiRequest } from './api-client.js';
-
-const API_TOKEN = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
-
-function requireToken(): string {
-  if (!API_TOKEN) {
-    throw new Error(
-      'FERRLABS_API_TOKEN environment variable is required for authenticated operations.',
-    );
-  }
-  return API_TOKEN;
-}
+import { getToken } from '../auth/index.js';
 
 interface VaultWithStats {
   id: string;
@@ -31,7 +21,7 @@ export function registerVaultsTools(server: McpServer) {
       project_slug: z.string().min(1).describe('Project slug'),
     },
     async ({ org_slug, project_slug }) => {
-      const token = requireToken();
+      const token = await getToken();
       const vaults = await apiRequest<VaultWithStats[]>(
         `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults`,
         { token },

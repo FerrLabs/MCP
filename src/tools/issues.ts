@@ -1,17 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { apiRequest } from './api-client.js';
-
-const API_TOKEN = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
-
-function requireToken(): string {
-  if (!API_TOKEN) {
-    throw new Error(
-      'FERRLABS_API_TOKEN environment variable is required for authenticated operations.',
-    );
-  }
-  return API_TOKEN;
-}
+import { getToken } from '../auth/index.js';
 
 interface IssueWithDetails {
   id: string;
@@ -48,7 +38,7 @@ export function registerIssuesTools(server: McpServer) {
         .describe('Items per page (default 25, max 100)'),
     },
     async ({ org_slug, project_slug, page, per_page }) => {
-      const token = requireToken();
+      const token = await getToken();
       const params = new URLSearchParams();
       if (page !== undefined) params.set('page', String(page));
       if (per_page !== undefined) params.set('per_page', String(per_page));

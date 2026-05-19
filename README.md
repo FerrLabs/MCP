@@ -15,16 +15,31 @@ Add to your MCP client configuration (Claude Code, Cursor, etc.):
   "mcpServers": {
     "ferrlabs": {
       "command": "npx",
-      "args": ["-y", "@ferrlabs/mcp"],
-      "env": {
-        "FERRLABS_API_TOKEN": "fl_..."
-      }
+      "args": ["-y", "@ferrlabs/mcp"]
     }
   }
 }
 ```
 
-Create a token from `app.ferrlabs.com` (Settings → API Tokens) and assign the scopes you want the assistant to have. The token is forwarded as `x-api-token` to `api.ferrlabs.com`.
+The first time you call a tool that needs auth, the MCP opens `auth.ferrlabs.com` in your default browser (OAuth 2.0 loopback PKCE). After you click Allow, the token is saved locally and reused for future sessions. No env var required.
+
+### CI / scripted / headless use
+
+Bypass the browser dance by injecting a token directly:
+
+```json
+{
+  "mcpServers": {
+    "ferrlabs": {
+      "command": "npx",
+      "args": ["-y", "@ferrlabs/mcp"],
+      "env": { "FERRLABS_API_TOKEN": "fl_..." }
+    }
+  }
+}
+```
+
+Create the token from `app.ferrlabs.com` → Settings → API Tokens. It's forwarded as `x-api-token` to `api.ferrlabs.com`.
 
 ## Available Tools
 
@@ -55,11 +70,26 @@ FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_
 
 ## Configuration
 
-| Variable             | Description                                                                  | Default                    |
-| -------------------- | ---------------------------------------------------------------------------- | -------------------------- |
-| `API_URL`            | FerrLabs API base URL (no `/v1` suffix — paths are prefixed in code)         | `https://api.ferrlabs.com` |
-| `FERRLABS_API_TOKEN` | FerrLabs API token (required for authenticated tools)                        | —                          |
-| `FERRFLOW_API_TOKEN` | **Deprecated** — accepted as a fallback for backward compatibility with v3.x | —                          |
+| Variable                  | Description                                                                           | Default                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `API_URL`                 | FerrLabs API base URL (no `/v1` suffix — paths are prefixed in code)                  | `https://api.ferrlabs.com`                                                |
+| `FERRLABS_AUTH_URL`       | Auth SPA base URL (where the OAuth browser flow lands)                                | `https://auth.ferrlabs.com`                                               |
+| `FERRLABS_API_TOKEN`      | Pre-provisioned token. Bypasses the OAuth flow. Use for CI / scripted environments.   | —                                                                         |
+| `FERRFLOW_API_TOKEN`      | **Deprecated** — accepted as a fallback for backward compatibility with v3.x.         | —                                                                         |
+| `FERRLABS_MCP_NO_OAUTH`   | Set to `1` to disable the OAuth fallback. Then `FERRLABS_API_TOKEN` becomes required. | unset                                                                     |
+| `FERRLABS_MCP_TOKEN_PATH` | Override the path where the OAuth-acquired token is persisted.                        | `%APPDATA%\ferrlabs\mcp\token.json` / `~/.config/ferrlabs/mcp/token.json` |
+| `FERRLABS_MCP_NO_PERSIST` | Set to `1` to keep the token in memory only (re-auth on every cold start).            | unset                                                                     |
+
+### How auth resolution works
+
+On the first authenticated tool call, the MCP looks for a token in this order:
+
+1. In-memory cache (set during this MCP process's lifetime)
+2. `FERRLABS_API_TOKEN` (or `FERRFLOW_API_TOKEN`) env var
+3. Persisted token file (`FERRLABS_MCP_TOKEN_PATH`)
+4. **OAuth 2.0 loopback PKCE flow** — opens the user's browser, captures the callback on `http://127.0.0.1:54321/cb`, exchanges the code for a session token via `POST /v1/auth/exchange`. Token is persisted to step 3 for future sessions.
+
+If you set `FERRLABS_MCP_NO_OAUTH=1`, step 4 is skipped — useful for CI where opening a browser would hang.
 
 ## Smoke test
 
