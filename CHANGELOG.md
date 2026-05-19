@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.0.0] - 2026-05-19
+
+### Breaking Changes
+
+- feat(license)!: relicense from MIT to MPL-2.0 to match FerrFlow (#116)
+
 ## [4.0.0] - 2026-05-19
 
 ### Breaking Changes
