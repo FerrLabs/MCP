@@ -28,7 +28,7 @@ function openBrowser(url: string): void {
   const args: { cmd: string; args: string[] } = (() => {
     switch (platform()) {
       case 'win32':
-        return { cmd: 'cmd', args: ['/c', 'start', '""', url] };
+        return { cmd: 'rundll32', args: ['url.dll,FileProtocolHandler', url] };
       case 'darwin':
         return { cmd: 'open', args: [url] };
       default:
