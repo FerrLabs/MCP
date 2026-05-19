@@ -4,6 +4,23 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [4.0.0] - 2026-05-19
+
+### Breaking Changes
+
+- feat!: rename package from `@ferrflow/mcp` to `@ferrlabs/mcp` (#111)
+- feat!: default `API_URL` is now `https://api.ferrlabs.com` (was `https://api.ferrflow.com`) (#111)
+- feat!: prefer `FERRLABS_API_TOKEN`; `FERRFLOW_API_TOKEN` accepted as a fallback for one release (#111)
+- feat!: authenticated endpoint paths now use the `/v1` prefix to match the unified FerrLabs API router (#111)
+- feat!: `revoke_token` switched from `POST /tokens/{id}/revoke` to `DELETE /v1/auth/tokens/{id}` (#111)
+
+### Features
+
+- feat(tools): add `list_orgs` and `list_projects` (FerrLabs organizations + projects) (#111)
+- feat(tools): add `list_vaults` (FerrVault — secrets management) (#111)
+- feat(tools): add `list_issues` (FerrTrack — issue tracker) (#111)
+- feat(tools): add `list_subscriptions` (per-product subscription status) (#111)
+
 ## [3.2.2] - 2026-04-21
 
 ### Bug Fixes
