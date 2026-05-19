@@ -67,7 +67,7 @@ FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_
 
 ```
 [PASS] initialize handshake — serverInfo: ferrlabs@4.0.0
-[PASS] tools/list — 17 tools registered
+[PASS] tools/list — 12 tools registered
 [PASS] tools/call health_check — {"status":"ready", ...}
 [PASS] tools/call get_stats — total_releases=N
 
