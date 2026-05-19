@@ -39,7 +39,7 @@
     "model-context-protocol",
     "ai"
   ],
-  "license": "MIT",
+  "license": "MPL-2.0",
   "main": "./dist/index.js",
   "name": "@ferrlabs/mcp",
   "publishConfig": {

@@ -86,4 +86,4 @@ Tokens issued by the legacy FerrFlow-only API are not valid against the unified 
 
 ## License
 
-MIT
+Mozilla Public License 2.0 — see [LICENSE](LICENSE).
