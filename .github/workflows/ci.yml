@@ -17,7 +17,7 @@ jobs:
     name: Test
     uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@main
     with:
-      runner: ferrlabs-k8s
+      runner: ubuntu-latest
       install-args: ''
       enable-lint: false
       enable-knip: false
@@ -28,7 +28,7 @@ jobs:
   release:
     name: Release
     needs: test
-    runs-on: ferrlabs-k8s
+    runs-on: ubuntu-latest
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success') || (github.event_name == 'workflow_dispatch' && needs.test.result == 'success')
     permissions:
       contents: write
