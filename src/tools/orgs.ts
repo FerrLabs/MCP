@@ -1,17 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { apiRequest } from './api-client.js';
-
-const API_TOKEN = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
-
-function requireToken(): string {
-  if (!API_TOKEN) {
-    throw new Error(
-      'FERRLABS_API_TOKEN environment variable is required for authenticated operations.',
-    );
-  }
-  return API_TOKEN;
-}
+import { getToken } from '../auth/index.js';
 
 interface OrgWithMemberCount {
   id: string;
@@ -36,7 +26,7 @@ export function registerOrgsTools(server: McpServer) {
     'List FerrLabs organizations the authenticated user belongs to',
     {},
     async () => {
-      const token = requireToken();
+      const token = await getToken();
       const orgs = await apiRequest<OrgWithMemberCount[]>('/v1/orgs', { token });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(orgs, null, 2) }],
@@ -51,7 +41,7 @@ export function registerOrgsTools(server: McpServer) {
       org_slug: z.string().min(1).describe('Organization slug (from list_orgs)'),
     },
     async ({ org_slug }) => {
-      const token = requireToken();
+      const token = await getToken();
       const projects = await apiRequest<ProjectWithCounts[]>(
         `/v1/orgs/${encodeURIComponent(org_slug)}/projects`,
         { token },

@@ -1,17 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { apiRequest } from './api-client.js';
-
-const API_TOKEN = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
-
-function requireToken(): string {
-  if (!API_TOKEN) {
-    throw new Error(
-      'FERRLABS_API_TOKEN environment variable is required for authenticated operations.',
-    );
-  }
-  return API_TOKEN;
-}
+import { getToken } from '../auth/index.js';
 
 interface SubscriptionRow {
   id: string;
@@ -33,7 +23,7 @@ export function registerSubscriptionsTools(server: McpServer) {
       org_slug: z.string().min(1).describe('Organization slug'),
     },
     async ({ org_slug }) => {
-      const token = requireToken();
+      const token = await getToken();
       const subs = await apiRequest<SubscriptionRow[]>(
         `/v1/orgs/${encodeURIComponent(org_slug)}/subscriptions`,
         { token },

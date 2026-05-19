@@ -1,17 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { apiRequest } from './api-client.js';
-
-const API_TOKEN = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
-
-function requireToken(): string {
-  if (!API_TOKEN) {
-    throw new Error(
-      'FERRLABS_API_TOKEN environment variable is required for authenticated operations (FERRFLOW_API_TOKEN is accepted as a fallback for backward compatibility).',
-    );
-  }
-  return API_TOKEN;
-}
+import { getToken } from '../auth/index.js';
 
 interface UserProfile {
   id: string;
@@ -39,7 +29,7 @@ type CreateTokenResponse = ApiTokenResponse & {
 
 export function registerTokenTools(server: McpServer) {
   server.tool('get_me', 'Get the current authenticated FerrLabs user profile', {}, async () => {
-    const token = requireToken();
+    const token = await getToken();
     const user = await apiRequest<UserProfile>('/v1/auth/me', { token });
     return {
       content: [
@@ -52,7 +42,7 @@ export function registerTokenTools(server: McpServer) {
   });
 
   server.tool('list_tokens', 'List all API tokens for the authenticated user', {}, async () => {
-    const token = requireToken();
+    const token = await getToken();
     const tokens = await apiRequest<ApiTokenResponse[]>('/v1/auth/tokens', { token });
     return {
       content: [
@@ -73,7 +63,7 @@ export function registerTokenTools(server: McpServer) {
       expires_at: z.string().optional().describe('Expiration date (ISO 8601)'),
     },
     async ({ name, scopes, expires_at }) => {
-      const token = requireToken();
+      const token = await getToken();
       const result = await apiRequest<CreateTokenResponse>('/v1/auth/tokens', {
         method: 'POST',
         body: { name, scopes, expires_at },
@@ -98,7 +88,7 @@ export function registerTokenTools(server: McpServer) {
       token_id: z.string().uuid().describe('Token ID to revoke'),
     },
     async ({ token_id }) => {
-      const token = requireToken();
+      const token = await getToken();
       await apiRequest<{ message: string }>(`/v1/auth/tokens/${token_id}`, {
         method: 'DELETE',
         token,
