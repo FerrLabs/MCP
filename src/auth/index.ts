@@ -1,10 +1,18 @@
 import { readPersistedToken, writePersistedToken } from './persistence.js';
 import { runLoopbackOauthFlow } from './oauth.js';
+import { getRequestBearerToken } from './context.js';
 
 let cached: string | null = null;
 let inFlight: Promise<string> | null = null;
 
 export async function getToken(): Promise<string> {
+  const perRequest = getRequestBearerToken();
+  if (perRequest) return perRequest;
+
+  if (process.env.FERRLABS_MCP_MODE === 'http') {
+    throw new Error('Bearer token required. Send `Authorization: Bearer fl_...` on each request.');
+  }
+
   if (cached) return cached;
 
   const envToken = process.env.FERRLABS_API_TOKEN ?? process.env.FERRFLOW_API_TOKEN;
