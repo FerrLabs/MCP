@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.2.1] - 2026-05-20
+
+### Bug Fixes
+
+- fix(docker): disable husky postinstall in Dockerfile build (no .git in context) (#121)
+
 ## [5.2.0] - 2026-05-20
 
 ### Features
