@@ -1,11 +1,13 @@
 FROM node:24-alpine AS build
 WORKDIR /app
+ENV HUSKY=0 \
+    CI=true
 RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY tsconfig.json ./
 COPY src ./src
-RUN pnpm build && pnpm prune --prod
+RUN pnpm build && pnpm prune --prod --ignore-scripts
 
 FROM node:24-alpine
 WORKDIR /app
