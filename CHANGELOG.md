@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.2.0] - 2026-05-20
+
+### Features
+
+- feat(transport): dual-transport — stdio default + Streamable HTTP for hosted use (#120)
+
 ## [5.1.1] - 2026-05-19
 
 ### Bug Fixes
