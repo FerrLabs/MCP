@@ -23,13 +23,13 @@
     "*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}": "prettier --write"
   },
   "scripts": {
-    "build": "pnpm -r --filter './packages/*' run build",
-    "ci:local": "pnpm typecheck && pnpm test && pnpm build",
+    "build": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run build && pnpm --filter @ferrlabs/mcp-vault run build",
+    "ci:local": "pnpm build && pnpm typecheck && pnpm test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "pnpm -r --filter './packages/*' run typecheck"
+    "typecheck": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run typecheck && pnpm --filter @ferrlabs/mcp-vault run typecheck"
   }
 }
