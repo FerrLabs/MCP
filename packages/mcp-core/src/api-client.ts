@@ -1,13 +1,20 @@
-const API_URL = process.env.API_URL ?? 'https://api.ferrlabs.com';
+const DEFAULT_API_URL = process.env.API_URL ?? 'https://api.ferrlabs.com';
 
 interface RequestOptions {
   method?: string;
   body?: unknown;
   token?: string;
+  /**
+   * Override the API base URL for this call. Sub-MCPs targeting per-product
+   * APIs (e.g. `api.ferrgrowth.com`, `api.ferrfleet.com`) set this on each
+   * tool call. Falls back to `API_URL` env var, then `api.ferrlabs.com`.
+   */
+  baseUrl?: string;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, token } = options;
+  const { method = 'GET', body, token, baseUrl } = options;
+  const base = baseUrl ?? DEFAULT_API_URL;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -19,7 +26,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${base}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
