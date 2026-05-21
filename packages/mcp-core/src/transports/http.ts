@@ -1,7 +1,11 @@
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import {
+  createServer as createHttpServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { createMcpServer } from '../server.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runWithAuthContext } from '../auth/context.js';
 
 function extractBearer(req: IncomingMessage): string | undefined {
@@ -15,6 +19,7 @@ export interface HttpServerOptions {
   port: number;
   host?: string;
   stateless?: boolean;
+  createServer: () => McpServer;
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> {
@@ -72,7 +77,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
       transport.onclose = () => {
         if (createdSessionId) transports.delete(createdSessionId);
       };
-      const server = createMcpServer();
+      const server = opts.createServer();
       await server.connect(transport);
     }
 
@@ -81,7 +86,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
     await runWithAuthContext({ bearerToken }, () => transport.handleRequest(req, res, body));
   }
 
-  const httpServer = createServer((req, res) => {
+  const httpServer = createHttpServer((req, res) => {
     const url = req.url ?? '/';
     if (url === '/health' || url === '/livez' || url === '/readyz') {
       res.writeHead(200, { 'Content-Type': 'application/json' });

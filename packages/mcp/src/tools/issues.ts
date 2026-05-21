@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { apiRequest } from './api-client.js';
-import { getToken } from '../auth/index.js';
+import { apiRequest } from '@ferrlabs/mcp-core';
+import { getToken } from '@ferrlabs/mcp-core';
 
 interface IssueWithDetails {
   id: string;

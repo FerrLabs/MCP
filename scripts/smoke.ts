@@ -4,10 +4,10 @@ import { dirname, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SERVER_ENTRY = resolve(__dirname, '..', 'dist', 'index.js');
+const SERVER_ENTRY = resolve(__dirname, '..', 'packages', 'mcp', 'dist', 'index.js');
 
 if (!existsSync(SERVER_ENTRY)) {
-  console.error(`dist/index.js not found at ${SERVER_ENTRY}. Run 'pnpm build' first.`);
+  console.error(`mcp dist not found at ${SERVER_ENTRY}. Run 'pnpm build' first.`);
   process.exit(2);
 }
 

@@ -1,23 +1,32 @@
+ARG PACKAGE=mcp
+
 FROM node:24-alpine AS build
+ARG PACKAGE
 WORKDIR /app
 ENV HUSKY=0 \
     CI=true
 RUN corepack enable
-COPY package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/mcp-core/package.json packages/mcp-core/
+COPY packages/mcp/package.json packages/mcp/
+COPY packages/mcp-vault/package.json packages/mcp-vault/
 RUN pnpm install --frozen-lockfile --ignore-scripts
-COPY tsconfig.json ./
-COPY src ./src
-RUN pnpm build && pnpm prune --prod --ignore-scripts
+COPY packages/mcp-core packages/mcp-core
+COPY packages/mcp packages/mcp
+COPY packages/mcp-vault packages/mcp-vault
+RUN pnpm -r --filter './packages/*' run build
+RUN pnpm --filter "@ferrlabs/${PACKAGE}" deploy --prod --legacy /out
 
 FROM node:24-alpine
+ARG PACKAGE
 WORKDIR /app
 ENV NODE_ENV=production \
     FERRLABS_MCP_MODE=http \
     PORT=3000 \
     HOST=0.0.0.0
-COPY --from=build --chown=1000:1000 /app/node_modules ./node_modules
-COPY --from=build --chown=1000:1000 /app/dist ./dist
-COPY --from=build --chown=1000:1000 /app/package.json ./
+COPY --from=build --chown=1000:1000 /out/node_modules ./node_modules
+COPY --from=build --chown=1000:1000 /out/dist ./dist
+COPY --from=build --chown=1000:1000 /out/package.json ./
 USER 1000:1000
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \

@@ -1,0 +1,41 @@
+{
+  "name": "@ferrlabs/mcp",
+  "version": "5.2.5",
+  "description": "Model Context Protocol server for the FerrLabs platform (orgs, projects, subscriptions, docs, tokens, public stats)",
+  "license": "MPL-2.0",
+  "type": "module",
+  "bin": {
+    "ferrlabs-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "ferrlabs",
+    "model-context-protocol",
+    "ai"
+  ],
+  "dependencies": {
+    "@ferrlabs/mcp-core": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^4.3.6"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FerrLabs/MCP.git",
+    "directory": "packages/mcp"
+  }
+}

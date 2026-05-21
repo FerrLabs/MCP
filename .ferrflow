@@ -8,9 +8,12 @@
       "name": "mcp",
       "path": ".",
       "changelog": "CHANGELOG.md",
-      "sharedPaths": ["src/"],
+      "sharedPaths": ["packages/"],
       "versionedFiles": [
-        { "path": "package.json", "format": "json" }
+        { "path": "package.json", "format": "json" },
+        { "path": "packages/mcp-core/package.json", "format": "json" },
+        { "path": "packages/mcp/package.json", "format": "json" },
+        { "path": "packages/mcp-vault/package.json", "format": "json" }
       ]
     }
   ]

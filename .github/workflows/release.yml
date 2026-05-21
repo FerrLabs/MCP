@@ -20,15 +20,28 @@ jobs:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm publish --no-git-checks
+      - name: Publish @ferrlabs/mcp-core
+        run: pnpm --filter @ferrlabs/mcp-core publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @ferrlabs/mcp
+        run: pnpm --filter @ferrlabs/mcp publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @ferrlabs/mcp-vault
+        run: pnpm --filter @ferrlabs/mcp-vault publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-ghcr:
-    name: Publish GHCR image
+    name: Publish GHCR image (${{ matrix.package }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [mcp, mcp-vault]
     permissions:
       contents: read
       packages: write
@@ -52,9 +65,11 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            PACKAGE=${{ matrix.package }}
           tags: |
-            ghcr.io/ferrlabs/mcp:${{ steps.ver.outputs.version }}
-            ghcr.io/ferrlabs/mcp:latest
+            ghcr.io/ferrlabs/${{ matrix.package }}:${{ steps.ver.outputs.version }}
+            ghcr.io/ferrlabs/${{ matrix.package }}:latest
           labels: |
             org.opencontainers.image.source=https://github.com/FerrLabs/MCP
             org.opencontainers.image.version=${{ steps.ver.outputs.version }}
