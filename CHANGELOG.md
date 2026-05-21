@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.2.2] - 2026-05-21
+
+### Bug Fixes
+
+- fix(docker): pin app user to UID 1000 so K8s runAsNonRoot validates (#122)
+
 ## [5.2.1] - 2026-05-20
 
 ### Bug Fixes
