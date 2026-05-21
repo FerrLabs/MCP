@@ -13,7 +13,10 @@
         { "path": "package.json", "format": "json" },
         { "path": "packages/mcp-core/package.json", "format": "json" },
         { "path": "packages/mcp/package.json", "format": "json" },
-        { "path": "packages/mcp-vault/package.json", "format": "json" }
+        { "path": "packages/mcp-vault/package.json", "format": "json" },
+        { "path": "packages/mcp-track/package.json", "format": "json" },
+        { "path": "packages/mcp-growth/package.json", "format": "json" },
+        { "path": "packages/mcp-fleet/package.json", "format": "json" }
       ]
     }
   ]

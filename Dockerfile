@@ -10,11 +10,17 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/mcp-core/package.json packages/mcp-core/
 COPY packages/mcp/package.json packages/mcp/
 COPY packages/mcp-vault/package.json packages/mcp-vault/
+COPY packages/mcp-track/package.json packages/mcp-track/
+COPY packages/mcp-growth/package.json packages/mcp-growth/
+COPY packages/mcp-fleet/package.json packages/mcp-fleet/
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/mcp-core packages/mcp-core
 COPY packages/mcp packages/mcp
 COPY packages/mcp-vault packages/mcp-vault
-RUN pnpm -r --filter './packages/*' run build
+COPY packages/mcp-track packages/mcp-track
+COPY packages/mcp-growth packages/mcp-growth
+COPY packages/mcp-fleet packages/mcp-fleet
+RUN pnpm run build
 RUN pnpm --filter "@ferrlabs/${PACKAGE}" deploy --prod --legacy /out
 
 FROM node:24-alpine

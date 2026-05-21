@@ -34,6 +34,18 @@ jobs:
         run: pnpm --filter @ferrlabs/mcp-vault publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @ferrlabs/mcp-track
+        run: pnpm --filter @ferrlabs/mcp-track publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @ferrlabs/mcp-growth
+        run: pnpm --filter @ferrlabs/mcp-growth publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @ferrlabs/mcp-fleet
+        run: pnpm --filter @ferrlabs/mcp-fleet publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-ghcr:
     name: Publish GHCR image (${{ matrix.package }})
@@ -41,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [mcp, mcp-vault]
+        package: [mcp, mcp-vault, mcp-track, mcp-growth, mcp-fleet]
     permissions:
       contents: read
       packages: write
