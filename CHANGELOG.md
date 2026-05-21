@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.2.0] - 2026-05-21
+
+### Features
+
+- feat(http): OAuth protected-resource discovery — 401 + WWW-Authenticate triggers client OAuth flow (#128)
+
 ## [6.1.0] - 2026-05-21
 
 ### Features
