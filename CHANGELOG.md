@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.2.3] - 2026-05-21
+
+### Bug Fixes
+
+- fix(docker): reuse node:alpine's built-in UID 1000 user (no addgroup conflict) (#123)
+
 ## [5.2.2] - 2026-05-21
 
 ### Bug Fixes
