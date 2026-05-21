@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.2.5] - 2026-05-21
+
+### Bug Fixes
+
+- fix(http): return 404 on unknown session-id so clients can re-init transparently (#125)
+
 ## [5.2.4] - 2026-05-21
 
 ### Bug Fixes
