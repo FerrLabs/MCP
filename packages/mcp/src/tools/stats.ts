@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { apiRequest } from './api-client.js';
+import { apiRequest } from '@ferrlabs/mcp-core';
 
 interface PublicStats {
   total_releases: number;

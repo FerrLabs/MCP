@@ -1,0 +1,33 @@
+{
+  "name": "@ferrlabs/mcp-core",
+  "version": "5.2.5",
+  "description": "Shared core for FerrLabs MCP servers — auth, transports (stdio + Streamable HTTP), api-client, runner",
+  "license": "MPL-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FerrLabs/MCP.git",
+    "directory": "packages/mcp-core"
+  }
+}

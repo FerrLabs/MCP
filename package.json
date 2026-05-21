@@ -1,12 +1,14 @@
 {
-  "bin": {
-    "ferrlabs-mcp": "./dist/index.js"
+  "name": "@ferrlabs/mcp-monorepo",
+  "private": true,
+  "version": "5.2.5",
+  "description": "FerrLabs MCP servers — workspace root",
+  "license": "MPL-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^4.3.6"
-  },
-  "description": "Model Context Protocol server for the FerrLabs ecosystem (FerrFlow, FerrVault, FerrTrack, FerrGrowth, FerrFleet, FerrLens)",
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^4.1.2",
@@ -20,48 +22,14 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}": "prettier --write"
   },
-  "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
-  },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "mcp",
-    "ferrlabs",
-    "ferrflow",
-    "ferrvault",
-    "ferrtrack",
-    "ferrgrowth",
-    "ferrfleet",
-    "ferrlens",
-    "model-context-protocol",
-    "ai"
-  ],
-  "license": "MPL-2.0",
-  "main": "./dist/index.js",
-  "name": "@ferrlabs/mcp",
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/FerrLabs/MCP.git"
-  },
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm -r --filter './packages/*' run build",
     "ci:local": "pnpm typecheck && pnpm test && pnpm build",
-    "dev": "tsx watch src/index.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "smoke": "pnpm build && tsx scripts/smoke.ts",
-    "start": "node dist/index.js",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
-  },
-  "type": "module",
-  "version": "5.2.5"
+    "typecheck": "pnpm -r --filter './packages/*' run typecheck"
+  }
 }
