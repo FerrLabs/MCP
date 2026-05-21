@@ -43,17 +43,34 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
     const sessionId = (req.headers['mcp-session-id'] as string | undefined) ?? undefined;
     let transport = sessionId ? transports.get(sessionId) : undefined;
 
+    if (sessionId && !transport && !stateless) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: {
+            code: -32001,
+            message: `Session ${sessionId} not found — reinitialize to obtain a new session`,
+          },
+          id: null,
+        }),
+      );
+      return;
+    }
+
     if (!transport) {
+      let createdSessionId: string | undefined;
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: stateless ? undefined : randomUUID,
         onsessioninitialized: stateless
           ? undefined
           : (newSessionId: string) => {
+              createdSessionId = newSessionId;
               if (transport) transports.set(newSessionId, transport);
             },
       });
       transport.onclose = () => {
-        if (sessionId) transports.delete(sessionId);
+        if (createdSessionId) transports.delete(createdSessionId);
       };
       const server = createMcpServer();
       await server.connect(transport);
