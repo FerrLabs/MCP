@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.1.0] - 2026-05-21
+
+### Features
+
+- feat: add @ferrlabs/mcp-track, @ferrlabs/mcp-growth, @ferrlabs/mcp-fleet sub-MCPs (#127)
+
 ## [6.0.0] - 2026-05-21
 
 ### Breaking Changes
