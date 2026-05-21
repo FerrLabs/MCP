@@ -15,11 +15,11 @@ ENV NODE_ENV=production \
     FERRLABS_MCP_MODE=http \
     PORT=3000 \
     HOST=0.0.0.0
-RUN addgroup -S app && adduser -S app -G app
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/package.json ./
-USER app
+RUN addgroup -S -g 1000 app && adduser -S -u 1000 -G app app
+COPY --from=build --chown=1000:1000 /app/node_modules ./node_modules
+COPY --from=build --chown=1000:1000 /app/dist ./dist
+COPY --from=build --chown=1000:1000 /app/package.json ./
+USER 1000:1000
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
     CMD wget -qO- http://127.0.0.1:3000/health || exit 1
