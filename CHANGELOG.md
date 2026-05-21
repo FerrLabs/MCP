@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [5.2.4] - 2026-05-21
+
+### Bug Fixes
+
+- fix(api-client): forward token via Authorization Bearer too + surface non-JSON errors (#124)
+
 ## [5.2.3] - 2026-05-21
 
 ### Bug Fixes
