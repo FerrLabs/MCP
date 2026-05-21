@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.0.0] - 2026-05-21
+
+### Breaking Changes
+
+- feat(workspace)!: split MCP into pnpm workspace with shared mcp-core + sub-MCPs (#126)
+
 ## [5.2.5] - 2026-05-21
 
 ### Bug Fixes
