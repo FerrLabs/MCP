@@ -14,9 +14,11 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 function makeResponse(body: unknown, status = 200): Response {
+  const text = body === undefined ? '' : JSON.stringify(body);
   return {
     ok: status >= 200 && status < 300,
     status,
+    text: () => Promise.resolve(text),
     json: () => Promise.resolve(body),
   } as unknown as Response;
 }

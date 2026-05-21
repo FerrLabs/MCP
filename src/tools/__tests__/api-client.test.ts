@@ -5,9 +5,11 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 function makeResponse(body: unknown, status = 200): Response {
+  const text = body === undefined ? '' : JSON.stringify(body);
   return {
     ok: status >= 200 && status < 300,
     status,
+    text: () => Promise.resolve(text),
     json: () => Promise.resolve(body),
   } as unknown as Response;
 }
@@ -47,7 +49,7 @@ describe('apiRequest', () => {
 
   it('throws a generic error when response has no error field', async () => {
     mockFetch.mockResolvedValue(makeResponse({}, 500));
-    await expect(apiRequest('/broken')).rejects.toThrow('API error: 500');
+    await expect(apiRequest('/broken')).rejects.toThrow('API error: HTTP 500');
   });
 
   it('sends a JSON body for POST requests', async () => {

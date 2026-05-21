@@ -16,6 +16,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (token) {
     headers['x-api-token'] = token;
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_URL}${path}`, {
@@ -28,10 +29,22 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     return undefined as T;
   }
 
-  const data = await res.json();
+  const raw = await res.text();
+  let data: unknown = undefined;
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      throw new Error(`API non-JSON response (HTTP ${res.status}): ${raw.slice(0, 200)}`);
+    }
+  }
 
   if (!res.ok) {
-    throw new Error(data.error ?? `API error: ${res.status}`);
+    const errMsg =
+      (data as { error?: string; message?: string } | undefined)?.error ??
+      (data as { error?: string; message?: string } | undefined)?.message ??
+      `API error: HTTP ${res.status}`;
+    throw new Error(errMsg);
   }
 
   return data as T;
