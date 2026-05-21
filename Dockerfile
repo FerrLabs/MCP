@@ -15,7 +15,6 @@ ENV NODE_ENV=production \
     FERRLABS_MCP_MODE=http \
     PORT=3000 \
     HOST=0.0.0.0
-RUN addgroup -S -g 1000 app && adduser -S -u 1000 -G app app
 COPY --from=build --chown=1000:1000 /app/node_modules ./node_modules
 COPY --from=build --chown=1000:1000 /app/dist ./dist
 COPY --from=build --chown=1000:1000 /app/package.json ./
