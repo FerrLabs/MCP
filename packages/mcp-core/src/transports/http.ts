@@ -31,7 +31,14 @@ export interface HttpServerOptions {
    * URL of the OAuth 2.0 Authorization Server users authenticate against.
    * Surfaced to MCP clients via /.well-known/oauth-protected-resource so
    * they can drive the standard PKCE flow when no Bearer is present.
-   * Defaults to `FERRLABS_AUTH_URL` env or `https://auth.ferrlabs.com`.
+   *
+   * Must be the host that serves the OIDC / OAuth 2.0 discovery metadata
+   * (i.e. `<host>/.well-known/openid-configuration` or
+   * `<host>/.well-known/oauth-authorization-server`). For FerrLabs that's
+   * `api.ferrlabs.com` — `auth.ferrlabs.com` is the user-facing login SPA
+   * but doesn't serve the metadata documents.
+   *
+   * Defaults to `FERRLABS_AUTH_URL` env or `https://api.ferrlabs.com`.
    */
   authorizationServer?: string;
 }
@@ -57,7 +64,7 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> 
 export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
   const { port, host = '0.0.0.0', stateless = true } = opts;
   const authServer =
-    opts.authorizationServer ?? process.env.FERRLABS_AUTH_URL ?? 'https://auth.ferrlabs.com';
+    opts.authorizationServer ?? process.env.FERRLABS_AUTH_URL ?? 'https://api.ferrlabs.com';
   const transports = new Map<string, StreamableHTTPServerTransport>();
 
   function sendUnauthorized(req: IncomingMessage, res: ServerResponse): void {
