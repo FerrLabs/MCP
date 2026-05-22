@@ -1,14 +1,20 @@
 import { z } from 'zod';
 import { apiRequest, getToken, type McpServer } from '@ferrlabs/mcp-core';
+import { TRACK_API_URL } from '../api-base.js';
 
-interface IssueSummary {
+interface Issue {
   id: string;
-  number: number;
+  ref: string;
+  project_id: string;
   title: string;
-  state: string;
-  author_id: string;
-  assignee_id: string | null;
+  body: string;
+  status: string;
+  kind: string;
   labels: string[];
+  assignee_id: string | null;
+  author_id: string;
+  cycle_id: string | null;
+  milestone_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -16,35 +22,37 @@ interface IssueSummary {
 export function registerIssueTools(server: McpServer) {
   server.tool(
     'list_issues',
-    'List FerrTrack issues in a project. Supports filtering by state, label, and assignee, plus a pagination limit.',
+    'List FerrTrack issues in a project. Filter by status (open|in_progress|review|closed|all), kind (bug|feat|chore|docs), assignee, limit.',
     {
-      org_slug: z.string().min(1).describe('Organization slug'),
       project_slug: z.string().min(1).describe('Project slug'),
-      state: z
-        .enum(['open', 'closed', 'all'])
+      status: z
+        .enum(['open', 'in_progress', 'review', 'closed', 'all'])
         .optional()
-        .describe('Filter by issue state (default open).'),
-      label: z.string().optional().describe('Only return issues carrying this label name.'),
-      assignee_id: z.string().optional().describe('Only return issues assigned to this user id.'),
+        .describe('Filter by issue status (default open).'),
+      kind: z.enum(['bug', 'feat', 'chore', 'docs']).optional().describe('Filter by issue kind.'),
+      assignee_id: z
+        .string()
+        .optional()
+        .describe('Assignee UUID, or "me" for the authenticated user.'),
       limit: z
         .number()
         .int()
         .min(1)
-        .max(100)
+        .max(200)
         .optional()
-        .describe('Max issues to return (default 30).'),
+        .describe('Max issues to return (default 50).'),
     },
-    async ({ org_slug, project_slug, state, label, assignee_id, limit }) => {
+    async ({ project_slug, status, kind, assignee_id, limit }) => {
       const token = await getToken();
       const params = new URLSearchParams();
-      if (state) params.set('state', state);
-      if (label) params.set('label', label);
-      if (assignee_id) params.set('assignee_id', assignee_id);
+      if (status) params.set('status', status);
+      if (kind) params.set('kind', kind);
+      if (assignee_id) params.set('assignee', assignee_id);
       if (limit !== undefined) params.set('limit', String(limit));
       const qs = params.toString() ? `?${params.toString()}` : '';
-      const issues = await apiRequest<IssueSummary[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/issues${qs}`,
-        { token },
+      const issues = await apiRequest<Issue[]>(
+        `/v1/projects/${encodeURIComponent(project_slug)}/issues${qs}`,
+        { token, baseUrl: TRACK_API_URL },
       );
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(issues, null, 2) }],
@@ -54,25 +62,30 @@ export function registerIssueTools(server: McpServer) {
 
   server.tool(
     'create_issue',
-    'Create a new FerrTrack issue. Returns the newly assigned issue number.',
+    'Create a new FerrTrack issue in a project. Returns the new issue including its `ref` (e.g. "FT-12").',
     {
-      org_slug: z.string().min(1).describe('Organization slug'),
       project_slug: z.string().min(1).describe('Project slug'),
-      title: z.string().min(1).max(255).describe('Issue title'),
-      body: z.string().optional().describe('Issue body (markdown).'),
-      labels: z.array(z.string()).optional().describe('Label names to apply on creation.'),
-      assignee_id: z.string().optional().describe('User id to assign on creation.'),
+      title: z.string().min(1).max(200).describe('Issue title'),
+      body: z.string().max(100_000).optional().describe('Issue body (markdown).'),
+      kind: z
+        .enum(['bug', 'feat', 'chore', 'docs'])
+        .optional()
+        .describe('Issue kind (default feat).'),
+      labels: z.array(z.string()).optional().describe('Label strings to apply on creation.'),
+      assignee_id: z.string().uuid().optional().describe('User UUID to assign on creation.'),
     },
-    async ({ org_slug, project_slug, title, body, labels, assignee_id }) => {
+    async ({ project_slug, title, body, kind, labels, assignee_id }) => {
       const token = await getToken();
-      const issue = await apiRequest<IssueSummary>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/issues`,
+      const issue = await apiRequest<Issue>(
+        `/v1/projects/${encodeURIComponent(project_slug)}/issues`,
         {
           token,
+          baseUrl: TRACK_API_URL,
           method: 'POST',
           body: {
             title,
-            body: body ?? null,
+            body: body ?? '',
+            kind: kind ?? 'feat',
             labels: labels ?? [],
             assignee_id: assignee_id ?? null,
           },
@@ -86,27 +99,33 @@ export function registerIssueTools(server: McpServer) {
 
   server.tool(
     'update_issue',
-    'Patch a FerrTrack issue — change title/body, flip state (open↔closed), or update labels/assignee. Only fields you pass are touched.',
+    'Patch a FerrTrack issue — change title/body/status/kind, edit labels, or set/clear assignee. Only fields you pass are touched.',
     {
-      org_slug: z.string().min(1).describe('Organization slug'),
-      project_slug: z.string().min(1).describe('Project slug'),
-      number: z.number().int().min(1).describe('Issue number'),
-      title: z.string().min(1).max(255).optional(),
-      body: z.string().optional(),
-      state: z.enum(['open', 'closed']).optional(),
+      issue_ref: z.string().min(1).describe('Issue ref, e.g. "FT-12"'),
+      title: z.string().min(1).max(200).optional(),
+      body: z.string().max(100_000).optional(),
+      status: z.enum(['open', 'in_progress', 'review', 'closed']).optional(),
+      kind: z.enum(['bug', 'feat', 'chore', 'docs']).optional(),
       labels: z.array(z.string()).optional(),
-      assignee_id: z.string().nullable().optional().describe('Pass null to unassign.'),
+      assignee_id: z
+        .string()
+        .uuid()
+        .nullable()
+        .optional()
+        .describe('User UUID; pass null to unassign.'),
     },
-    async ({ org_slug, project_slug, number, ...patch }) => {
+    async ({ issue_ref, ...patch }) => {
       const token = await getToken();
       const body: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const issue = await apiRequest<IssueSummary>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/issues/${number}`,
-        { token, method: 'PATCH', body },
-      );
+      const issue = await apiRequest<Issue>(`/v1/issues/${encodeURIComponent(issue_ref)}`, {
+        token,
+        baseUrl: TRACK_API_URL,
+        method: 'PATCH',
+        body,
+      });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(issue, null, 2) }],
       };
