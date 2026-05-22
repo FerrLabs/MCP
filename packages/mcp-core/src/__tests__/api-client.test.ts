@@ -1,8 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiRequest } from '../api-client.js';
+import { apiRequest, UnauthorizedError } from '../api-client.js';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
+
+const clearPersistedTokenMock = vi.fn();
+const clearTokenCacheMock = vi.fn();
+vi.mock('../auth/persistence.js', () => ({
+  clearPersistedToken: () => clearPersistedTokenMock(),
+}));
+vi.mock('../auth/index.js', () => ({
+  clearTokenCache: () => clearTokenCacheMock(),
+}));
 
 function makeResponse(body: unknown, status = 200): Response {
   const text = body === undefined ? '' : JSON.stringify(body);
@@ -17,6 +26,8 @@ function makeResponse(body: unknown, status = 200): Response {
 describe('apiRequest', () => {
   beforeEach(() => {
     mockFetch.mockReset();
+    clearPersistedTokenMock.mockReset();
+    clearTokenCacheMock.mockReset();
   });
 
   it('makes a GET request and returns parsed JSON', async () => {
@@ -57,5 +68,21 @@ describe('apiRequest', () => {
     await apiRequest('/v1/auth/tokens', { method: 'POST', body: { name: 'ci', scopes: ['*'] } });
     const [, init] = mockFetch.mock.calls[0];
     expect(init.body).toBe(JSON.stringify({ name: 'ci', scopes: ['*'] }));
+  });
+
+  it('clears persisted token and cache on 401 with a token', async () => {
+    mockFetch.mockResolvedValue(makeResponse({ error: 'unauthorized' }, 401));
+    await expect(apiRequest('/v1/orgs', { token: 'stale' })).rejects.toBeInstanceOf(
+      UnauthorizedError,
+    );
+    expect(clearPersistedTokenMock).toHaveBeenCalledOnce();
+    expect(clearTokenCacheMock).toHaveBeenCalledOnce();
+  });
+
+  it('does not clear persisted token on 401 without a token', async () => {
+    mockFetch.mockResolvedValue(makeResponse({ error: 'unauthorized' }, 401));
+    await expect(apiRequest('/v1/orgs')).rejects.toThrow('unauthorized');
+    expect(clearPersistedTokenMock).not.toHaveBeenCalled();
+    expect(clearTokenCacheMock).not.toHaveBeenCalled();
   });
 });

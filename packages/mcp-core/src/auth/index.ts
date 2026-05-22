@@ -46,7 +46,9 @@ export async function getToken(): Promise<string> {
   return inFlight;
 }
 
-export function resetTokenCacheForTesting(): void {
+export function clearTokenCache(): void {
   cached = null;
   inFlight = null;
 }
+
+export const resetTokenCacheForTesting = clearTokenCache;

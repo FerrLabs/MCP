@@ -1,3 +1,6 @@
+import { clearPersistedToken } from './auth/persistence.js';
+import { clearTokenCache } from './auth/index.js';
+
 const DEFAULT_API_URL = process.env.API_URL ?? 'https://api.ferrlabs.com';
 
 interface RequestOptions {
@@ -10,6 +13,13 @@ interface RequestOptions {
    * tool call. Falls back to `API_URL` env var, then `api.ferrlabs.com`.
    */
   baseUrl?: string;
+}
+
+export class UnauthorizedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -34,6 +44,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (res.status === 204) {
     return undefined as T;
+  }
+
+  if (res.status === 401 && token) {
+    await clearPersistedToken();
+    clearTokenCache();
+    throw new UnauthorizedError(
+      'Stored token rejected by the FerrLabs API (likely revoked, expired, or issued under an incompatible format). The token has been cleared — retry the call to trigger a fresh OAuth login.',
+    );
   }
 
   const raw = await res.text();
