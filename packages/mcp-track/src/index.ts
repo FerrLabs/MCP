@@ -2,16 +2,16 @@
 import { runMcp } from '@ferrlabs/mcp-core';
 import { registerIssueDetailsTool } from './tools/issue-details.js';
 import { registerIssueTools } from './tools/issues.js';
-import { registerLabelTools } from './tools/labels.js';
 import { registerCommentTools } from './tools/comments.js';
+import { registerProjectTools } from './tools/projects.js';
 
 runMcp({
   name: 'ferrlabs-track',
   version: '6.0.0',
   register: (server) => {
+    registerProjectTools(server);
     registerIssueDetailsTool(server);
     registerIssueTools(server);
-    registerLabelTools(server);
     registerCommentTools(server);
   },
 }).catch((err: unknown) => {
