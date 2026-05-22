@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 import { runMcp } from '@ferrlabs/mcp-core';
 import { registerVaultDetailsTool } from './tools/vault-details.js';
+import { registerSecretTools } from './tools/secrets.js';
+import { registerVaultAuditTools } from './tools/audit.js';
+import { registerVaultMutationTools } from './tools/vaults.js';
 
 runMcp({
   name: 'ferrlabs-vault',
   version: '5.2.5',
   register: (server) => {
     registerVaultDetailsTool(server);
+    registerSecretTools(server);
+    registerVaultAuditTools(server);
+    registerVaultMutationTools(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrlabs-mcp-vault fatal:', err instanceof Error ? err.message : err);

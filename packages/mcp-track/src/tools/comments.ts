@@ -30,4 +30,25 @@ export function registerCommentTools(server: McpServer) {
       };
     },
   );
+
+  server.tool(
+    'create_issue_comment',
+    'Post a new comment on a FerrTrack issue. Body supports markdown.',
+    {
+      org_slug: z.string().min(1).describe('Organization slug'),
+      project_slug: z.string().min(1).describe('Project slug'),
+      number: z.number().int().min(1).describe('Issue number'),
+      body: z.string().min(1).describe('Comment body (markdown).'),
+    },
+    async ({ org_slug, project_slug, number, body }) => {
+      const token = await getToken();
+      const comment = await apiRequest<Comment>(
+        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/issues/${number}/comments`,
+        { token, method: 'POST', body: { body } },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(comment, null, 2) }],
+      };
+    },
+  );
 }

@@ -40,7 +40,7 @@ export function registerRunTools(server: McpServer) {
 
   server.tool(
     'get_run',
-    'Get details + transcript of a single FerrFleet run.',
+    'Get the metadata of a single FerrFleet run (status, timing, agent, trigger). Use get_run_transcript for the captured output.',
     {
       run_id: z.string().min(1).describe('Run id'),
     },
@@ -52,6 +52,24 @@ export function registerRunTools(server: McpServer) {
       });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(run, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    'get_run_transcript',
+    'Get the full captured transcript of a FerrFleet run — every event the runner emitted, in order. Heavy for long runs; consider get_run first to confirm the run is interesting before pulling the transcript.',
+    {
+      run_id: z.string().min(1).describe('Run id'),
+    },
+    async ({ run_id }) => {
+      const token = await getToken();
+      const transcript = await apiRequest<unknown>(
+        `/v1/runs/${encodeURIComponent(run_id)}/transcript`,
+        { token, baseUrl: FLEET_API_URL },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(transcript, null, 2) }],
       };
     },
   );
