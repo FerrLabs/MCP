@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { runMcp } from '@ferrlabs/mcp-core';
 import { registerIssueDetailsTool } from './tools/issue-details.js';
+import { registerIssueTools } from './tools/issues.js';
 import { registerLabelTools } from './tools/labels.js';
 import { registerCommentTools } from './tools/comments.js';
 
@@ -9,6 +10,7 @@ runMcp({
   version: '6.0.0',
   register: (server) => {
     registerIssueDetailsTool(server);
+    registerIssueTools(server);
     registerLabelTools(server);
     registerCommentTools(server);
   },

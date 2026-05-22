@@ -43,4 +43,36 @@ export function registerAgentTools(server: McpServer) {
       };
     },
   );
+
+  server.tool(
+    'trigger_agent_run',
+    'Trigger a new run of a FerrFleet agent. Returns the freshly-created run id — poll get_run for status or pull get_run_transcript when finished.',
+    {
+      agent_id: z.string().min(1).describe('Agent id'),
+      input: z
+        .record(z.string(), z.unknown())
+        .optional()
+        .describe('Optional structured input passed to the agent at run start.'),
+      reason: z
+        .string()
+        .max(500)
+        .optional()
+        .describe('Free-text reason recorded with the run (audit trail).'),
+    },
+    async ({ agent_id, input, reason }) => {
+      const token = await getToken();
+      const run = await apiRequest<{ id: string; status: string; created_at: string }>(
+        `/v1/agents/${encodeURIComponent(agent_id)}/runs`,
+        {
+          token,
+          method: 'POST',
+          baseUrl: FLEET_API_URL,
+          body: { input: input ?? {}, reason: reason ?? null },
+        },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(run, null, 2) }],
+      };
+    },
+  );
 }
