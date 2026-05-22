@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.2.2] - 2026-05-22
+
+### Bug Fixes
+
+- fix(mcp-core): clear persisted token + cache on 401 and retry OAuth on next call (#139)
+
 ## [6.2.1] - 2026-05-22
 
 ### Bug Fixes
