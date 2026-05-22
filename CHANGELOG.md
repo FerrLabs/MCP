@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.3.1] - 2026-05-22
+
+### Bug Fixes
+
+- fix(mcp-track): hit api.ferrtrack.com with real route shapes; add project tools (#147)
+
 ## [6.3.0] - 2026-05-22
 
 ### Features
