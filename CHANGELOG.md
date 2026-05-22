@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.3.0] - 2026-05-22
+
+### Features
+
+- feat(mcp): broaden sub-MCP tool surfaces across vault, track, growth, fleet (#145)
+
 ## [6.2.2] - 2026-05-22
 
 ### Bug Fixes
