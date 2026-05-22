@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.2.1] - 2026-05-22
+
+### Bug Fixes
+
+- fix(http): point OAuth discovery at api.ferrlabs.com (auth.ferrlabs.com is the SPA, not metadata) (#136)
+
 ## [6.2.0] - 2026-05-21
 
 ### Features
