@@ -147,7 +147,29 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
     await runWithAuthContext({ bearerToken }, () => transport.handleRequest(req, res, body));
   }
 
+  function applyCorsHeaders(req: IncomingMessage, res: ServerResponse): void {
+    const origin = (req.headers.origin as string | undefined) ?? '*';
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    const requested =
+      (req.headers['access-control-request-headers'] as string | undefined) ??
+      'authorization, content-type, mcp-session-id, mcp-protocol-version';
+    res.setHeader('Access-Control-Allow-Headers', requested);
+    res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id, www-authenticate');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+
   const httpServer = createHttpServer((req, res) => {
+    applyCorsHeaders(req, res);
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
     const url = req.url ?? '/';
     if (url === '/health' || url === '/livez' || url === '/readyz') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
