@@ -5,6 +5,7 @@ import { registerPageTools } from './tools/pages.js';
 import { registerFormTools } from './tools/forms.js';
 import { registerAnalyticsTools } from './tools/analytics.js';
 import { registerSeoTools } from './tools/seo.js';
+import { registerReleaseTools } from './tools/releases.js';
 
 runMcp({
   name: 'ferrlabs-growth',
@@ -15,6 +16,7 @@ runMcp({
     registerFormTools(server);
     registerAnalyticsTools(server);
     registerSeoTools(server);
+    registerReleaseTools(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrlabs-mcp-growth fatal:', err instanceof Error ? err.message : err);

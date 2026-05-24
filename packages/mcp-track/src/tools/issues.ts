@@ -131,4 +131,22 @@ export function registerIssueTools(server: McpServer) {
       };
     },
   );
+
+  server.tool(
+    'list_issue_links',
+    'List GitHub PR ↔ FerrTrack issue links for one issue (created by the GitHub webhook on push).',
+    {
+      issue_ref: z.string().min(1).describe('Issue ref, e.g. "FT-12"'),
+    },
+    async ({ issue_ref }) => {
+      const token = await getToken();
+      const links = await apiRequest<unknown>(`/v1/issues/${encodeURIComponent(issue_ref)}/links`, {
+        token,
+        baseUrl: TRACK_API_URL,
+      });
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(links, null, 2) }],
+      };
+    },
+  );
 }

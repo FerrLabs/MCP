@@ -65,4 +65,91 @@ export function registerFormTools(server: McpServer) {
       };
     },
   );
+
+  server.tool(
+    'create_form',
+    'Create a new form on a FerrGrowth site. Fields are typed; submissions land in list_form_submissions.',
+    {
+      site_id: z.string().min(1).describe('Site id or slug'),
+      name: z.string().min(1).max(100),
+      fields: z
+        .array(
+          z.object({
+            name: z
+              .string()
+              .min(1)
+              .max(80)
+              .regex(/^[a-z][a-z0-9_]*$/, 'snake_case identifier'),
+            type: z.enum(['text', 'email', 'phone', 'textarea', 'select', 'checkbox', 'number']),
+            required: z.boolean().optional(),
+          }),
+        )
+        .min(1)
+        .describe('Form schema — at least one field.'),
+    },
+    async ({ site_id, name, fields }) => {
+      const token = await getToken();
+      const form = await apiRequest<Form>(`/v1/sites/${encodeURIComponent(site_id)}/forms`, {
+        token,
+        baseUrl: GROWTH_API_URL,
+        method: 'POST',
+        body: { name, fields },
+      });
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(form, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    'update_form',
+    'Patch a FerrGrowth form — rename it or replace the field schema. Only fields you pass are touched.',
+    {
+      site_id: z.string().min(1).describe('Site id or slug'),
+      form_id: z.string().min(1).describe('Form id'),
+      name: z.string().min(1).max(100).optional(),
+      fields: z
+        .array(
+          z.object({
+            name: z.string().min(1).max(80),
+            type: z.enum(['text', 'email', 'phone', 'textarea', 'select', 'checkbox', 'number']),
+            required: z.boolean().optional(),
+          }),
+        )
+        .optional(),
+    },
+    async ({ site_id, form_id, ...patch }) => {
+      const token = await getToken();
+      const body: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (v !== undefined) body[k] = v;
+      }
+      const form = await apiRequest<Form>(
+        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
+        { token, baseUrl: GROWTH_API_URL, method: 'PATCH', body },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(form, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    'delete_form',
+    'Delete a FerrGrowth form. Existing submissions are kept in the audit table; the form definition is removed.',
+    {
+      site_id: z.string().min(1).describe('Site id or slug'),
+      form_id: z.string().min(1).describe('Form id'),
+    },
+    async ({ site_id, form_id }) => {
+      const token = await getToken();
+      await apiRequest<void>(
+        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
+        { token, baseUrl: GROWTH_API_URL, method: 'DELETE' },
+      );
+      return {
+        content: [{ type: 'text' as const, text: `Form ${form_id} deleted.` }],
+      };
+    },
+  );
 }
