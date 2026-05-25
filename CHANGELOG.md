@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.4.0] - 2026-05-25
+
+### Features
+
+- feat(mcp): round out CRUD across vault, track, growth sub-MCPs (#150)
+
 ## [6.3.3] - 2026-05-25
 
 ### Bug Fixes
