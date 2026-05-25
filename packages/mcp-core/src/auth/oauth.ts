@@ -47,8 +47,30 @@ interface CallbackResult {
   state: string;
 }
 
-function listenForCallback(port: number, expectedState: string): Promise<CallbackResult> {
-  return new Promise((resolve, reject) => {
+interface BoundListener {
+  port: number;
+  callback: Promise<CallbackResult>;
+}
+
+/**
+ * Bind a loopback HTTP listener on `port` and return a resolved promise
+ * only once the socket is actually `listening`. Rejects with the bind
+ * error (e.g. `EADDRINUSE`) before returning, so callers can synchronously
+ * fall back to a different port via `await` + `try/catch`.
+ *
+ * The returned `callback` promise lives for the duration of the OAuth
+ * flow and resolves when `/cb` is hit with a matching `state`, or rejects
+ * on CSRF mismatch / internal error.
+ */
+function bindCallbackListener(port: number, expectedState: string): Promise<BoundListener> {
+  return new Promise((resolveBound, rejectBound) => {
+    let resolveCallback!: (result: CallbackResult) => void;
+    let rejectCallback!: (err: Error) => void;
+    const callback = new Promise<CallbackResult>((res, rej) => {
+      resolveCallback = res;
+      rejectCallback = rej;
+    });
+
     const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       try {
         const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
@@ -64,7 +86,7 @@ function listenForCallback(port: number, expectedState: string): Promise<Callbac
         }
         if (state !== expectedState) {
           res.writeHead(400).end('state mismatch');
-          reject(new Error('OAuth callback state mismatch (CSRF protection triggered)'));
+          rejectCallback(new Error('OAuth callback state mismatch (CSRF protection triggered)'));
           server.close();
           return;
         }
@@ -73,13 +95,27 @@ function listenForCallback(port: number, expectedState: string): Promise<Callbac
           "<!doctype html><html><body style='font-family:sans-serif;padding:2rem;color:#1e293b'><h1>Authorized</h1><p>You can close this tab and return to your terminal.</p></body></html>",
         );
         setImmediate(() => server.close());
-        resolve({ code, state });
+        resolveCallback({ code, state });
       } catch (err) {
         res.writeHead(500).end('Internal error');
-        reject(err instanceof Error ? err : new Error(String(err)));
+        rejectCallback(err instanceof Error ? err : new Error(String(err)));
       }
     });
-    server.on('error', reject);
+
+    const onBindError = (err: Error) => {
+      server.removeListener('listening', onListening);
+      rejectBound(err);
+    };
+    const onListening = () => {
+      server.removeListener('error', onBindError);
+      // Once bound successfully, route runtime errors into the callback
+      // promise (e.g. unexpected close after we've started serving).
+      server.on('error', (err) => rejectCallback(err));
+      resolveBound({ port, callback });
+    };
+
+    server.once('error', onBindError);
+    server.once('listening', onListening);
     server.listen(port, '127.0.0.1');
   });
 }
@@ -115,26 +151,35 @@ export interface RunLoopbackFlowResult {
   scope?: string;
 }
 
+export const __testOnly = {
+  bindCallbackListener,
+};
+
 export async function runLoopbackOauthFlow(): Promise<RunLoopbackFlowResult> {
   const pkce = generatePkcePair();
   const state = generateState();
 
-  let port: number | null = null;
-  let callbackPromise: Promise<CallbackResult> | null = null;
+  let bound: BoundListener | null = null;
+  const bindErrors: Array<{ port: number; error: string }> = [];
   for (const candidate of REDIRECT_PORTS) {
     try {
-      callbackPromise = listenForCallback(candidate, state);
-      port = candidate;
+      // eslint-disable-next-line no-await-in-loop -- intentional: probe ports sequentially
+      bound = await bindCallbackListener(candidate, state);
       break;
-    } catch {
-      callbackPromise = null;
+    } catch (err) {
+      bindErrors.push({
+        port: candidate,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
-  if (port === null || !callbackPromise) {
+  if (!bound) {
+    const detail = bindErrors.map((e) => `${e.port}: ${e.error}`).join('; ');
     throw new Error(
-      `Could not bind any of the loopback ports (${REDIRECT_PORTS.join(', ')}). Close whatever is using them and retry.`,
+      `Could not bind any of the loopback ports (${REDIRECT_PORTS.join(', ')}). ${detail}. Close whatever is holding the ports (commonly an MCP subprocess from another Claude session stuck in OAuth), then retry.`,
     );
   }
+  const { port, callback: callbackPromise } = bound;
 
   const redirectUri = `http://127.0.0.1:${port}/cb`;
   const authorizeUrl = new URL(`${AUTH_BASE}/authorize`);

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { generatePkcePair } from '../oauth.js';
+import { generatePkcePair, __testOnly } from '../oauth.js';
 import { createHash } from 'node:crypto';
+import { createServer, type Server } from 'node:http';
 
 describe('generatePkcePair', () => {
   it('returns a verifier between 43 and 128 chars (RFC 7636)', () => {
@@ -26,5 +27,46 @@ describe('generatePkcePair', () => {
     const { verifier, challenge } = generatePkcePair();
     expect(verifier).toMatch(/^[A-Za-z0-9_-]+$/);
     expect(challenge).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+});
+
+function closeServer(server: Server): Promise<void> {
+  return new Promise((resolve) => server.close(() => resolve()));
+}
+
+async function freePort(): Promise<number> {
+  const probe = createServer();
+  await new Promise<void>((resolve) => probe.listen(0, '127.0.0.1', () => resolve()));
+  const addr = probe.address();
+  const port = typeof addr === 'object' && addr ? addr.port : 0;
+  await closeServer(probe);
+  return port;
+}
+
+describe('bindCallbackListener (port fallback)', () => {
+  it('rejects synchronously with EADDRINUSE when the port is already bound', async () => {
+    const port = await freePort();
+    const squatter = createServer();
+    await new Promise<void>((resolve) => squatter.listen(port, '127.0.0.1', () => resolve()));
+
+    try {
+      await expect(__testOnly.bindCallbackListener(port, 'st')).rejects.toThrow(/EADDRINUSE/);
+    } finally {
+      await closeServer(squatter);
+    }
+  });
+
+  it('resolves with the bound port when the socket is free', async () => {
+    const port = await freePort();
+    const bound = await __testOnly.bindCallbackListener(port, 'st');
+    expect(bound.port).toBe(port);
+    // Attach a catch handler *before* triggering the rejection so the
+    // unhandled-rejection guard in vitest stays quiet.
+    const callbackSettled = bound.callback.catch((err: Error) => err);
+    const res = await fetch(`http://127.0.0.1:${port}/cb?code=x&state=wrong`);
+    expect(res.status).toBe(400);
+    const settled = await callbackSettled;
+    expect(settled).toBeInstanceOf(Error);
+    expect((settled as Error).message).toMatch(/state mismatch/);
   });
 });
