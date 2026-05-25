@@ -10,6 +10,10 @@ interface VaultSummary {
   updated_at: string;
 }
 
+function vaultBase(org_slug: string, project_slug: string, vault_id: string): string {
+  return `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}`;
+}
+
 export function registerVaultMutationTools(server: McpServer) {
   server.tool(
     'create_vault',
@@ -24,14 +28,57 @@ export function registerVaultMutationTools(server: McpServer) {
       const token = await getToken();
       const vault = await apiRequest<VaultSummary>(
         `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults`,
-        {
-          token,
-          method: 'POST',
-          body: { name, description: description ?? null },
-        },
+        { token, method: 'POST', body: { name, description: description ?? null } },
       );
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(vault, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    'update_vault',
+    'Patch a vault — rename it or change its description. Only the fields you pass are touched.',
+    {
+      org_slug: z.string().min(1).describe('Organization slug'),
+      project_slug: z.string().min(1).describe('Project slug'),
+      vault_id: z.string().min(1).describe('Vault id'),
+      name: z.string().min(1).max(100).optional(),
+      description: z.string().max(500).nullable().optional(),
+    },
+    async ({ org_slug, project_slug, vault_id, ...patch }) => {
+      const token = await getToken();
+      const body: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (v !== undefined) body[k] = v;
+      }
+      const vault = await apiRequest<VaultSummary>(vaultBase(org_slug, project_slug, vault_id), {
+        token,
+        method: 'PATCH',
+        body,
+      });
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(vault, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    'delete_vault',
+    'Delete a vault and ALL its secrets. Irreversible. The server enforces a soft-delete window; check the FerrVault UI to confirm.',
+    {
+      org_slug: z.string().min(1).describe('Organization slug'),
+      project_slug: z.string().min(1).describe('Project slug'),
+      vault_id: z.string().min(1).describe('Vault id'),
+    },
+    async ({ org_slug, project_slug, vault_id }) => {
+      const token = await getToken();
+      await apiRequest<void>(vaultBase(org_slug, project_slug, vault_id), {
+        token,
+        method: 'DELETE',
+      });
+      return {
+        content: [{ type: 'text' as const, text: `Vault ${vault_id} deleted.` }],
       };
     },
   );

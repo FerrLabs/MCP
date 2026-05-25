@@ -48,4 +48,43 @@ export function registerCommentTools(server: McpServer) {
       };
     },
   );
+
+  server.tool(
+    'update_issue_comment',
+    'Edit a comment you authored on a FerrTrack issue.',
+    {
+      issue_ref: z.string().min(1).describe('Issue ref, e.g. "FT-12"'),
+      comment_id: z.string().min(1).describe('Comment id'),
+      body: z.string().min(1).describe('New comment body (markdown).'),
+    },
+    async ({ issue_ref, comment_id, body }) => {
+      const token = await getToken();
+      const comment = await apiRequest<Comment>(
+        `/v1/issues/${encodeURIComponent(issue_ref)}/comments/${encodeURIComponent(comment_id)}`,
+        { token, baseUrl: TRACK_API_URL, method: 'PATCH', body: { body } },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(comment, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
+    'delete_issue_comment',
+    'Delete a comment you authored on a FerrTrack issue.',
+    {
+      issue_ref: z.string().min(1).describe('Issue ref, e.g. "FT-12"'),
+      comment_id: z.string().min(1).describe('Comment id'),
+    },
+    async ({ issue_ref, comment_id }) => {
+      const token = await getToken();
+      await apiRequest<void>(
+        `/v1/issues/${encodeURIComponent(issue_ref)}/comments/${encodeURIComponent(comment_id)}`,
+        { token, baseUrl: TRACK_API_URL, method: 'DELETE' },
+      );
+      return {
+        content: [{ type: 'text' as const, text: `Comment ${comment_id} deleted.` }],
+      };
+    },
+  );
 }

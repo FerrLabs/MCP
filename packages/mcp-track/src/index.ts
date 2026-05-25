@@ -4,6 +4,9 @@ import { registerIssueDetailsTool } from './tools/issue-details.js';
 import { registerIssueTools } from './tools/issues.js';
 import { registerCommentTools } from './tools/comments.js';
 import { registerProjectTools } from './tools/projects.js';
+import { registerCycleTools } from './tools/cycles.js';
+import { registerMilestoneTools } from './tools/milestones.js';
+import { registerSearchTools } from './tools/search.js';
 
 runMcp({
   name: 'ferrlabs-track',
@@ -13,6 +16,9 @@ runMcp({
     registerIssueDetailsTool(server);
     registerIssueTools(server);
     registerCommentTools(server);
+    registerCycleTools(server);
+    registerMilestoneTools(server);
+    registerSearchTools(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrlabs-mcp-track fatal:', err instanceof Error ? err.message : err);
