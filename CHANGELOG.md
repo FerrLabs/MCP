@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.3.3] - 2026-05-25
+
+### Bug Fixes
+
+- fix(mcp-core): port-fallback works on EADDRINUSE (was async-reject vs sync try/catch) (#153)
+
 ## [6.3.2] - 2026-05-23
 
 ### Bug Fixes
