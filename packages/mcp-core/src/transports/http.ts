@@ -22,6 +22,22 @@ function publicOrigin(req: IncomingMessage): string {
   return `${proto}://${host}`;
 }
 
+const UNAUTHORIZED_DESCRIPTION =
+  'Missing or invalid bearer token. Fetch the OAuth protected-resource metadata and run the authorization code + PKCE flow.';
+
+export function unauthorizedChallenge(metadataUrl: string): {
+  wwwAuthenticate: string;
+  body: string;
+} {
+  return {
+    wwwAuthenticate: `Bearer error="invalid_token", error_description="${UNAUTHORIZED_DESCRIPTION}", resource_metadata="${metadataUrl}"`,
+    body: JSON.stringify({
+      error: 'invalid_token',
+      error_description: UNAUTHORIZED_DESCRIPTION,
+    }),
+  };
+}
+
 export interface HttpServerOptions {
   port: number;
   host?: string;
@@ -69,22 +85,14 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
 
   function sendUnauthorized(req: IncomingMessage, res: ServerResponse): void {
     const origin = publicOrigin(req);
-    const metadataUrl = `${origin}/.well-known/oauth-protected-resource`;
+    const { wwwAuthenticate, body } = unauthorizedChallenge(
+      `${origin}/.well-known/oauth-protected-resource`,
+    );
     res.writeHead(401, {
       'Content-Type': 'application/json',
-      'WWW-Authenticate': `Bearer resource_metadata="${metadataUrl}"`,
+      'WWW-Authenticate': wwwAuthenticate,
     });
-    res.end(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        error: {
-          code: -32001,
-          message:
-            'Missing or invalid bearer token. The MCP client should fetch the OAuth protected-resource metadata and run the authorization code + PKCE flow.',
-        },
-        id: null,
-      }),
-    );
+    res.end(body);
   }
 
   function sendResourceMetadata(req: IncomingMessage, res: ServerResponse): void {
