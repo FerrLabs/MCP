@@ -78,4 +78,28 @@ export function registerProjectTools(server: McpServer) {
       };
     },
   );
+
+  server.tool(
+    'update_project',
+    'Patch a FerrTrack project — rename it or update its summary. Slug and prefix are immutable to keep issue refs stable.',
+    {
+      project_slug: z.string().min(1).describe('Project slug'),
+      name: z.string().min(1).max(100).optional(),
+      summary: z.string().max(500).nullable().optional(),
+    },
+    async ({ project_slug, ...patch }) => {
+      const token = await getToken();
+      const body: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (v !== undefined) body[k] = v;
+      }
+      const project = await apiRequest<Project>(
+        `/v1/projects/${encodeURIComponent(project_slug)}`,
+        { token, baseUrl: TRACK_API_URL, method: 'PATCH', body },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(project, null, 2) }],
+      };
+    },
+  );
 }

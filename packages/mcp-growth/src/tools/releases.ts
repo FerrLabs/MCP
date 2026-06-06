@@ -13,6 +13,25 @@ interface Release {
 
 export function registerReleaseTools(server: McpServer) {
   server.tool(
+    'get_release',
+    'Get details of a single FerrGrowth release (build metadata, size, active flag).',
+    {
+      site_id: z.string().min(1).describe('Site id or slug'),
+      release_id: z.string().min(1).describe('Release id'),
+    },
+    async ({ site_id, release_id }) => {
+      const token = await getToken();
+      const release = await apiRequest<Release>(
+        `/v1/sites/${encodeURIComponent(site_id)}/releases/${encodeURIComponent(release_id)}`,
+        { token, baseUrl: GROWTH_API_URL },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(release, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
     'list_releases',
     'List bundle releases of a FerrGrowth site (built artefacts). The one with `active: true` is the one currently served.',
     {

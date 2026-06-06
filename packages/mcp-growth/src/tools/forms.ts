@@ -22,6 +22,25 @@ interface FormSubmission {
 
 export function registerFormTools(server: McpServer) {
   server.tool(
+    'get_form',
+    'Get the schema of a single FerrGrowth form (fields, validation, name).',
+    {
+      site_id: z.string().min(1).describe('Site id or slug'),
+      form_id: z.string().min(1).describe('Form id'),
+    },
+    async ({ site_id, form_id }) => {
+      const token = await getToken();
+      const form = await apiRequest<Form>(
+        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
+        { token, baseUrl: GROWTH_API_URL },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(form, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
     'list_forms',
     'List forms attached to a FerrGrowth site.',
     {

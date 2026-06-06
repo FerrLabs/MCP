@@ -15,6 +15,24 @@ interface Milestone {
 
 export function registerMilestoneTools(server: McpServer) {
   server.tool(
+    'get_milestone',
+    'Get a single FerrTrack milestone by id.',
+    {
+      milestone_id: z.string().min(1).describe('Milestone id'),
+    },
+    async ({ milestone_id }) => {
+      const token = await getToken();
+      const milestone = await apiRequest<Milestone>(
+        `/v1/milestones/${encodeURIComponent(milestone_id)}`,
+        { token, baseUrl: TRACK_API_URL },
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(milestone, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
     'list_milestones',
     'List milestones for a FerrTrack project.',
     {
