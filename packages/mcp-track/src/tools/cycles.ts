@@ -24,6 +24,24 @@ interface CycleIssue {
 
 export function registerCycleTools(server: McpServer) {
   server.tool(
+    'get_cycle',
+    'Get a single FerrTrack cycle by id.',
+    {
+      cycle_id: z.string().min(1).describe('Cycle id'),
+    },
+    async ({ cycle_id }) => {
+      const token = await getToken();
+      const cycle = await apiRequest<Cycle>(`/v1/cycles/${encodeURIComponent(cycle_id)}`, {
+        token,
+        baseUrl: TRACK_API_URL,
+      });
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(cycle, null, 2) }],
+      };
+    },
+  );
+
+  server.tool(
     'list_cycles',
     'List cycles (sprints) for a FerrTrack project.',
     {
