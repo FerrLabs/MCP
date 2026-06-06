@@ -18,7 +18,6 @@ jobs:
     uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@main
     with:
       enable-sonar: true
-      runner: ubuntu-latest
       install-args: ''
       enable-lint: false
       enable-knip: false
