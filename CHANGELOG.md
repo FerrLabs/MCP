@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.4.1] - 2026-06-06
+
+### Bug Fixes
+
+- fix(http): emit RFC 6749 OAuth error body on 401 so mcp-remote can authenticate (#164)
+
 ## [6.4.0] - 2026-05-25
 
 ### Features
