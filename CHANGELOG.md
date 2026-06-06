@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.5.0] - 2026-06-06
+
+### Features
+
+- feat(mcp): admin tools — org/members/teams/billing/sessions/profile + gets/updates (#165)
+
 ## [6.4.1] - 2026-06-06
 
 ### Bug Fixes
