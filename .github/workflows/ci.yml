@@ -20,9 +20,9 @@ jobs:
       enable-sonar: true
       install-args: ''
       enable-lint: false
-      enable-knip: false
-      enable-madge: false
-      enable-audit: false
+      enable-knip: true
+      enable-madge: true
+      enable-audit: true
     secrets: inherit
 
   release:
