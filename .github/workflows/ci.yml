@@ -22,6 +22,7 @@ jobs:
       enable-lint: false
       enable-knip: true
       enable-madge: true
+      madge-paths: packages/*/src
       enable-audit: true
     secrets: inherit
 
