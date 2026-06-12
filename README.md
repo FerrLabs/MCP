@@ -1,8 +1,8 @@
 # FerrLabs MCP Server
 
 [![npm](https://img.shields.io/npm/v/@ferrlabs/mcp)](https://www.npmjs.com/package/@ferrlabs/mcp)
-[![Quality Gate](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=alert_status&token=sqb_df3c6923234b4dc9cc88fdd1b251c8a54c3b7903)](https://sonar.ferrlabs.com/dashboard?id=MCP)
-[![Coverage](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=coverage&token=sqb_df3c6923234b4dc9cc88fdd1b251c8a54c3b7903)](https://sonar.ferrlabs.com/dashboard?id=MCP)
+[![Quality Gate](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=alert_status)](https://sonar.ferrlabs.com/dashboard?id=MCP)
+[![Coverage](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=coverage)](https://sonar.ferrlabs.com/dashboard?id=MCP)
 [![License](https://img.shields.io/github/license/FerrLabs/MCP)](LICENSE)
 
 [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with the FerrLabs ecosystem (FerrFlow, FerrVault, FerrTrack, FerrGrowth, FerrFleet, FerrLens) through the unified FerrLabs API. Runs locally via stdio transport.
