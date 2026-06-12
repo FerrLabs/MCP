@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runMcp } from '@ferrlabs/mcp-core';
+import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
 import { registerSiteTools } from './tools/sites.js';
 import { registerPageTools } from './tools/pages.js';
 import { registerFormTools } from './tools/forms.js';
@@ -9,7 +9,7 @@ import { registerReleaseTools } from './tools/releases.js';
 
 runMcp({
   name: 'ferrlabs-growth',
-  version: '6.0.0',
+  version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerSiteTools(server);
     registerPageTools(server);
