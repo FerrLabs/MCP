@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { spawn } from 'node:child_process';
 import { platform } from 'node:os';
+import { fetchWithTimeout } from '../http.js';
 
 const AUTH_BASE = process.env.FERRLABS_AUTH_URL ?? 'https://auth.ferrlabs.com';
 const API_BASE = process.env.API_URL ?? 'https://api.ferrlabs.com';
@@ -125,7 +126,7 @@ async function exchangeCodeForToken(
   codeVerifier: string,
   redirectUri: string,
 ): Promise<string> {
-  const res = await fetch(`${API_BASE}/v1/auth/exchange`, {
+  const res = await fetchWithTimeout(`${API_BASE}/v1/auth/exchange`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'User-Agent': 'ferrlabs-mcp/oauth' },
     body: JSON.stringify({

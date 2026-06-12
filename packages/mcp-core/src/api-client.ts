@@ -1,5 +1,6 @@
 import { clearPersistedToken } from './auth/persistence.js';
 import { clearTokenCache } from './auth/index.js';
+import { fetchWithTimeout } from './http.js';
 
 const DEFAULT_API_URL = process.env.API_URL ?? 'https://api.ferrlabs.com';
 
@@ -36,7 +37,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetchWithTimeout(`${base}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,

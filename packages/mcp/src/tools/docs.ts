@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { fetchWithTimeout } from '@ferrlabs/mcp-core';
 
 const PRODUCT_HOSTS: Record<string, string> = {
   ferrlabs: 'https://ferrlabs.com',
@@ -32,6 +33,50 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+export function buildDocUrl(product: string, slug?: string): string {
+  const host = PRODUCT_HOSTS[product];
+  if (!host) {
+    throw new Error(`fetch_docs: unknown product '${product}'`);
+  }
+  if (slug !== undefined) {
+    if (slug.includes('://') || slug.includes('..') || slug.startsWith('//')) {
+      throw new Error(
+        `fetch_docs: invalid slug '${slug}' — must be a relative path without '://', '..', or a leading '//'`,
+      );
+    }
+  }
+  const path = slug ? `/${slug.replace(/^\//, '')}` : '/';
+  return `${host}${path}`;
+}
+
+export async function fetchDoc(product: string, slug?: string): Promise<string> {
+  const url = buildDocUrl(product, slug);
+
+  const res = await fetchWithTimeout(url, {
+    redirect: 'manual',
+    headers: {
+      'User-Agent': 'ferrlabs-mcp',
+      Accept: 'text/html,text/markdown,text/plain',
+    },
+  });
+
+  if (res.status >= 300 && res.status < 400) {
+    throw new Error(
+      `fetch_docs ${url}: refused to follow redirect (HTTP ${res.status}) off the allowlisted host`,
+    );
+  }
+
+  if (!res.ok) {
+    throw new Error(`fetch_docs ${url}: HTTP ${res.status}`);
+  }
+
+  const raw = await res.text();
+  const text = stripHtml(raw);
+  const truncated = text.length > MAX_BYTES;
+  const out = truncated ? `${text.slice(0, MAX_BYTES)}\n\n[truncated]` : text;
+  return `# ${url}\n\n${out}`;
+}
+
 export function registerDocsTools(server: McpServer) {
   server.tool(
     'fetch_docs',
@@ -46,31 +91,12 @@ export function registerDocsTools(server: McpServer) {
         ),
     },
     async ({ product, slug }) => {
-      const host = PRODUCT_HOSTS[product];
-      const path = slug ? `/${slug.replace(/^\//, '')}` : '/';
-      const url = `${host}${path}`;
-
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': 'ferrlabs-mcp/4.0.0',
-          Accept: 'text/html,text/markdown,text/plain',
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`fetch_docs ${url}: HTTP ${res.status}`);
-      }
-
-      const raw = await res.text();
-      const text = stripHtml(raw);
-      const truncated = text.length > MAX_BYTES;
-      const out = truncated ? `${text.slice(0, MAX_BYTES)}\n\n[truncated]` : text;
-
+      const text = await fetchDoc(product, slug);
       return {
         content: [
           {
             type: 'text' as const,
-            text: `# ${url}\n\n${out}`,
+            text,
           },
         ],
       };
