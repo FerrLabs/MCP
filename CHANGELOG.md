@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.5.2] - 2026-06-12
+
+### Bug Fixes
+
+- fix(http): add timeout and redirect control to outbound fetch calls (#186)
+
 ## [6.5.1] - 2026-06-12
 
 ### Bug Fixes
