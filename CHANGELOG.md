@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.5.1] - 2026-06-12
+
+### Bug Fixes
+
+- fix(server): read MCP server version from package.json at runtime (#183)
+
 ## [6.5.0] - 2026-06-06
 
 ### Features
