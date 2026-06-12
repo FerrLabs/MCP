@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runMcp } from '@ferrlabs/mcp-core';
+import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
 import { registerVaultDetailsTool } from './tools/vault-details.js';
 import { registerSecretTools } from './tools/secrets.js';
 import { registerVaultAuditTools } from './tools/audit.js';
@@ -8,7 +8,7 @@ import { registerSecretMutationTools } from './tools/secret-mutations.js';
 
 runMcp({
   name: 'ferrlabs-vault',
-  version: '5.2.5',
+  version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerVaultDetailsTool(server);
     registerSecretTools(server);

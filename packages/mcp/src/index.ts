@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runMcp } from '@ferrlabs/mcp-core';
+import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
 import { registerStatsTools } from './tools/stats.js';
 import { registerTokenTools } from './tools/tokens.js';
 import { registerOrgsTools } from './tools/orgs.js';
@@ -12,7 +12,7 @@ import { registerDocsTools } from './tools/docs.js';
 
 runMcp({
   name: 'ferrlabs',
-  version: '5.2.5',
+  version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerStatsTools(server);
     registerTokenTools(server);

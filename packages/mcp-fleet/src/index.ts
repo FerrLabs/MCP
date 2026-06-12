@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { runMcp } from '@ferrlabs/mcp-core';
+import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
 import { registerAgentTools } from './tools/agents.js';
 import { registerRunTools } from './tools/runs.js';
 
 runMcp({
   name: 'ferrlabs-fleet',
-  version: '6.0.0',
+  version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerAgentTools(server);
     registerRunTools(server);

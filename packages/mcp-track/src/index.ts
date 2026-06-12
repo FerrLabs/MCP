@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runMcp } from '@ferrlabs/mcp-core';
+import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
 import { registerIssueDetailsTool } from './tools/issue-details.js';
 import { registerIssueTools } from './tools/issues.js';
 import { registerCommentTools } from './tools/comments.js';
@@ -10,7 +10,7 @@ import { registerSearchTools } from './tools/search.js';
 
 runMcp({
   name: 'ferrlabs-track',
-  version: '6.0.0',
+  version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerProjectTools(server);
     registerIssueDetailsTool(server);
