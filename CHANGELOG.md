@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.5.3] - 2026-06-13
+
+### Bug Fixes
+
+- fix(transport): harden HTTP transport CORS, bind, host, and body size (#188)
+
 ## [6.5.2] - 2026-06-12
 
 ### Bug Fixes
