@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, chmod } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, chmod, rename, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { homedir, platform } from 'node:os';
 
@@ -50,24 +50,27 @@ export async function readPersistedToken(): Promise<string | null> {
 export async function writePersistedToken(token: string, scopes?: string[]): Promise<void> {
   if (process.env.FERRLABS_MCP_NO_PERSIST === '1') return;
   const path = defaultTokenPath();
-  await mkdir(dirname(path), { recursive: true });
+  const isPosix = platform() !== 'win32';
+  await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const payload: PersistedToken = {
     token,
     obtained_at: new Date().toISOString(),
     scopes,
   };
-  await writeFile(path, JSON.stringify(payload, null, 2), 'utf8');
-  if (platform() !== 'win32') {
-    try {
-      await chmod(path, 0o600);
-    } catch {
-      // ignore — best effort on platforms that don't support POSIX modes
+  const tmpPath = `${path}.${process.pid}.tmp`;
+  await writeFile(tmpPath, JSON.stringify(payload, null, 2), { encoding: 'utf8', mode: 0o600 });
+  try {
+    if (isPosix) {
+      await chmod(tmpPath, 0o600);
     }
+    await rename(tmpPath, path);
+  } catch (err) {
+    await unlink(tmpPath).catch(() => undefined);
+    throw err;
   }
 }
 
 export async function clearPersistedToken(): Promise<void> {
-  const { unlink } = await import('node:fs/promises');
   try {
     await unlink(defaultTokenPath());
   } catch {
