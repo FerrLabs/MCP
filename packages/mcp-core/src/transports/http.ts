@@ -8,11 +8,41 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runWithAuthContext } from '../auth/context.js';
 
+const MAX_BODY_BYTES = 1_000_000;
+
 function extractBearer(req: IncomingMessage): string | undefined {
   const header = req.headers['authorization'];
   if (typeof header !== 'string') return undefined;
   const match = /^Bearer\s+(.+)$/i.exec(header);
   return match?.[1];
+}
+
+export function parseList(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+export function resolveAllowedOrigin(
+  requestOrigin: string | undefined,
+  allowlist: string[],
+): string | undefined {
+  if (requestOrigin === undefined) return undefined;
+  return allowlist.includes(requestOrigin) ? requestOrigin : undefined;
+}
+
+export function isHostAllowed(hostHeader: string | undefined, allowedHosts: string[]): boolean {
+  if (allowedHosts.length === 0) return true;
+  if (!hostHeader) return false;
+  const host = hostHeader.split(':')[0].toLowerCase();
+  return allowedHosts.some((allowed) => allowed.split(':')[0].toLowerCase() === host);
+}
+
+export function defaultBindHost(envHost: string | undefined, bindAll: boolean): string {
+  if (envHost) return envHost;
+  return bindAll ? '0.0.0.0' : '127.0.0.1';
 }
 
 function publicOrigin(req: IncomingMessage): string {
@@ -59,11 +89,27 @@ export interface HttpServerOptions {
   authorizationServer?: string;
 }
 
+class PayloadTooLargeError extends Error {
+  constructor() {
+    super(`Request body exceeds the ${MAX_BODY_BYTES}-byte limit`);
+    this.name = 'PayloadTooLargeError';
+  }
+}
+
 async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> {
   if (req.method !== 'POST') return undefined;
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    req.on('data', (c: Buffer) => chunks.push(c));
+    let total = 0;
+    req.on('data', (c: Buffer) => {
+      total += c.length;
+      if (total > MAX_BODY_BYTES) {
+        req.destroy();
+        reject(new PayloadTooLargeError());
+        return;
+      }
+      chunks.push(c);
+    });
     req.on('end', () => {
       const raw = Buffer.concat(chunks).toString('utf8');
       if (!raw) return resolve(undefined);
@@ -78,7 +124,11 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> 
 }
 
 export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
-  const { port, host = '0.0.0.0', stateless = true } = opts;
+  const { port, stateless = true } = opts;
+  const bindAll = process.env.FERRLABS_MCP_BIND_ALL === '1';
+  const host = defaultBindHost(opts.host, bindAll);
+  const allowedOrigins = parseList(process.env.FERRLABS_MCP_ALLOWED_ORIGINS);
+  const allowedHosts = parseList(process.env.FERRLABS_MCP_ALLOWED_HOSTS);
   const authServer =
     opts.authorizationServer ?? process.env.FERRLABS_AUTH_URL ?? 'https://api.ferrlabs.com';
   const transports = new Map<string, StreamableHTTPServerTransport>();
@@ -156,15 +206,16 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
   }
 
   function applyCorsHeaders(req: IncomingMessage, res: ServerResponse): void {
-    const origin = (req.headers.origin as string | undefined) ?? '*';
-    res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
+    const allowed = resolveAllowedOrigin(req.headers.origin as string | undefined, allowedOrigins);
+    if (!allowed) return;
+    res.setHeader('Access-Control-Allow-Origin', allowed);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    const requested =
-      (req.headers['access-control-request-headers'] as string | undefined) ??
-      'authorization, content-type, mcp-session-id, mcp-protocol-version';
-    res.setHeader('Access-Control-Allow-Headers', requested);
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'authorization, content-type, mcp-session-id, mcp-protocol-version',
+    );
     res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id, www-authenticate');
     res.setHeader('Access-Control-Max-Age', '86400');
   }
@@ -175,6 +226,12 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
       res.end();
+      return;
+    }
+
+    if (!isHostAllowed(req.headers.host, allowedHosts)) {
+      res.writeHead(421, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Host not allowed' }));
       return;
     }
 
@@ -191,7 +248,8 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
     if (url === '/mcp' || url.startsWith('/mcp?')) {
       handleMcpRequest(req, res).catch((err) => {
         if (!res.headersSent) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
+          const status = err instanceof PayloadTooLargeError ? 413 : 500;
+          res.writeHead(status, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
         } else {
           res.end();
