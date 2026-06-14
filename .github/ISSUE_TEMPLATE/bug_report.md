@@ -11,6 +11,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce:
+
 1.
 2.
 3.
@@ -19,6 +20,7 @@ Steps to reproduce:
 What you expected to happen.
 
 **Environment**
+
 - MCP version:
 - Transport: HTTP / stdio
 - Logs:
