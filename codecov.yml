@@ -16,4 +16,4 @@ coverage:
         informational: true
 
 ignore:
-  - ".github/**"
+  - '.github/**'
