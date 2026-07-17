@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.5.4] - 2026-07-17
+
+### Bug Fixes
+
+- fix(ci): move pnpm overrides to workspace and patch hono (#209)
+
 ## [6.5.3] - 2026-06-13
 
 ### Bug Fixes
