@@ -50,5 +50,3 @@ export function clearTokenCache(): void {
   cached = null;
   inFlight = null;
 }
-
-export const resetTokenCacheForTesting = clearTokenCache;

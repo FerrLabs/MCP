@@ -28,13 +28,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
+    "smoke": "pnpm build && tsx scripts/smoke.ts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run typecheck && pnpm --filter @ferrlabs/mcp-vault run typecheck && pnpm --filter @ferrlabs/mcp-track run typecheck && pnpm --filter @ferrlabs/mcp-growth run typecheck && pnpm --filter @ferrlabs/mcp-fleet run typecheck"
-  },
-  "pnpm": {
-    "overrides": {
-      "fast-uri@<=3.1.1": ">=3.1.2"
-    }
   }
 }
