@@ -4,7 +4,7 @@ interface AuthContext {
   bearerToken?: string;
 }
 
-export const authContext = new AsyncLocalStorage<AuthContext>();
+const authContext = new AsyncLocalStorage<AuthContext>();
 
 export function runWithAuthContext<T>(ctx: AuthContext, fn: () => Promise<T>): Promise<T> {
   return authContext.run(ctx, fn);
