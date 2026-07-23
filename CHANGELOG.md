@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [6.5.5] - 2026-07-23
+
+### Bug Fixes
+
+- fix(ci): repair renovate-rebase.yml truncated by the pin sweep (#218)
+
 ## [6.5.4] - 2026-07-17
 
 ### Bug Fixes
