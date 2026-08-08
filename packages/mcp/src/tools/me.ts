@@ -47,7 +47,7 @@ export function registerMeTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const me = await apiRequest<MeProfile>('/v1/auth/me', {
+      const me = await apiRequest<MeProfile>('/auth/me', {
         token,
         method: 'PATCH',
         body,
@@ -62,7 +62,7 @@ export function registerMeTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const sessions = await apiRequest<MeSession[]>('/v1/me/sessions', { token });
+      const sessions = await apiRequest<MeSession[]>('/me/sessions', { token });
       return { content: [{ type: 'text' as const, text: JSON.stringify(sessions, null, 2) }] };
     },
   );
@@ -75,7 +75,7 @@ export function registerMeTools(server: McpServer) {
     },
     async ({ session_id }) => {
       const token = await getToken();
-      await apiRequest<void>(`/v1/me/sessions/${encodeURIComponent(session_id)}`, {
+      await apiRequest<void>(`/me/sessions/${encodeURIComponent(session_id)}`, {
         token,
         method: 'DELETE',
       });
@@ -89,7 +89,7 @@ export function registerMeTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const dump = await apiRequest<unknown>('/v1/auth/me/export', { token });
+      const dump = await apiRequest<unknown>('/auth/me/export', { token });
       return { content: [{ type: 'text' as const, text: JSON.stringify(dump, null, 2) }] };
     },
   );

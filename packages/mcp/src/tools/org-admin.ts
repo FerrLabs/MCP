@@ -59,7 +59,7 @@ interface Team {
 }
 
 function orgBase(slug: string): string {
-  return `/v1/orgs/${encodeURIComponent(slug)}`;
+  return `/orgs/${encodeURIComponent(slug)}`;
 }
 
 export function registerOrgAdminTools(server: McpServer) {

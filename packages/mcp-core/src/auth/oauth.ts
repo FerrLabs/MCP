@@ -126,7 +126,7 @@ async function exchangeCodeForToken(
   codeVerifier: string,
   redirectUri: string,
 ): Promise<string> {
-  const res = await fetchWithTimeout(`${API_BASE}/v1/auth/exchange`, {
+  const res = await fetchWithTimeout(`${API_BASE}/auth/exchange`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'User-Agent': 'ferrlabs-mcp/oauth' },
     body: JSON.stringify({

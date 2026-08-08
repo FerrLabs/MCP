@@ -36,7 +36,7 @@ describe('orgs tools', () => {
     expect(handlers.has('list_projects')).toBe(true);
   });
 
-  it('list_orgs hits /v1/orgs with the API token', async () => {
+  it('list_orgs hits /orgs with the API token', async () => {
     mockFetch.mockResolvedValue(
       makeResponse([
         {
@@ -50,7 +50,7 @@ describe('orgs tools', () => {
     );
     const result = await handlers.get('list_orgs')!({});
     const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toContain('/v1/orgs');
+    expect(url).toContain('/orgs');
     expect((init.headers as Record<string, string>)['x-api-token']).toBe('test-token');
     expect(result).toMatchObject({ content: [{ type: 'text' }] });
   });
@@ -59,6 +59,6 @@ describe('orgs tools', () => {
     mockFetch.mockResolvedValue(makeResponse([]));
     await handlers.get('list_projects')!({ org_slug: 'acme corp' });
     const [url] = mockFetch.mock.calls[0];
-    expect(url).toContain('/v1/orgs/acme%20corp/projects');
+    expect(url).toContain('/orgs/acme%20corp/projects');
   });
 });

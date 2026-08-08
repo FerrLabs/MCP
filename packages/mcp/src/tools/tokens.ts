@@ -30,7 +30,7 @@ type CreateTokenResponse = ApiTokenResponse & {
 export function registerTokenTools(server: McpServer) {
   server.tool('get_me', 'Get the current authenticated FerrLabs user profile', {}, async () => {
     const token = await getToken();
-    const user = await apiRequest<UserProfile>('/v1/auth/me', { token });
+    const user = await apiRequest<UserProfile>('/auth/me', { token });
     return {
       content: [
         {
@@ -43,7 +43,7 @@ export function registerTokenTools(server: McpServer) {
 
   server.tool('list_tokens', 'List all API tokens for the authenticated user', {}, async () => {
     const token = await getToken();
-    const tokens = await apiRequest<ApiTokenResponse[]>('/v1/auth/tokens', { token });
+    const tokens = await apiRequest<ApiTokenResponse[]>('/auth/tokens', { token });
     return {
       content: [
         {
@@ -64,7 +64,7 @@ export function registerTokenTools(server: McpServer) {
     },
     async ({ name, scopes, expires_at }) => {
       const token = await getToken();
-      const result = await apiRequest<CreateTokenResponse>('/v1/auth/tokens', {
+      const result = await apiRequest<CreateTokenResponse>('/auth/tokens', {
         method: 'POST',
         body: { name, scopes, expires_at },
         token,
@@ -89,7 +89,7 @@ export function registerTokenTools(server: McpServer) {
     },
     async ({ token_id }) => {
       const token = await getToken();
-      await apiRequest<{ message: string }>(`/v1/auth/tokens/${token_id}`, {
+      await apiRequest<{ message: string }>(`/auth/tokens/${token_id}`, {
         method: 'DELETE',
         token,
       });

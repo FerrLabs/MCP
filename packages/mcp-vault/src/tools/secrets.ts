@@ -26,7 +26,7 @@ export function registerSecretTools(server: McpServer) {
     async ({ org_slug, project_slug, vault_id }) => {
       const token = await getToken();
       const secrets = await apiRequest<SecretSummary[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/secrets`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/secrets`,
         { token },
       );
       return {
@@ -52,7 +52,7 @@ export function registerSecretTools(server: McpServer) {
       const token = await getToken();
       const qs = reveal ? '?reveal=true' : '';
       const secret = await apiRequest<SecretRevealed>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/secrets/${encodeURIComponent(secret_id)}${qs}`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/secrets/${encodeURIComponent(secret_id)}${qs}`,
         { token },
       );
       return {

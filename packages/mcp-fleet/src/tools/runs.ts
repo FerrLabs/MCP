@@ -28,7 +28,7 @@ export function registerRunTools(server: McpServer) {
     async ({ limit }) => {
       const token = await getToken();
       const qs = limit !== undefined ? `?limit=${limit}` : '';
-      const runs = await apiRequest<Run[]>(`/v1/runs${qs}`, {
+      const runs = await apiRequest<Run[]>(`/runs${qs}`, {
         token,
         baseUrl: FLEET_API_URL,
       });
@@ -46,7 +46,7 @@ export function registerRunTools(server: McpServer) {
     },
     async ({ run_id }) => {
       const token = await getToken();
-      const run = await apiRequest<Run>(`/v1/runs/${encodeURIComponent(run_id)}`, {
+      const run = await apiRequest<Run>(`/runs/${encodeURIComponent(run_id)}`, {
         token,
         baseUrl: FLEET_API_URL,
       });
@@ -65,7 +65,7 @@ export function registerRunTools(server: McpServer) {
     async ({ run_id }) => {
       const token = await getToken();
       const transcript = await apiRequest<unknown>(
-        `/v1/runs/${encodeURIComponent(run_id)}/transcript`,
+        `/runs/${encodeURIComponent(run_id)}/transcript`,
         { token, baseUrl: FLEET_API_URL },
       );
       return {

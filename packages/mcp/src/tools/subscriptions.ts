@@ -25,7 +25,7 @@ export function registerSubscriptionsTools(server: McpServer) {
     async ({ org_slug }) => {
       const token = await getToken();
       const subs = await apiRequest<SubscriptionRow[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/subscriptions`,
+        `/orgs/${encodeURIComponent(org_slug)}/subscriptions`,
         { token },
       );
       return {
@@ -48,7 +48,7 @@ export function registerSubscriptionsTools(server: McpServer) {
     async ({ org_slug, product, tier }) => {
       const token = await getToken();
       const sub = await apiRequest<SubscriptionRow>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/subscriptions`,
+        `/orgs/${encodeURIComponent(org_slug)}/subscriptions`,
         { token, method: 'POST', body: { product, tier } },
       );
       return { content: [{ type: 'text' as const, text: JSON.stringify(sub, null, 2) }] };
@@ -66,7 +66,7 @@ export function registerSubscriptionsTools(server: McpServer) {
     async ({ org_slug, product, tier }) => {
       const token = await getToken();
       const sub = await apiRequest<SubscriptionRow>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/subscriptions/${encodeURIComponent(product)}`,
+        `/orgs/${encodeURIComponent(org_slug)}/subscriptions/${encodeURIComponent(product)}`,
         { token, method: 'PATCH', body: { tier } },
       );
       return { content: [{ type: 'text' as const, text: JSON.stringify(sub, null, 2) }] };
@@ -90,7 +90,7 @@ export function registerSubscriptionsTools(server: McpServer) {
       const token = await getToken();
       const qs = immediate ? '?immediate=true' : '';
       await apiRequest<void>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/subscriptions/${encodeURIComponent(product)}${qs}`,
+        `/orgs/${encodeURIComponent(org_slug)}/subscriptions/${encodeURIComponent(product)}${qs}`,
         { token, method: 'DELETE' },
       );
       return {
