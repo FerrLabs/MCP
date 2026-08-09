@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [7.0.0] - 2026-08-09
+
+### Breaking Changes
+
+- feat!: appelle l'API FerrLabs à la racine, sans préfixe /v1 (#233)
+
 ## [6.5.5] - 2026-07-23
 
 ### Bug Fixes
