@@ -7,4 +7,9 @@ on:
 jobs:
   dispatch:
     uses: FerrLabs/.github/.github/workflows/reusable-renovate-dispatch.yml@e01fb75f1dd050e90493b7a65f0ebd95c634ebe6 # main
+    with:
+      # This repo is public, so the job cannot use the default `ferrlabs-k8s`
+      # runner: that group sets `allows_public_repositories=false`, which is
+      # what keeps public-repo workflows away from the cluster.
+      runner: ubuntu-latest
     secrets: inherit
