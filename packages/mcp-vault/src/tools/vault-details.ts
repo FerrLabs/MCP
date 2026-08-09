@@ -22,7 +22,7 @@ export function registerVaultDetailsTool(server: McpServer) {
     async ({ org_slug, project_slug, vault_id }) => {
       const token = await getToken();
       const vault = await apiRequest<VaultDetails>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}`,
         { token },
       );
       return {

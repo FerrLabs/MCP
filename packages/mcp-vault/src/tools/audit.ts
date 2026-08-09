@@ -40,7 +40,7 @@ export function registerVaultAuditTools(server: McpServer) {
       const token = await getToken();
       const qs = limit !== undefined ? `?limit=${limit}` : '';
       const entries = await apiRequest<AuditEntry[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/audit-log${qs}`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/audit-log${qs}`,
         { token },
       );
       return {
@@ -60,7 +60,7 @@ export function registerVaultAuditTools(server: McpServer) {
     async ({ org_slug, project_slug, vault_id }) => {
       const token = await getToken();
       const requests = await apiRequest<SecretRequest[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/secret-requests`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}/secret-requests`,
         { token },
       );
       return {

@@ -27,7 +27,7 @@ export function registerOrgsTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const orgs = await apiRequest<OrgWithMemberCount[]>('/v1/orgs', { token });
+      const orgs = await apiRequest<OrgWithMemberCount[]>('/orgs', { token });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(orgs, null, 2) }],
       };
@@ -43,7 +43,7 @@ export function registerOrgsTools(server: McpServer) {
     async ({ org_slug }) => {
       const token = await getToken();
       const projects = await apiRequest<ProjectWithCounts[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects`,
         { token },
       );
       return {

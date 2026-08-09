@@ -11,7 +11,7 @@ interface VaultSummary {
 }
 
 function vaultBase(org_slug: string, project_slug: string, vault_id: string): string {
-  return `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}`;
+  return `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}`;
 }
 
 export function registerVaultMutationTools(server: McpServer) {
@@ -27,7 +27,7 @@ export function registerVaultMutationTools(server: McpServer) {
     async ({ org_slug, project_slug, name, description }) => {
       const token = await getToken();
       const vault = await apiRequest<VaultSummary>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults`,
         { token, method: 'POST', body: { name, description: description ?? null } },
       );
       return {

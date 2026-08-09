@@ -23,7 +23,7 @@ export function registerVaultsTools(server: McpServer) {
     async ({ org_slug, project_slug }) => {
       const token = await getToken();
       const vaults = await apiRequest<VaultWithStats[]>(
-        `/v1/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults`,
         { token },
       );
       return {
