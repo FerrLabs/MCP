@@ -21,7 +21,7 @@ COPY packages/mcp-track packages/mcp-track
 COPY packages/mcp-growth packages/mcp-growth
 COPY packages/mcp-fleet packages/mcp-fleet
 RUN pnpm run build
-RUN pnpm --filter "@ferrlabs/${PACKAGE}" deploy --prod --legacy /out
+RUN pnpm --filter "@ferrlabs/${PACKAGE}" deploy --prod /out
 
 FROM node:24-alpine
 ARG PACKAGE

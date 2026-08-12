@@ -1,5 +1,7 @@
 packages:
   - 'packages/*'
+injectWorkspacePackages: true
+
 allowBuilds:
   esbuild: false
 overrides:
