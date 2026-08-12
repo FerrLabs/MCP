@@ -4,6 +4,13 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [7.0.1] - 2026-08-12
+
+### Bug Fixes
+
+- fix(docker): injecte les paquets du workspace dans l'image au lieu d'un lien mort (#265)
+- fix(ci): accorde pull-requests write au job appelant les reusables (#260)
+
 ## [7.0.0] - 2026-08-09
 
 ### Breaking Changes
