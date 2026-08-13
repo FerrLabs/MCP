@@ -30,7 +30,7 @@ jobs:
       # entier est refuse au demarrage, comme ci-dessus.
       packages: read
     name: Test
-    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@a45da1ccdd3981ea5d34b77f91d9c965f7a4883b # main
+    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@8a2ad76ab0c58f42b46890618145fde58268072e # main
     with:
       enable-sonar: true
       install-args: ''
@@ -48,7 +48,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: FerrLabs/.github/.github/workflows/reusable-ferrflow-release.yml@a45da1ccdd3981ea5d34b77f91d9c965f7a4883b # main
+    uses: FerrLabs/.github/.github/workflows/reusable-ferrflow-release.yml@8a2ad76ab0c58f42b46890618145fde58268072e # main
     with:
       dry-run: ${{ inputs.dry_run || false }}
     secrets: inherit
