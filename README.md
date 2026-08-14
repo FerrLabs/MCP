@@ -1,11 +1,24 @@
-# FerrLabs MCP Server
+<div align="center">
+
+# FerrLabs MCP
+
+**Let your AI assistant drive the FerrLabs suite.**
+
+A [Model Context Protocol](https://modelcontextprotocol.io) server exposing FerrFlow, FerrVault,<br />
+FerrTrack, FerrGrowth, FerrFleet and FerrLens through the unified FerrLabs API.
 
 [![npm](https://img.shields.io/npm/v/@ferrlabs/mcp)](https://www.npmjs.com/package/@ferrlabs/mcp)
 [![Quality Gate](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=alert_status)](https://sonar.ferrlabs.com/dashboard?id=MCP)
 [![Coverage](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=coverage)](https://sonar.ferrlabs.com/dashboard?id=MCP)
 [![License](https://img.shields.io/github/license/FerrLabs/MCP)](LICENSE)
 
-[Model Context Protocol](https://modelcontextprotocol.io) server that lets AI assistants interact with the FerrLabs ecosystem (FerrFlow, FerrVault, FerrTrack, FerrGrowth, FerrFleet, FerrLens) through the unified FerrLabs API. Runs locally via stdio transport.
+[npm](https://www.npmjs.com/package/@ferrlabs/mcp) | [FerrLabs](https://ferrlabs.com) | [Changelog](https://ferrlabs.com/changelog/)
+
+</div>
+
+Runs locally over stdio, or over Streamable HTTP behind a gateway. The first tool call that needs
+auth opens a browser for an OAuth loopback flow and saves the token, so there is no environment
+variable to set up front.
 
 ## Quick Start
 
@@ -116,13 +129,13 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 
 ### `@ferrlabs/mcp-fleet`
 
-| Tool                                         | Notes                                                    |
-| -------------------------------------------- | -------------------------------------------------------- |
-| `list_agents`, `get_agent`                   | read                                                     |
-| `list_runs`, `get_run`, `get_run_transcript` | read                                                     |
-| `trigger_agent_run`                          | **destructive** — executes an agent and spends run quota |
+| Tool                                         | Notes                                                   |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `list_agents`, `get_agent`                   | read                                                    |
+| `list_runs`, `get_run`, `get_run_transcript` | read                                                    |
+| `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota |
 
-FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event`) were removed in v4.0.0 — they required either a local FerrFlow CLI install or HMAC signing the MCP doesn't do. Use the FerrFlow CLI directly or fetch docs via `fetch_docs("ferrflow", "docs/...")`.
+FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event`) were removed in v4.0.0. They required either a local FerrFlow CLI install or HMAC signing the MCP doesn't do. Use the FerrFlow CLI directly or fetch docs via `fetch_docs("ferrflow", "docs/...")`.
 
 ## Stack
 
@@ -137,10 +150,10 @@ FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_
 
 | Variable                  | Description                                                                           | Default                                                                   |
 | ------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `API_URL`                 | FerrLabs API base URL (no `/v1` suffix — paths are prefixed in code)                  | `https://api.ferrlabs.com`                                                |
+| `API_URL`                 | FerrLabs API base URL (no `/v1` suffix, paths are prefixed in code)                   | `https://api.ferrlabs.com`                                                |
 | `FERRLABS_AUTH_URL`       | Auth SPA base URL (where the OAuth browser flow lands)                                | `https://auth.ferrlabs.com`                                               |
-| `FERRLABS_API_TOKEN`      | Pre-provisioned token. Bypasses the OAuth flow. Use for CI / scripted environments.   | —                                                                         |
-| `FERRFLOW_API_TOKEN`      | **Deprecated** — accepted as a fallback for backward compatibility with v3.x.         | —                                                                         |
+| `FERRLABS_API_TOKEN`      | Pre-provisioned token. Bypasses the OAuth flow. Use for CI / scripted environments.   | _(unset)_                                                                 |
+| `FERRFLOW_API_TOKEN`      | **Deprecated**, accepted as a fallback for backward compatibility with v3.x.          | _(unset)_                                                                 |
 | `FERRLABS_MCP_NO_OAUTH`   | Set to `1` to disable the OAuth fallback. Then `FERRLABS_API_TOKEN` becomes required. | unset                                                                     |
 | `FERRLABS_MCP_TOKEN_PATH` | Override the path where the OAuth-acquired token is persisted.                        | `%APPDATA%\ferrlabs\mcp\token.json` / `~/.config/ferrlabs/mcp/token.json` |
 | `FERRLABS_MCP_NO_PERSIST` | Set to `1` to keep the token in memory only (re-auth on every cold start).            | unset                                                                     |
@@ -153,7 +166,7 @@ FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_
 
 ### HTTP transport
 
-By default the server runs over stdio. Set `FERRLABS_MCP_MODE=http` (or pass `--http`) to expose the MCP over Streamable HTTP on `HOST:PORT` (`0.0.0.0:3000` by default) — this is the mode the Docker image runs. Requests carry the bearer token in the `Authorization` header. Run the HTTP transport behind a gateway (e.g. Traefik) that terminates TLS and applies rate limiting / request-size caps; do not expose it directly on an untrusted network.
+By default the server runs over stdio. Set `FERRLABS_MCP_MODE=http` (or pass `--http`) to expose the MCP over Streamable HTTP on `HOST:PORT` (`0.0.0.0:3000` by default), which is the mode the Docker image runs. Requests carry the bearer token in the `Authorization` header. Run the HTTP transport behind a gateway (e.g. Traefik) that terminates TLS and applies rate limiting / request-size caps; do not expose it directly on an untrusted network.
 
 ### How auth resolution works
 
@@ -162,21 +175,21 @@ On the first authenticated tool call, the MCP looks for a token in this order:
 1. In-memory cache (set during this MCP process's lifetime)
 2. `FERRLABS_API_TOKEN` (or `FERRFLOW_API_TOKEN`) env var
 3. Persisted token file (`FERRLABS_MCP_TOKEN_PATH`)
-4. **OAuth 2.0 loopback PKCE flow** — opens the user's browser at `FERRLABS_AUTH_URL` (`auth.ferrlabs.com`, the login SPA), captures the callback on `http://127.0.0.1:54321/cb`, then exchanges the code for a session token via `POST /v1/auth/exchange` on `API_URL` (`api.ferrlabs.com`). Token is persisted to step 3 for future sessions.
+4. **OAuth 2.0 loopback PKCE flow**: opens the user's browser at `FERRLABS_AUTH_URL` (`auth.ferrlabs.com`, the login SPA), captures the callback on `http://127.0.0.1:54321/cb`, then exchanges the code for a session token via `POST /v1/auth/exchange` on `API_URL` (`api.ferrlabs.com`). Token is persisted to step 3 for future sessions.
 
-If you set `FERRLABS_MCP_NO_OAUTH=1`, step 4 is skipped — useful for CI where opening a browser would hang.
+If you set `FERRLABS_MCP_NO_OAUTH=1`, step 4 is skipped, which is what you want in CI where opening a browser would hang.
 
-> **Auth host split.** `auth.ferrlabs.com` is the user-facing login SPA (where the browser `authorize` step lands); `api.ferrlabs.com` performs the token exchange and serves the OAuth discovery metadata used by the HTTP transport. Configure `FERRLABS_AUTH_URL` for the former and `API_URL` for the latter — they are not interchangeable.
+> **Auth host split.** `auth.ferrlabs.com` is the user-facing login SPA (where the browser `authorize` step lands); `api.ferrlabs.com` performs the token exchange and serves the OAuth discovery metadata used by the HTTP transport. Configure `FERRLABS_AUTH_URL` for the former and `API_URL` for the latter. They are not interchangeable.
 
 ## Smoke test
 
 `pnpm smoke` builds the server, spawns it over stdio, runs the MCP `initialize`/`tools/list` handshake, then calls `health_check` and `get_stats` against the real `api.ferrlabs.com`. Useful to confirm the server boots, registers all tools, and the API is reachable. Exits non-zero on any failure.
 
 ```
-[PASS] initialize handshake — serverInfo: ferrlabs@6.5.0
-[PASS] tools/list — N tools registered
-[PASS] tools/call health_check — {"status":"ready", ...}
-[PASS] tools/call get_stats — total_releases=N
+[PASS] initialize handshake, serverInfo: ferrlabs@6.5.0
+[PASS] tools/list, N tools registered
+[PASS] tools/call health_check, {"status":"ready", ...}
+[PASS] tools/call get_stats, total_releases=N
 
 Smoke: 4/4 OK
 ```
@@ -187,10 +200,10 @@ v4.0.0 renames the package and points the MCP at the unified FerrLabs API. To mi
 
 1. Replace `@ferrflow/mcp` with `@ferrlabs/mcp` in your MCP client config.
 2. Rename `FERRFLOW_API_TOKEN` → `FERRLABS_API_TOKEN` (the old name still works for one release).
-3. If you were overriding `API_URL=https://api.ferrflow.com`, drop the override — the default is now `https://api.ferrlabs.com`.
+3. If you were overriding `API_URL=https://api.ferrflow.com`, drop the override. The default is now `https://api.ferrlabs.com`.
 
 Tokens issued by the legacy FerrFlow-only API are not valid against the unified API. Create a fresh one from `app.ferrlabs.com`.
 
 ## License
 
-Mozilla Public License 2.0 — see [LICENSE](LICENSE).
+Mozilla Public License 2.0, see [LICENSE](LICENSE).
