@@ -6,7 +6,7 @@ on:
 
 jobs:
   dispatch:
-    uses: FerrLabs/.github/.github/workflows/reusable-renovate-dispatch.yml@5aec567fa6bfb149af54fc1819b1603bb7205c28 # main
+    uses: FerrLabs/.github/.github/workflows/reusable-renovate-dispatch.yml@97d3b861d4aca885a479b80510c619f841782a98 # main
     with:
       # This repo is public, so the job cannot use the default `ferrlabs-k8s`
       # runner: that group sets `allows_public_repositories=false`, which is
