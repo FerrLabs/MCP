@@ -45,16 +45,16 @@ importers:
         version: link:../mcp-core
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
-        version: 1.30.0(supports-color@7.2.0)(zod@4.4.3)
+        version: 1.30.0(supports-color@7.2.0)(zod@4.5.1)
       zod:
         specifier: ^4.3.6
-        version: 4.4.3
+        version: 4.5.1
 
   packages/mcp-core:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
-        version: 1.30.0(supports-color@7.2.0)(zod@4.4.3)
+        version: 1.30.0(supports-color@7.2.0)(zod@4.5.1)
 
   packages/mcp-fleet:
     dependencies:
@@ -63,7 +63,7 @@ importers:
         version: link:../mcp-core
       zod:
         specifier: ^4.3.6
-        version: 4.4.3
+        version: 4.5.1
 
   packages/mcp-growth:
     dependencies:
@@ -72,7 +72,7 @@ importers:
         version: link:../mcp-core
       zod:
         specifier: ^4.3.6
-        version: 4.4.3
+        version: 4.5.1
 
   packages/mcp-track:
     dependencies:
@@ -81,7 +81,7 @@ importers:
         version: link:../mcp-core
       zod:
         specifier: ^4.3.6
-        version: 4.4.3
+        version: 4.5.1
 
   packages/mcp-vault:
     dependencies:
@@ -90,7 +90,7 @@ importers:
         version: link:../mcp-core
       zod:
         specifier: ^4.3.6
-        version: 4.4.3
+        version: 4.5.1
 
 packages:
 
@@ -1291,8 +1291,8 @@ packages:
     peerDependencies:
       zod: ^3.25.28 || ^4
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.5.1:
+    resolution: {integrity: sha512-P3GqeAEOEDqKvafVGLezbg+39YW/ze4xrD4qdS0adOY8eoI3zfjv1PQM4UwQzgT8mZKXEbqtVt8K+ZKGqkMFKg==}
 
 snapshots:
 
@@ -1418,7 +1418,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@modelcontextprotocol/sdk@1.30.0(supports-color@7.2.0)(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.30.0(supports-color@7.2.0)(zod@4.5.1)':
     dependencies:
       '@hono/node-server': 2.0.12(hono@4.12.33)
       ajv: 8.20.0
@@ -1435,8 +1435,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 4.4.3
-      zod-to-json-schema: 3.25.2(zod@4.4.3)
+      zod: 4.5.1
+      zod-to-json-schema: 3.25.2(zod@4.5.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -1830,9 +1830,9 @@ snapshots:
 
   fast-uri@4.1.2: {}
 
-  fdir@6.5.0(picomatch@4.0.5):
+  fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   finalhandler@2.1.1(supports-color@7.2.0):
     dependencies:
@@ -2197,8 +2197,8 @@ snapshots:
 
   tinyglobby@0.2.17:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.5)
-      picomatch: 4.0.5
+      fdir: 6.5.0(picomatch@4.0.7)
+      picomatch: 4.0.7
 
   tinyrainbow@3.1.1: {}
 
@@ -2251,7 +2251,7 @@ snapshots:
   vite@8.2.0(@types/node@25.9.5)(esbuild@0.28.2)(tsx@4.23.12)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.33.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       postcss: 8.5.25
       rolldown: 1.2.1
       tinyglobby: 0.2.17
@@ -2304,8 +2304,8 @@ snapshots:
   yaml@2.9.0:
     optional: true
 
-  zod-to-json-schema@3.25.2(zod@4.4.3):
+  zod-to-json-schema@3.25.2(zod@4.5.1):
     dependencies:
-      zod: 4.4.3
+      zod: 4.5.1
 
-  zod@4.4.3: {}
+  zod@4.5.1: {}
