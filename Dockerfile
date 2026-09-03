@@ -7,19 +7,9 @@ ENV HUSKY=0 \
     CI=true
 RUN corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-COPY packages/mcp-core/package.json packages/mcp-core/
-COPY packages/mcp/package.json packages/mcp/
-COPY packages/ferrvault-mcp/package.json packages/ferrvault-mcp/
-COPY packages/ferrtrack-mcp/package.json packages/ferrtrack-mcp/
-COPY packages/ferrgrowth-mcp/package.json packages/ferrgrowth-mcp/
-COPY packages/ferrfleet-mcp/package.json packages/ferrfleet-mcp/
-RUN pnpm install --frozen-lockfile --ignore-scripts
-COPY packages/mcp-core packages/mcp-core
-COPY packages/mcp packages/mcp
-COPY packages/ferrvault-mcp packages/ferrvault-mcp
-COPY packages/ferrtrack-mcp packages/ferrtrack-mcp
-COPY packages/ferrgrowth-mcp packages/ferrgrowth-mcp
-COPY packages/ferrfleet-mcp packages/ferrfleet-mcp
+RUN pnpm fetch --frozen-lockfile
+COPY packages packages
+RUN pnpm install --frozen-lockfile --offline
 RUN pnpm run build
 RUN pnpm --filter "${PACKAGE}" deploy --prod --legacy /out
 
