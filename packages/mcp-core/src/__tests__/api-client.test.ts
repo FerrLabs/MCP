@@ -72,9 +72,7 @@ describe('apiRequest', () => {
 
   it('clears persisted token and cache on 401 with a token', async () => {
     mockFetch.mockResolvedValue(makeResponse({ error: 'unauthorized' }, 401));
-    await expect(apiRequest('/orgs', { token: 'stale' })).rejects.toBeInstanceOf(
-      UnauthorizedError,
-    );
+    await expect(apiRequest('/orgs', { token: 'stale' })).rejects.toBeInstanceOf(UnauthorizedError);
     expect(clearPersistedTokenMock).toHaveBeenCalledOnce();
     expect(clearTokenCacheMock).toHaveBeenCalledOnce();
   });
