@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [8.0.0] - 2026-09-03
+
+### Breaking Changes
+
+- refactor!: move product sub-MCPs to their product npm scope (#319)
+
 ## [7.0.2] - 2026-09-03
 
 ### Bug Fixes
