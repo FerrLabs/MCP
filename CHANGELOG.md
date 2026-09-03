@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [7.0.2] - 2026-09-03
+
+### Bug Fixes
+
+- fix(deps): pin fast-uri, hono, nanoid and qs above their advisories (#321)
+
 ## [7.0.1] - 2026-08-12
 
 ### Bug Fixes
