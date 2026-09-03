@@ -1,11 +1,11 @@
 {
-  "name": "@ferrlabs/mcp-vault",
+  "name": "@ferrvault/mcp",
   "version": "7.0.2",
   "description": "Model Context Protocol server for FerrVault â€” vaults, secrets, secret requests, rotation",
   "license": "MPL-2.0",
   "type": "module",
   "bin": {
-    "ferrlabs-mcp-vault": "./dist/index.js"
+    "ferrvault-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
@@ -36,6 +36,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FerrLabs/MCP.git",
-    "directory": "packages/mcp-vault"
+    "directory": "packages/ferrvault-mcp"
   }
 }

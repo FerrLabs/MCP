@@ -7,7 +7,7 @@ import { registerVaultMutationTools } from './tools/vaults.js';
 import { registerSecretMutationTools } from './tools/secret-mutations.js';
 
 runMcp({
-  name: 'ferrlabs-vault',
+  name: 'ferrvault',
   version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerVaultDetailsTool(server);
@@ -17,6 +17,6 @@ runMcp({
     registerSecretMutationTools(server);
   },
 }).catch((err: unknown) => {
-  console.error('ferrlabs-mcp-vault fatal:', err instanceof Error ? err.message : err);
+  console.error('ferrvault-mcp fatal:', err instanceof Error ? err.message : err);
   process.exit(1);
 });

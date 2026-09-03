@@ -1,11 +1,11 @@
 {
-  "name": "@ferrlabs/mcp-track",
+  "name": "@ferrtrack/mcp",
   "version": "7.0.2",
   "description": "Model Context Protocol server for FerrTrack â€” issues, labels, comments",
   "license": "MPL-2.0",
   "type": "module",
   "bin": {
-    "ferrlabs-mcp-track": "./dist/index.js"
+    "ferrtrack-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
@@ -36,6 +36,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FerrLabs/MCP.git",
-    "directory": "packages/mcp-track"
+    "directory": "packages/ferrtrack-mcp"
   }
 }

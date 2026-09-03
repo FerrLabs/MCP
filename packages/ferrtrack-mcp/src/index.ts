@@ -9,7 +9,7 @@ import { registerMilestoneTools } from './tools/milestones.js';
 import { registerSearchTools } from './tools/search.js';
 
 runMcp({
-  name: 'ferrlabs-track',
+  name: 'ferrtrack',
   version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerProjectTools(server);
@@ -21,6 +21,6 @@ runMcp({
     registerSearchTools(server);
   },
 }).catch((err: unknown) => {
-  console.error('ferrlabs-mcp-track fatal:', err instanceof Error ? err.message : err);
+  console.error('ferrtrack-mcp fatal:', err instanceof Error ? err.message : err);
   process.exit(1);
 });

@@ -40,6 +40,42 @@ importers:
         specifier: ^4.1.8
         version: 4.1.11(@types/node@25.9.5)(@vitest/coverage-v8@4.1.11)(vite@8.2.0(@types/node@25.9.5)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
 
+  packages/ferrfleet-mcp:
+    dependencies:
+      '@ferrlabs/mcp-core':
+        specifier: workspace:^
+        version: file:packages/mcp-core(supports-color@7.2.0)(zod@4.5.4)
+      zod:
+        specifier: ^4.3.6
+        version: 4.5.4
+
+  packages/ferrgrowth-mcp:
+    dependencies:
+      '@ferrlabs/mcp-core':
+        specifier: workspace:^
+        version: file:packages/mcp-core(supports-color@7.2.0)(zod@4.5.4)
+      zod:
+        specifier: ^4.3.6
+        version: 4.5.4
+
+  packages/ferrtrack-mcp:
+    dependencies:
+      '@ferrlabs/mcp-core':
+        specifier: workspace:^
+        version: file:packages/mcp-core(supports-color@7.2.0)(zod@4.5.4)
+      zod:
+        specifier: ^4.3.6
+        version: 4.5.4
+
+  packages/ferrvault-mcp:
+    dependencies:
+      '@ferrlabs/mcp-core':
+        specifier: workspace:^
+        version: file:packages/mcp-core(supports-color@7.2.0)(zod@4.5.4)
+      zod:
+        specifier: ^4.3.6
+        version: 4.5.4
+
   packages/mcp:
     dependencies:
       '@ferrlabs/mcp-core':
@@ -57,42 +93,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.30.0(supports-color@7.2.0)(zod@4.5.4)
-
-  packages/mcp-fleet:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.5.4
-
-  packages/mcp-growth:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.5.4
-
-  packages/mcp-track:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.5.4
-
-  packages/mcp-vault:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.5.4
 
 packages:
 
@@ -281,6 +281,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@ferrlabs/mcp-core@file:packages/mcp-core':
+    resolution: {directory: packages/mcp-core, type: directory}
+    engines: {node: '>=22.0.0'}
 
   '@hono/node-server@2.0.12':
     resolution: {integrity: sha512-eWpQYr67tqJLeaSUl0Q+TquuYfUdTibpOJlUMV2FfUP7+KqCC5TufnwnlXL6mobZBJbGAYRd7ZvEBDCbLInjhg==}
@@ -1406,6 +1410,14 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@ferrlabs/mcp-core@file:packages/mcp-core(supports-color@7.2.0)(zod@4.5.4)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.30.0(supports-color@7.2.0)(zod@4.5.4)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - supports-color
+      - zod
 
   '@hono/node-server@2.0.12(hono@4.13.5)':
     dependencies:

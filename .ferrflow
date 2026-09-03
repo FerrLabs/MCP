@@ -10,15 +10,38 @@
       "name": "mcp",
       "path": ".",
       "changelog": "CHANGELOG.md",
-      "sharedPaths": ["packages/"],
+      "sharedPaths": [
+        "packages/"
+      ],
       "versionedFiles": [
-        { "path": "package.json", "format": "json" },
-        { "path": "packages/mcp-core/package.json", "format": "json" },
-        { "path": "packages/mcp/package.json", "format": "json" },
-        { "path": "packages/mcp-vault/package.json", "format": "json" },
-        { "path": "packages/mcp-track/package.json", "format": "json" },
-        { "path": "packages/mcp-growth/package.json", "format": "json" },
-        { "path": "packages/mcp-fleet/package.json", "format": "json" }
+        {
+          "path": "package.json",
+          "format": "json"
+        },
+        {
+          "path": "packages/mcp-core/package.json",
+          "format": "json"
+        },
+        {
+          "path": "packages/mcp/package.json",
+          "format": "json"
+        },
+        {
+          "path": "packages/ferrvault-mcp/package.json",
+          "format": "json"
+        },
+        {
+          "path": "packages/ferrtrack-mcp/package.json",
+          "format": "json"
+        },
+        {
+          "path": "packages/ferrgrowth-mcp/package.json",
+          "format": "json"
+        },
+        {
+          "path": "packages/ferrfleet-mcp/package.json",
+          "format": "json"
+        }
       ]
     }
   ]
