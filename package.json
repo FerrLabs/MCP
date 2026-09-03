@@ -23,7 +23,7 @@
     "*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}": "prettier --write"
   },
   "scripts": {
-    "build": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run build && pnpm --filter @ferrlabs/mcp-vault run build && pnpm --filter @ferrlabs/mcp-track run build && pnpm --filter @ferrlabs/mcp-growth run build && pnpm --filter @ferrlabs/mcp-fleet run build",
+    "build": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run build && pnpm --filter @ferrvault/mcp run build && pnpm --filter @ferrtrack/mcp run build && pnpm --filter @ferrgrowth/mcp run build && pnpm --filter @ferrfleet/mcp run build",
     "ci:local": "pnpm build && pnpm typecheck && pnpm test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -31,6 +31,6 @@
     "smoke": "pnpm build && tsx scripts/smoke.ts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run typecheck && pnpm --filter @ferrlabs/mcp-vault run typecheck && pnpm --filter @ferrlabs/mcp-track run typecheck && pnpm --filter @ferrlabs/mcp-growth run typecheck && pnpm --filter @ferrlabs/mcp-fleet run typecheck"
+    "typecheck": "pnpm --filter @ferrlabs/mcp-core run build && pnpm --filter @ferrlabs/mcp run typecheck && pnpm --filter @ferrvault/mcp run typecheck && pnpm --filter @ferrtrack/mcp run typecheck && pnpm --filter @ferrgrowth/mcp run typecheck && pnpm --filter @ferrfleet/mcp run typecheck"
   }
 }

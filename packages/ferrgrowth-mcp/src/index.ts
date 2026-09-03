@@ -8,7 +8,7 @@ import { registerSeoTools } from './tools/seo.js';
 import { registerReleaseTools } from './tools/releases.js';
 
 runMcp({
-  name: 'ferrlabs-growth',
+  name: 'ferrgrowth',
   version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerSiteTools(server);
@@ -19,6 +19,6 @@ runMcp({
     registerReleaseTools(server);
   },
 }).catch((err: unknown) => {
-  console.error('ferrlabs-mcp-growth fatal:', err instanceof Error ? err.message : err);
+  console.error('ferrgrowth-mcp fatal:', err instanceof Error ? err.message : err);
   process.exit(1);
 });

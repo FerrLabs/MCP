@@ -59,13 +59,13 @@ Create the token from `app.ferrlabs.com` → Settings → API Tokens. It's forwa
 
 This repo ships six MCP servers as separate npm packages. `@ferrlabs/mcp` is the unified entrypoint (orgs, billing, profile, public stats, docs); the four sub-MCPs target a specific product API. Add only the servers you need to your client config.
 
-| Package                | npm                    | Targets                      | Base URL env         |
-| ---------------------- | ---------------------- | ---------------------------- | -------------------- |
-| `@ferrlabs/mcp`        | `@ferrlabs/mcp`        | `api.ferrlabs.com` (unified) | `API_URL`            |
-| `@ferrlabs/mcp-vault`  | `@ferrlabs/mcp-vault`  | FerrVault secrets            | `API_URL`            |
-| `@ferrlabs/mcp-track`  | `@ferrlabs/mcp-track`  | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
-| `@ferrlabs/mcp-growth` | `@ferrlabs/mcp-growth` | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
-| `@ferrlabs/mcp-fleet`  | `@ferrlabs/mcp-fleet`  | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
+| Package           | npm               | Targets                      | Base URL env         |
+| ----------------- | ----------------- | ---------------------------- | -------------------- |
+| `@ferrlabs/mcp`   | `@ferrlabs/mcp`   | `api.ferrlabs.com` (unified) | `API_URL`            |
+| `@ferrvault/mcp`  | `@ferrvault/mcp`  | FerrVault secrets            | `API_URL`            |
+| `@ferrtrack/mcp`  | `@ferrtrack/mcp`  | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
+| `@ferrgrowth/mcp` | `@ferrgrowth/mcp` | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
+| `@ferrfleet/mcp`  | `@ferrfleet/mcp`  | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
 
 All servers share the same auth resolution (env token or OAuth loopback, see below). Register several at once:
 
@@ -73,10 +73,10 @@ All servers share the same auth resolution (env token or OAuth loopback, see bel
 {
   "mcpServers": {
     "ferrlabs": { "command": "npx", "args": ["-y", "@ferrlabs/mcp"] },
-    "ferrlabs-vault": { "command": "npx", "args": ["-y", "@ferrlabs/mcp-vault"] },
-    "ferrlabs-track": { "command": "npx", "args": ["-y", "@ferrlabs/mcp-track"] },
-    "ferrlabs-growth": { "command": "npx", "args": ["-y", "@ferrlabs/mcp-growth"] },
-    "ferrlabs-fleet": { "command": "npx", "args": ["-y", "@ferrlabs/mcp-fleet"] }
+    "ferrvault": { "command": "npx", "args": ["-y", "@ferrvault/mcp"] },
+    "ferrtrack": { "command": "npx", "args": ["-y", "@ferrtrack/mcp"] },
+    "ferrgrowth": { "command": "npx", "args": ["-y", "@ferrgrowth/mcp"] },
+    "ferrfleet": { "command": "npx", "args": ["-y", "@ferrfleet/mcp"] }
   }
 }
 ```
@@ -96,7 +96,7 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_subscriptions`, `activate_subscription`, `update_subscription`, `cancel_subscription`        | auth   | `cancel_subscription` is **destructive**                          |
 | `list_tokens`, `create_token`, `revoke_token`                                                      | auth   | `create_token` needs a session; `revoke_token` is **destructive** |
 
-### `@ferrlabs/mcp-vault`
+### `@ferrvault/mcp`
 
 | Tool                                                               | Notes                                               |
 | ------------------------------------------------------------------ | --------------------------------------------------- |
@@ -105,7 +105,7 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `create_vault`, `update_vault`, `delete_vault`                     | `delete_vault` is **destructive**                   |
 | `create_secret`, `update_secret`, `rotate_secret`, `delete_secret` | `rotate_secret`/`delete_secret` are **destructive** |
 
-### `@ferrlabs/mcp-track`
+### `@ferrtrack/mcp`
 
 | Tool                                                                                                               | Notes                                     |
 | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
@@ -116,7 +116,7 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_milestones`, `get_milestone`, `create_milestone`, `update_milestone`, `delete_milestone`                     | `delete_milestone` is **destructive**     |
 | `list_track_users`, `search_track`                                                                                 | read                                      |
 
-### `@ferrlabs/mcp-growth`
+### `@ferrgrowth/mcp`
 
 | Tool                                                                                                     | Notes                                                         |
 | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -127,7 +127,7 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_releases`, `get_release`, `activate_release`                                                       | `activate_release` is **destructive** (switches live serving) |
 | `get_analytics_summary`, `get_seo_overview`, `run_seo_audit`                                             | read / audit                                                  |
 
-### `@ferrlabs/mcp-fleet`
+### `@ferrfleet/mcp`
 
 | Tool                                         | Notes                                                   |
 | -------------------------------------------- | ------------------------------------------------------- |
@@ -157,9 +157,9 @@ FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_
 | `FERRLABS_MCP_NO_OAUTH`   | Set to `1` to disable the OAuth fallback. Then `FERRLABS_API_TOKEN` becomes required. | unset                                                                     |
 | `FERRLABS_MCP_TOKEN_PATH` | Override the path where the OAuth-acquired token is persisted.                        | `%APPDATA%\ferrlabs\mcp\token.json` / `~/.config/ferrlabs/mcp/token.json` |
 | `FERRLABS_MCP_NO_PERSIST` | Set to `1` to keep the token in memory only (re-auth on every cold start).            | unset                                                                     |
-| `FERRTRACK_API_URL`       | Base URL for the FerrTrack API (`@ferrlabs/mcp-track`).                               | `https://api.ferrtrack.com`                                               |
-| `FERRGROWTH_API_URL`      | Base URL for the FerrGrowth API (`@ferrlabs/mcp-growth`).                             | `https://api.ferrgrowth.com`                                              |
-| `FERRFLEET_API_URL`       | Base URL for the FerrFleet API (`@ferrlabs/mcp-fleet`).                               | `https://api.ferrfleet.com`                                               |
+| `FERRTRACK_API_URL`       | Base URL for the FerrTrack API (`@ferrtrack/mcp`).                                    | `https://api.ferrtrack.com`                                               |
+| `FERRGROWTH_API_URL`      | Base URL for the FerrGrowth API (`@ferrgrowth/mcp`).                                  | `https://api.ferrgrowth.com`                                              |
+| `FERRFLEET_API_URL`       | Base URL for the FerrFleet API (`@ferrfleet/mcp`).                                    | `https://api.ferrfleet.com`                                               |
 | `FERRLABS_MCP_MODE`       | Transport: `stdio` (default) or `http` (Streamable HTTP). `--http` also selects http. | `stdio`                                                                   |
 | `PORT`                    | Port for the HTTP transport (`FERRLABS_MCP_MODE=http`).                               | `3000`                                                                    |
 | `HOST`                    | Bind address for the HTTP transport.                                                  | `0.0.0.0`                                                                 |
@@ -193,6 +193,25 @@ If you set `FERRLABS_MCP_NO_OAUTH=1`, step 4 is skipped, which is what you want 
 
 Smoke: 4/4 OK
 ```
+
+## Migrating the sub-MCP package names
+
+The four product sub-MCPs moved to their product's npm scope in 8.0.0. The unified server and the shared core did not move.
+
+| Old name               | New name          |
+| ---------------------- | ----------------- |
+| `@ferrlabs/mcp-vault`  | `@ferrvault/mcp`  |
+| `@ferrlabs/mcp-track`  | `@ferrtrack/mcp`  |
+| `@ferrlabs/mcp-growth` | `@ferrgrowth/mcp` |
+| `@ferrlabs/mcp-fleet`  | `@ferrfleet/mcp`  |
+| `@ferrlabs/mcp`        | unchanged         |
+| `@ferrlabs/mcp-core`   | unchanged         |
+
+Update the package name in your MCP client config; nothing else changes. Tools, arguments and environment variables are identical, and the servers still target the same product APIs.
+
+npm has no redirect for a renamed package. The old names stay installable at 7.0.2 forever and are deprecated with a pointer here, but they receive no further releases, security fixes included. Move off them.
+
+The binaries were renamed to match, so `ferrlabs-mcp-track` is now `ferrtrack-mcp`. That matters only if you invoke them directly rather than through `npx`. The GHCR images moved the same way, from `ghcr.io/ferrlabs/mcp-track` to `ghcr.io/ferrlabs/ferrtrack-mcp`; the old image tags stay published but stop receiving new versions.
 
 ## Migrating from `@ferrflow/mcp` v3.x
 

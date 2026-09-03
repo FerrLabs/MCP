@@ -4,13 +4,13 @@ import { registerAgentTools } from './tools/agents.js';
 import { registerRunTools } from './tools/runs.js';
 
 runMcp({
-  name: 'ferrlabs-fleet',
+  name: 'ferrfleet',
   version: readPackageVersion(import.meta.url),
   register: (server) => {
     registerAgentTools(server);
     registerRunTools(server);
   },
 }).catch((err: unknown) => {
-  console.error('ferrlabs-mcp-fleet fatal:', err instanceof Error ? err.message : err);
+  console.error('ferrfleet-mcp fatal:', err instanceof Error ? err.message : err);
   process.exit(1);
 });

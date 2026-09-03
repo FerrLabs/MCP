@@ -1,11 +1,11 @@
 {
-  "name": "@ferrlabs/mcp-fleet",
+  "name": "@ferrfleet/mcp",
   "version": "7.0.2",
   "description": "Model Context Protocol server for FerrFleet â€” agents, runs, skills",
   "license": "MPL-2.0",
   "type": "module",
   "bin": {
-    "ferrlabs-mcp-fleet": "./dist/index.js"
+    "ferrfleet-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
@@ -36,6 +36,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/FerrLabs/MCP.git",
-    "directory": "packages/mcp-fleet"
+    "directory": "packages/ferrfleet-mcp"
   }
 }

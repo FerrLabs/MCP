@@ -1,4 +1,4 @@
-ARG PACKAGE=mcp
+ARG PACKAGE=@ferrlabs/mcp
 
 FROM node:24-alpine AS build
 ARG PACKAGE
@@ -9,22 +9,21 @@ RUN corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/mcp-core/package.json packages/mcp-core/
 COPY packages/mcp/package.json packages/mcp/
-COPY packages/mcp-vault/package.json packages/mcp-vault/
-COPY packages/mcp-track/package.json packages/mcp-track/
-COPY packages/mcp-growth/package.json packages/mcp-growth/
-COPY packages/mcp-fleet/package.json packages/mcp-fleet/
+COPY packages/ferrvault-mcp/package.json packages/ferrvault-mcp/
+COPY packages/ferrtrack-mcp/package.json packages/ferrtrack-mcp/
+COPY packages/ferrgrowth-mcp/package.json packages/ferrgrowth-mcp/
+COPY packages/ferrfleet-mcp/package.json packages/ferrfleet-mcp/
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/mcp-core packages/mcp-core
 COPY packages/mcp packages/mcp
-COPY packages/mcp-vault packages/mcp-vault
-COPY packages/mcp-track packages/mcp-track
-COPY packages/mcp-growth packages/mcp-growth
-COPY packages/mcp-fleet packages/mcp-fleet
+COPY packages/ferrvault-mcp packages/ferrvault-mcp
+COPY packages/ferrtrack-mcp packages/ferrtrack-mcp
+COPY packages/ferrgrowth-mcp packages/ferrgrowth-mcp
+COPY packages/ferrfleet-mcp packages/ferrfleet-mcp
 RUN pnpm run build
-RUN pnpm --filter "@ferrlabs/${PACKAGE}" deploy --prod /out
+RUN pnpm --filter "${PACKAGE}" deploy --prod --legacy /out
 
 FROM node:24-alpine
-ARG PACKAGE
 WORKDIR /app
 ENV NODE_ENV=production \
     FERRLABS_MCP_MODE=http \
