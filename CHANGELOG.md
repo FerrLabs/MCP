@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [8.0.1] - 2026-09-03
+
+### Bug Fixes
+
+- fix(docker): build mcp-core before the workspace install injects it (#322)
+
 ## [8.0.0] - 2026-09-03
 
 ### Breaking Changes
