@@ -160,6 +160,7 @@ FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_
 | `FERRTRACK_API_URL`       | Base URL for the FerrTrack API (`@ferrtrack/mcp`).                                    | `https://api.ferrtrack.com`                                               |
 | `FERRGROWTH_API_URL`      | Base URL for the FerrGrowth API (`@ferrgrowth/mcp`).                                  | `https://api.ferrgrowth.com`                                              |
 | `FERRFLEET_API_URL`       | Base URL for the FerrFleet API (`@ferrfleet/mcp`).                                    | `https://api.ferrfleet.com`                                               |
+| `FERRFLEET_API_VERSION`   | Contract version sent as `x-ferrfleet-api-version` by `@ferrfleet/mcp`.               | `2026-08-04`                                                              |
 | `FERRLABS_MCP_MODE`       | Transport: `stdio` (default) or `http` (Streamable HTTP). `--http` also selects http. | `stdio`                                                                   |
 | `PORT`                    | Port for the HTTP transport (`FERRLABS_MCP_MODE=http`).                               | `3000`                                                                    |
 | `HOST`                    | Bind address for the HTTP transport.                                                  | `0.0.0.0`                                                                 |

@@ -14,6 +14,12 @@ interface RequestOptions {
    * tool call. Falls back to `API_URL` env var, then `api.ferrlabs.com`.
    */
   baseUrl?: string;
+  /**
+   * Extra headers merged into the request, after the defaults and before the
+   * credential headers. Product APIs that negotiate a contract version use
+   * this to send their own header, e.g. `x-ferrfleet-api-version`.
+   */
+  headers?: Record<string, string>;
 }
 
 export class UnauthorizedError extends Error {
@@ -24,13 +30,17 @@ export class UnauthorizedError extends Error {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, token, baseUrl } = options;
+  const { method = 'GET', body, token, baseUrl, headers: extraHeaders } = options;
   const base = baseUrl ?? DEFAULT_API_URL;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'User-Agent': 'ferrlabs-mcp/4.0.0',
   };
+
+  for (const [name, value] of Object.entries(extraHeaders ?? {})) {
+    headers[name] = value;
+  }
 
   if (token) {
     headers['x-api-token'] = token;

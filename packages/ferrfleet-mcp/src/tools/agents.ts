@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer } from '@ferrlabs/mcp-core';
-import { FLEET_API_URL } from '../api-base.js';
+import { getToken, type McpServer } from '@ferrlabs/mcp-core';
+import { fleetRequest } from '../api-base.js';
 
 interface Agent {
   id: string;
@@ -19,7 +19,7 @@ export function registerAgentTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const agents = await apiRequest<Agent[]>('/agents', { token, baseUrl: FLEET_API_URL });
+      const agents = await fleetRequest<Agent[]>('/agents', { token });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(agents, null, 2) }],
       };
@@ -34,10 +34,7 @@ export function registerAgentTools(server: McpServer) {
     },
     async ({ agent_id }) => {
       const token = await getToken();
-      const agent = await apiRequest<Agent>(`/agents/${encodeURIComponent(agent_id)}`, {
-        token,
-        baseUrl: FLEET_API_URL,
-      });
+      const agent = await fleetRequest<Agent>(`/agents/${encodeURIComponent(agent_id)}`, { token });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(agent, null, 2) }],
       };
@@ -61,12 +58,11 @@ export function registerAgentTools(server: McpServer) {
     },
     async ({ agent_id, input, reason }) => {
       const token = await getToken();
-      const run = await apiRequest<{ id: string; status: string; created_at: string }>(
+      const run = await fleetRequest<{ id: string; status: string; created_at: string }>(
         `/agents/${encodeURIComponent(agent_id)}/runs`,
         {
           token,
           method: 'POST',
-          baseUrl: FLEET_API_URL,
           body: { input: input ?? {}, reason: reason ?? null },
         },
       );

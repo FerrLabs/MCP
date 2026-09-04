@@ -30,6 +30,25 @@ describe('apiRequest', () => {
     clearTokenCacheMock.mockReset();
   });
 
+  it('sends extra headers alongside the defaults', async () => {
+    mockFetch.mockResolvedValue(makeResponse({ ok: true }));
+    await apiRequest('/agents', { headers: { 'x-ferrfleet-api-version': '2026-08-04' } });
+    const init = mockFetch.mock.calls[0][1];
+    expect(init.headers['x-ferrfleet-api-version']).toBe('2026-08-04');
+    expect(init.headers['Content-Type']).toBe('application/json');
+  });
+
+  it('does not let an extra header overwrite the credential headers', async () => {
+    mockFetch.mockResolvedValue(makeResponse({ ok: true }));
+    await apiRequest('/agents', {
+      token: 'real',
+      headers: { Authorization: 'Bearer forged', 'x-api-token': 'forged' },
+    });
+    const init = mockFetch.mock.calls[0][1];
+    expect(init.headers['Authorization']).toBe('Bearer real');
+    expect(init.headers['x-api-token']).toBe('real');
+  });
+
   it('makes a GET request and returns parsed JSON', async () => {
     mockFetch.mockResolvedValue(makeResponse({ status: 'ok' }));
     const result = await apiRequest<{ status: string }>('/health');
