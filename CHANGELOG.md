@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [8.0.2] - 2026-09-04
+
+### Bug Fixes
+
+- fix(fleet): negotiate the API contract by date header instead of a v1 prefix (#323)
+
 ## [8.0.1] - 2026-09-03
 
 ### Bug Fixes
