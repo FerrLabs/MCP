@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer } from '@ferrlabs/mcp-core';
-import { FLEET_API_URL } from '../api-base.js';
+import { getToken, type McpServer } from '@ferrlabs/mcp-core';
+import { fleetRequest } from '../api-base.js';
 
 interface Run {
   id: string;
@@ -28,10 +28,7 @@ export function registerRunTools(server: McpServer) {
     async ({ limit }) => {
       const token = await getToken();
       const qs = limit !== undefined ? `?limit=${limit}` : '';
-      const runs = await apiRequest<Run[]>(`/runs${qs}`, {
-        token,
-        baseUrl: FLEET_API_URL,
-      });
+      const runs = await fleetRequest<Run[]>(`/runs${qs}`, { token });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(runs, null, 2) }],
       };
@@ -46,10 +43,7 @@ export function registerRunTools(server: McpServer) {
     },
     async ({ run_id }) => {
       const token = await getToken();
-      const run = await apiRequest<Run>(`/runs/${encodeURIComponent(run_id)}`, {
-        token,
-        baseUrl: FLEET_API_URL,
-      });
+      const run = await fleetRequest<Run>(`/runs/${encodeURIComponent(run_id)}`, { token });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(run, null, 2) }],
       };
@@ -64,9 +58,9 @@ export function registerRunTools(server: McpServer) {
     },
     async ({ run_id }) => {
       const token = await getToken();
-      const transcript = await apiRequest<unknown>(
+      const transcript = await fleetRequest<unknown>(
         `/runs/${encodeURIComponent(run_id)}/transcript`,
-        { token, baseUrl: FLEET_API_URL },
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(transcript, null, 2) }],
