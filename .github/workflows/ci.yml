@@ -14,20 +14,9 @@ on:
 
 jobs:
   test:
-    # Le workflow appele finit par appeler reusable-sonarqube-scan, qui demande
-    # `pull-requests: write` pour commenter le delta sur les PR. Un workflow
-    # appele ne peut pas obtenir plus que ce que son appelant lui accorde, et le
-    # defaut du repo est `read` : sans cette ligne, GitHub refuse de demarrer le
-    # run entier (startup_failure, aucun job cree, aucun message exploitable).
-    # La condition `enable-sonar` ne protege pas : les permissions sont validees
-    # au demarrage, avant toute evaluation de `if`.
     permissions:
       contents: read
       pull-requests: write
-      # Le reusable declare `packages: read` (registre npm GitHub pour les
-      # paquets `@ferrlabs/*`). Un workflow appele ne peut pas obtenir plus que
-      # son appelant : sans cette ligne la permission tombe a `none` et le run
-      # entier est refuse au demarrage, comme ci-dessus.
       packages: read
     name: Test
     uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@350e50d90a591467cdd0a1c297c0348bbf8fbcc7 # main
