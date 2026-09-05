@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [8.0.3] - 2026-09-05
+
+### Bug Fixes
+
+- perf(ci): cancel superseded pull request runs (#328)
+
 ## [8.0.2] - 2026-09-04
 
 ### Bug Fixes
