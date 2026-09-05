@@ -4,6 +4,12 @@ on:
   pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [opened, edited, reopened, synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # `pull_request_target` runs in the base's context, so `github.ref` is
+  # the base branch and every open PR would share one group.
+  cancel-in-progress: ${{ github.event_name == 'pull_request_target' }}
+
 permissions:
   pull-requests: read
 

@@ -12,6 +12,13 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Cancel superseded pull request runs. Never on a push to main: this
+  # workflow releases, so a burst of merges queues instead, which bounds
+  # it at one running and one pending release rather than one per merge.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     permissions:
