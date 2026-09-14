@@ -26,7 +26,7 @@ jobs:
       pull-requests: write
       packages: read
     name: Test
-    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@539e9aca37e08abde8d9cefbe13cd98fa62b1b41 # main
+    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@c2ba2d8915572bebd539fa5ba7ec4219bfc02f18 # main
     with:
       enable-sonar: true
       install-args: ''
@@ -44,7 +44,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: FerrLabs/.github/.github/workflows/reusable-ferrflow-release.yml@539e9aca37e08abde8d9cefbe13cd98fa62b1b41 # main
+    uses: FerrLabs/.github/.github/workflows/reusable-ferrflow-release.yml@c2ba2d8915572bebd539fa5ba7ec4219bfc02f18 # main
     with:
       dry-run: ${{ inputs.dry_run || false }}
     secrets: inherit
