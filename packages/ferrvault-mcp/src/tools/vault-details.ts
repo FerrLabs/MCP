@@ -10,6 +10,18 @@ interface VaultDetails {
   updated_at: string;
 }
 
+export async function fetchVaultDetails(
+  orgSlug: string,
+  projectSlug: string,
+  vaultId: string,
+): Promise<VaultDetails> {
+  const token = await getToken();
+  return apiRequest<VaultDetails>(
+    `/orgs/${encodeURIComponent(orgSlug)}/projects/${encodeURIComponent(projectSlug)}/vaults/${encodeURIComponent(vaultId)}`,
+    { token },
+  );
+}
+
 export function registerVaultDetailsTool(server: McpServer) {
   server.tool(
     'get_vault',
@@ -20,11 +32,7 @@ export function registerVaultDetailsTool(server: McpServer) {
       vault_id: z.string().min(1).describe('Vault id'),
     },
     async ({ org_slug, project_slug, vault_id }) => {
-      const token = await getToken();
-      const vault = await apiRequest<VaultDetails>(
-        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/vaults/${encodeURIComponent(vault_id)}`,
-        { token },
-      );
+      const vault = await fetchVaultDetails(org_slug, project_slug, vault_id);
       return {
         content: [{ type: 'text' as const, text: toToolText(vault) }],
       };

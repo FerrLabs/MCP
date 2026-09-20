@@ -137,6 +137,28 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 
 FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event`) were removed in v4.0.0. They required either a local FerrFlow CLI install or HMAC signing the MCP doesn't do. Use the FerrFlow CLI directly or fetch docs via `fetch_docs("ferrflow", "docs/...")`.
 
+## Resources and prompts
+
+Tools are not the only surface. A resource is content a client attaches once and keeps, instead of spending a turn on a tool call and leaving a blob in the transcript. A prompt is a workflow the user picks by name.
+
+| Server           | Resource                                             | What it holds                                                                    |
+| ---------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `@ferrlabs/mcp`  | `ferrlabs://org/{slug}/overview`                     | member count, active subscriptions per product, pending invites, recent activity |
+| `@ferrlabs/mcp`  | `ferrlabs://org/{slug}/usage`                        | current-period metered usage per product, with the tier limit                    |
+| `@ferrtrack/mcp` | `ferrtrack://project/{slug}/issues`                  | open issues in one project                                                       |
+| `@ferrvault/mcp` | `ferrvault://org/{org}/project/{project}/vault/{id}` | vault name, description, secret count, timestamps                                |
+
+The org and project resources enumerate themselves, so a client can browse them. The vault one does not: listing every vault would mean walking every org and every project on each request, so a vault is addressed directly by URI.
+
+**Vault resources carry metadata only.** Secret values stay behind `get_secret`, which needs `reveal=true` and is audit-logged server-side. No resource ever returns one.
+
+| Server           | Prompt           | What it does                                                                                                      |
+| ---------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `@ferrtrack/mcp` | `triage_backlog` | walks a project's open issues and proposes a decision per issue, grouped by action, without applying anything     |
+| `@ferrfleet/mcp` | `review_run`     | reads a run and reports what it did, what it changed outside its workspace, and whether the result can be trusted |
+
+Resource handlers call the same fetch functions the tools use, so a path is defined once. Capabilities are declared by the SDK when a resource or prompt is registered, so a server that exposes neither advertises neither.
+
 ## Stack
 
 | Component | Technology                         |

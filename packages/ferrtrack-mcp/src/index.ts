@@ -7,6 +7,8 @@ import { registerProjectTools } from './tools/projects.js';
 import { registerCycleTools } from './tools/cycles.js';
 import { registerMilestoneTools } from './tools/milestones.js';
 import { registerSearchTools } from './tools/search.js';
+import { registerIssueResources } from './resources/issues.js';
+import { registerTriagePrompt } from './prompts/triage.js';
 
 runMcp({
   name: 'ferrtrack',
@@ -19,6 +21,8 @@ runMcp({
     registerCycleTools(server);
     registerMilestoneTools(server);
     registerSearchTools(server);
+    registerIssueResources(server);
+    registerTriagePrompt(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrtrack-mcp fatal:', err instanceof Error ? err.message : err);

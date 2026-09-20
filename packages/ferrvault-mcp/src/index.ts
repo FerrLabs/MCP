@@ -5,6 +5,7 @@ import { registerSecretTools } from './tools/secrets.js';
 import { registerVaultAuditTools } from './tools/audit.js';
 import { registerVaultMutationTools } from './tools/vaults.js';
 import { registerSecretMutationTools } from './tools/secret-mutations.js';
+import { registerVaultResources } from './resources/vaults.js';
 
 runMcp({
   name: 'ferrvault',
@@ -15,6 +16,7 @@ runMcp({
     registerVaultAuditTools(server);
     registerVaultMutationTools(server);
     registerSecretMutationTools(server);
+    registerVaultResources(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrvault-mcp fatal:', err instanceof Error ? err.message : err);

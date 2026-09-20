@@ -2,6 +2,7 @@
 import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
 import { registerAgentTools } from './tools/agents.js';
 import { registerRunTools } from './tools/runs.js';
+import { registerRunReviewPrompt } from './prompts/run-review.js';
 
 runMcp({
   name: 'ferrfleet',
@@ -9,6 +10,7 @@ runMcp({
   register: (server) => {
     registerAgentTools(server);
     registerRunTools(server);
+    registerRunReviewPrompt(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrfleet-mcp fatal:', err instanceof Error ? err.message : err);

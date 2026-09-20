@@ -19,6 +19,29 @@ interface Issue {
   updated_at: string;
 }
 
+interface IssueFilters {
+  status?: string;
+  kind?: string;
+  assignee_id?: string;
+  limit?: number;
+}
+
+export async function fetchProjectIssues(
+  projectSlug: string,
+  filters: IssueFilters = {},
+): Promise<Issue[]> {
+  const token = await getToken();
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.kind) params.set('kind', filters.kind);
+  if (filters.assignee_id) params.set('assignee', filters.assignee_id);
+  if (filters.limit !== undefined) params.set('limit', String(filters.limit));
+  const qs = params.toString() ? `?${params.toString()}` : '';
+  return trackRequest<Issue[]>(`/projects/${encodeURIComponent(projectSlug)}/issues${qs}`, {
+    token,
+  });
+}
+
 export function registerIssueTools(server: McpServer) {
   server.tool(
     'list_issues',
@@ -43,17 +66,7 @@ export function registerIssueTools(server: McpServer) {
         .describe('Max issues to return (default 50).'),
     },
     async ({ project_slug, status, kind, assignee_id, limit }) => {
-      const token = await getToken();
-      const params = new URLSearchParams();
-      if (status) params.set('status', status);
-      if (kind) params.set('kind', kind);
-      if (assignee_id) params.set('assignee', assignee_id);
-      if (limit !== undefined) params.set('limit', String(limit));
-      const qs = params.toString() ? `?${params.toString()}` : '';
-      const issues = await trackRequest<Issue[]>(
-        `/projects/${encodeURIComponent(project_slug)}/issues${qs}`,
-        { token },
-      );
+      const issues = await fetchProjectIssues(project_slug, { status, kind, assignee_id, limit });
       return {
         content: [{ type: 'text' as const, text: toToolText(issues) }],
       };

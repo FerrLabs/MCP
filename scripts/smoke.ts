@@ -17,6 +17,10 @@ interface ServerUnderTest {
    * tool needs a credential and a live product API.
    */
   liveCalls?: LiveCall[];
+  /** URI templates the server must advertise, if it exposes resources at all. */
+  expectedResourceTemplates?: string[];
+  /** Prompt names the server must advertise, if it exposes prompts at all. */
+  expectedPrompts?: string[];
 }
 
 interface LiveCall {
@@ -53,11 +57,13 @@ const SERVERS: ServerUnderTest[] = [
         describe: (p) => `total_releases=${isRecord(p) ? String(p.total_releases) : '?'}`,
       },
     ],
+    expectedResourceTemplates: ['ferrlabs://org/{slug}/overview', 'ferrlabs://org/{slug}/usage'],
   },
   {
     pkg: 'ferrvault-mcp',
     serverName: 'ferrvault',
     expectedTools: ['get_vault', 'list_secrets', 'create_secret', 'rotate_secret', 'delete_vault'],
+    expectedResourceTemplates: ['ferrvault://org/{org}/project/{project}/vault/{id}'],
   },
   {
     pkg: 'ferrtrack-mcp',
@@ -69,6 +75,8 @@ const SERVERS: ServerUnderTest[] = [
       'plan_next_cycle',
       'delete_cycle',
     ],
+    expectedResourceTemplates: ['ferrtrack://project/{slug}/issues'],
+    expectedPrompts: ['triage_backlog'],
   },
   {
     pkg: 'ferrgrowth-mcp',
@@ -79,6 +87,7 @@ const SERVERS: ServerUnderTest[] = [
     pkg: 'ferrfleet-mcp',
     serverName: 'ferrfleet',
     expectedTools: ['list_agents', 'get_agent', 'trigger_agent_run', 'list_runs', 'get_run'],
+    expectedPrompts: ['review_run'],
   },
 ];
 
@@ -220,6 +229,36 @@ async function checkServer(server: ServerUnderTest): Promise<Check[]> {
           ? `${list.tools.length} tools registered`
           : `missing: ${missing.join(', ')}`,
     });
+
+    if (server.expectedResourceTemplates) {
+      const listed = await client.rpc<{ resourceTemplates: { uriTemplate: string }[] }>(
+        'resources/templates/list',
+      );
+      const advertised = new Set(listed.resourceTemplates.map((r) => r.uriTemplate));
+      const absent = server.expectedResourceTemplates.filter((t) => !advertised.has(t));
+      checks.push({
+        name: `${server.serverName}: resources/templates/list`,
+        ok: absent.length === 0,
+        detail:
+          absent.length === 0
+            ? `${listed.resourceTemplates.length} templates advertised`
+            : `missing: ${absent.join(', ')}`,
+      });
+    }
+
+    if (server.expectedPrompts) {
+      const listed = await client.rpc<{ prompts: { name: string }[] }>('prompts/list');
+      const advertised = new Set(listed.prompts.map((p) => p.name));
+      const absent = server.expectedPrompts.filter((n) => !advertised.has(n));
+      checks.push({
+        name: `${server.serverName}: prompts/list`,
+        ok: absent.length === 0,
+        detail:
+          absent.length === 0
+            ? `${listed.prompts.length} prompts advertised`
+            : `missing: ${absent.join(', ')}`,
+      });
+    }
 
     for (const call of server.liveCalls ?? []) {
       const result = await client.rpc<ToolResult>('tools/call', {

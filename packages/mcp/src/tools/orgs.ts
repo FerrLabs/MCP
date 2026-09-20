@@ -20,14 +20,23 @@ interface ProjectWithCounts {
   created_at: string;
 }
 
+export async function fetchOrgs(): Promise<OrgWithMemberCount[]> {
+  const token = await getToken();
+  return apiRequest<OrgWithMemberCount[]>('/orgs', { token });
+}
+
+export async function listOrgSlugs(): Promise<string[]> {
+  const orgs = await fetchOrgs();
+  return orgs.map((org) => org.slug);
+}
+
 export function registerOrgsTools(server: McpServer) {
   server.tool(
     'list_orgs',
     'List FerrLabs organizations the authenticated user belongs to',
     {},
     async () => {
-      const token = await getToken();
-      const orgs = await apiRequest<OrgWithMemberCount[]>('/orgs', { token });
+      const orgs = await fetchOrgs();
       return {
         content: [{ type: 'text' as const, text: toToolText(orgs) }],
       };
