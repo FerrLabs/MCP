@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface Cycle {
   id: string;
@@ -31,10 +31,7 @@ export function registerCycleTools(server: McpServer) {
     },
     async ({ cycle_id }) => {
       const token = await getToken();
-      const cycle = await apiRequest<Cycle>(`/v1/cycles/${encodeURIComponent(cycle_id)}`, {
-        token,
-        baseUrl: TRACK_API_URL,
-      });
+      const cycle = await trackRequest<Cycle>(`/cycles/${encodeURIComponent(cycle_id)}`, { token });
       return {
         content: [{ type: 'text' as const, text: toToolText(cycle) }],
       };
@@ -49,9 +46,9 @@ export function registerCycleTools(server: McpServer) {
     },
     async ({ project_slug }) => {
       const token = await getToken();
-      const cycles = await apiRequest<Cycle[]>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/cycles`,
-        { token, baseUrl: TRACK_API_URL },
+      const cycles = await trackRequest<Cycle[]>(
+        `/projects/${encodeURIComponent(project_slug)}/cycles`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(cycles) }],
@@ -67,9 +64,9 @@ export function registerCycleTools(server: McpServer) {
     },
     async ({ cycle_id }) => {
       const token = await getToken();
-      const issues = await apiRequest<CycleIssue[]>(
-        `/v1/cycles/${encodeURIComponent(cycle_id)}/issues`,
-        { token, baseUrl: TRACK_API_URL },
+      const issues = await trackRequest<CycleIssue[]>(
+        `/cycles/${encodeURIComponent(cycle_id)}/issues`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(issues) }],
@@ -88,11 +85,10 @@ export function registerCycleTools(server: McpServer) {
     },
     async ({ project_slug, name, starts_at, ends_at }) => {
       const token = await getToken();
-      const cycle = await apiRequest<Cycle>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/cycles`,
+      const cycle = await trackRequest<Cycle>(
+        `/projects/${encodeURIComponent(project_slug)}/cycles`,
         {
           token,
-          baseUrl: TRACK_API_URL,
           method: 'POST',
           body: { name, starts_at, ends_at },
         },
@@ -111,9 +107,9 @@ export function registerCycleTools(server: McpServer) {
     },
     async ({ project_slug }) => {
       const token = await getToken();
-      const cycle = await apiRequest<Cycle>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/cycles/plan`,
-        { token, baseUrl: TRACK_API_URL, method: 'POST' },
+      const cycle = await trackRequest<Cycle>(
+        `/projects/${encodeURIComponent(project_slug)}/cycles/plan`,
+        { token, method: 'POST' },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(cycle) }],
@@ -137,9 +133,8 @@ export function registerCycleTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const cycle = await apiRequest<Cycle>(`/v1/cycles/${encodeURIComponent(cycle_id)}`, {
+      const cycle = await trackRequest<Cycle>(`/cycles/${encodeURIComponent(cycle_id)}`, {
         token,
-        baseUrl: TRACK_API_URL,
         method: 'PATCH',
         body,
       });
@@ -157,9 +152,8 @@ export function registerCycleTools(server: McpServer) {
     },
     async ({ cycle_id }) => {
       const token = await getToken();
-      await apiRequest<void>(`/v1/cycles/${encodeURIComponent(cycle_id)}`, {
+      await trackRequest<void>(`/cycles/${encodeURIComponent(cycle_id)}`, {
         token,
-        baseUrl: TRACK_API_URL,
         method: 'DELETE',
       });
       return {

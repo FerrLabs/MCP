@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { GROWTH_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { growthRequest } from '../api-base.js';
 
 interface SeoOverview {
   site_id: string;
@@ -27,9 +27,9 @@ export function registerSeoTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      const overview = await apiRequest<SeoOverview>(
-        `/v1/sites/${encodeURIComponent(site_id)}/audits/seo/overview`,
-        { token, baseUrl: GROWTH_API_URL },
+      const overview = await growthRequest<SeoOverview>(
+        `/sites/${encodeURIComponent(site_id)}/audits/seo/overview`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(overview) }],
@@ -46,9 +46,9 @@ export function registerSeoTools(server: McpServer) {
     },
     async ({ site_id, page_slug }) => {
       const token = await getToken();
-      const result = await apiRequest<SeoAuditResult>(
-        `/v1/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}/audits/seo`,
-        { token, method: 'POST', baseUrl: GROWTH_API_URL },
+      const result = await growthRequest<SeoAuditResult>(
+        `/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}/audits/seo`,
+        { token, method: 'POST' },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(result) }],

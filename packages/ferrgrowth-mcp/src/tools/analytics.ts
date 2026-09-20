@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { GROWTH_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { growthRequest } from '../api-base.js';
 
 interface AnalyticsSummary {
   site_id: string;
@@ -29,9 +29,9 @@ export function registerAnalyticsTools(server: McpServer) {
       if (from) params.set('from', from);
       if (to) params.set('to', to);
       const qs = params.toString() ? `?${params.toString()}` : '';
-      const summary = await apiRequest<AnalyticsSummary>(
-        `/v1/sites/${encodeURIComponent(site_id)}/analytics${qs}`,
-        { token, baseUrl: GROWTH_API_URL },
+      const summary = await growthRequest<AnalyticsSummary>(
+        `/sites/${encodeURIComponent(site_id)}/analytics${qs}`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(summary) }],

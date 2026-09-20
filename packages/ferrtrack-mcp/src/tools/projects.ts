@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface Project {
   id: string;
@@ -19,10 +19,7 @@ export function registerProjectTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const projects = await apiRequest<Project[]>('/v1/projects', {
-        token,
-        baseUrl: TRACK_API_URL,
-      });
+      const projects = await trackRequest<Project[]>('/projects', { token });
       return {
         content: [{ type: 'text' as const, text: toToolText(projects) }],
       };
@@ -37,10 +34,9 @@ export function registerProjectTools(server: McpServer) {
     },
     async ({ project_slug }) => {
       const token = await getToken();
-      const project = await apiRequest<Project>(
-        `/v1/projects/${encodeURIComponent(project_slug)}`,
-        { token, baseUrl: TRACK_API_URL },
-      );
+      const project = await trackRequest<Project>(`/projects/${encodeURIComponent(project_slug)}`, {
+        token,
+      });
       return {
         content: [{ type: 'text' as const, text: toToolText(project) }],
       };
@@ -62,9 +58,8 @@ export function registerProjectTools(server: McpServer) {
     },
     async ({ slug, prefix, name, summary }) => {
       const token = await getToken();
-      const project = await apiRequest<Project>('/v1/projects', {
+      const project = await trackRequest<Project>('/projects', {
         token,
-        baseUrl: TRACK_API_URL,
         method: 'POST',
         body: {
           slug,
@@ -93,10 +88,11 @@ export function registerProjectTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const project = await apiRequest<Project>(
-        `/v1/projects/${encodeURIComponent(project_slug)}`,
-        { token, baseUrl: TRACK_API_URL, method: 'PATCH', body },
-      );
+      const project = await trackRequest<Project>(`/projects/${encodeURIComponent(project_slug)}`, {
+        token,
+        method: 'PATCH',
+        body,
+      });
       return {
         content: [{ type: 'text' as const, text: toToolText(project) }],
       };

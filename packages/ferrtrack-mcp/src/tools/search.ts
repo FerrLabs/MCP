@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface SearchHit {
   kind: 'issue' | 'project';
@@ -36,10 +36,7 @@ export function registerSearchTools(server: McpServer) {
       const token = await getToken();
       const params = new URLSearchParams({ q });
       if (limit !== undefined) params.set('limit', String(limit));
-      const hits = await apiRequest<SearchHit[]>(`/v1/search?${params.toString()}`, {
-        token,
-        baseUrl: TRACK_API_URL,
-      });
+      const hits = await trackRequest<SearchHit[]>(`/search?${params.toString()}`, { token });
       return {
         content: [{ type: 'text' as const, text: toToolText(hits) }],
       };
@@ -52,10 +49,7 @@ export function registerSearchTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const users = await apiRequest<TrackUser[]>('/v1/users', {
-        token,
-        baseUrl: TRACK_API_URL,
-      });
+      const users = await trackRequest<TrackUser[]>('/users', { token });
       return {
         content: [{ type: 'text' as const, text: toToolText(users) }],
       };

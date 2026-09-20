@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { GROWTH_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { growthRequest } from '../api-base.js';
 
 interface Release {
   id: string;
@@ -21,9 +21,9 @@ export function registerReleaseTools(server: McpServer) {
     },
     async ({ site_id, release_id }) => {
       const token = await getToken();
-      const release = await apiRequest<Release>(
-        `/v1/sites/${encodeURIComponent(site_id)}/releases/${encodeURIComponent(release_id)}`,
-        { token, baseUrl: GROWTH_API_URL },
+      const release = await growthRequest<Release>(
+        `/sites/${encodeURIComponent(site_id)}/releases/${encodeURIComponent(release_id)}`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(release) }],
@@ -39,9 +39,9 @@ export function registerReleaseTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      const releases = await apiRequest<Release[]>(
-        `/v1/sites/${encodeURIComponent(site_id)}/releases`,
-        { token, baseUrl: GROWTH_API_URL },
+      const releases = await growthRequest<Release[]>(
+        `/sites/${encodeURIComponent(site_id)}/releases`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(releases) }],
@@ -58,9 +58,9 @@ export function registerReleaseTools(server: McpServer) {
     },
     async ({ site_id, release_id }) => {
       const token = await getToken();
-      const release = await apiRequest<Release>(
-        `/v1/sites/${encodeURIComponent(site_id)}/releases/${encodeURIComponent(release_id)}/activate`,
-        { token, baseUrl: GROWTH_API_URL, method: 'POST' },
+      const release = await growthRequest<Release>(
+        `/sites/${encodeURIComponent(site_id)}/releases/${encodeURIComponent(release_id)}/activate`,
+        { token, method: 'POST' },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(release) }],

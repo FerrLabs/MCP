@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface IssueDetails {
   id: string;
@@ -28,9 +28,8 @@ export function registerIssueDetailsTool(server: McpServer) {
     },
     async ({ issue_ref }) => {
       const token = await getToken();
-      const issue = await apiRequest<IssueDetails>(`/v1/issues/${encodeURIComponent(issue_ref)}`, {
+      const issue = await trackRequest<IssueDetails>(`/issues/${encodeURIComponent(issue_ref)}`, {
         token,
-        baseUrl: TRACK_API_URL,
       });
       return {
         content: [{ type: 'text' as const, text: toToolText(issue) }],

@@ -29,16 +29,22 @@ function ok(body: unknown = { id: 'x' }): Response {
   } as unknown as Response;
 }
 
-function lastCall(): { url: string; method: string; body: unknown } {
+function lastCall(): {
+  url: string;
+  method: string;
+  body: unknown;
+  headers: Record<string, string>;
+} {
   const [url, init] = mockFetch.mock.calls[0];
   return {
     url: String(url),
     method: init.method ?? 'GET',
     body: init.body ? JSON.parse(init.body) : undefined,
+    headers: init.headers as Record<string, string>,
   };
 }
 
-const GROWTH = 'https://api.ferrgrowth.com/v1';
+const GROWTH = 'https://api.ferrgrowth.com';
 
 describe('ferrgrowth write tools', () => {
   beforeEach(async () => {
@@ -54,6 +60,14 @@ describe('ferrgrowth write tools', () => {
     registerPageTools(mockServer);
     registerFormTools(mockServer);
     registerReleaseTools(mockServer);
+  });
+
+  it('negotiates the contract by date header, with no version left in the path', async () => {
+    await handlers.get('create_site')!({ slug: 'shop', name: 'Shop' });
+
+    const call = lastCall();
+    expect(call.headers['x-ferrgrowth-api-version']).toBe('2026-08-04');
+    expect(call.url).not.toContain('/v1/');
   });
 
   it('every call goes to the FerrGrowth API', async () => {
