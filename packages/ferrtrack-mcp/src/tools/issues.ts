@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface Issue {
   id: string;
@@ -50,9 +50,9 @@ export function registerIssueTools(server: McpServer) {
       if (assignee_id) params.set('assignee', assignee_id);
       if (limit !== undefined) params.set('limit', String(limit));
       const qs = params.toString() ? `?${params.toString()}` : '';
-      const issues = await apiRequest<Issue[]>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/issues${qs}`,
-        { token, baseUrl: TRACK_API_URL },
+      const issues = await trackRequest<Issue[]>(
+        `/projects/${encodeURIComponent(project_slug)}/issues${qs}`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(issues) }],
@@ -76,11 +76,10 @@ export function registerIssueTools(server: McpServer) {
     },
     async ({ project_slug, title, body, kind, labels, assignee_id }) => {
       const token = await getToken();
-      const issue = await apiRequest<Issue>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/issues`,
+      const issue = await trackRequest<Issue>(
+        `/projects/${encodeURIComponent(project_slug)}/issues`,
         {
           token,
-          baseUrl: TRACK_API_URL,
           method: 'POST',
           body: {
             title,
@@ -120,9 +119,8 @@ export function registerIssueTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const issue = await apiRequest<Issue>(`/v1/issues/${encodeURIComponent(issue_ref)}`, {
+      const issue = await trackRequest<Issue>(`/issues/${encodeURIComponent(issue_ref)}`, {
         token,
-        baseUrl: TRACK_API_URL,
         method: 'PATCH',
         body,
       });
@@ -140,9 +138,8 @@ export function registerIssueTools(server: McpServer) {
     },
     async ({ issue_ref }) => {
       const token = await getToken();
-      const links = await apiRequest<unknown>(`/v1/issues/${encodeURIComponent(issue_ref)}/links`, {
+      const links = await trackRequest<unknown>(`/issues/${encodeURIComponent(issue_ref)}/links`, {
         token,
-        baseUrl: TRACK_API_URL,
       });
       return {
         content: [{ type: 'text' as const, text: toToolText(links) }],

@@ -29,16 +29,22 @@ function ok(body: unknown = { id: 'x' }): Response {
   } as unknown as Response;
 }
 
-function lastCall(): { url: string; method: string; body: unknown } {
+function lastCall(): {
+  url: string;
+  method: string;
+  body: unknown;
+  headers: Record<string, string>;
+} {
   const [url, init] = mockFetch.mock.calls[0];
   return {
     url: String(url),
     method: init.method ?? 'GET',
     body: init.body ? JSON.parse(init.body) : undefined,
+    headers: init.headers as Record<string, string>,
   };
 }
 
-const TRACK = 'https://api.ferrtrack.com/v1';
+const TRACK = 'https://api.ferrtrack.com';
 
 describe('ferrtrack write tools', () => {
   beforeEach(async () => {
@@ -52,6 +58,14 @@ describe('ferrtrack write tools', () => {
     registerIssueTools(mockServer);
     registerCycleTools(mockServer);
     registerCommentTools(mockServer);
+  });
+
+  it('negotiates the contract by date header, with no version left in the path', async () => {
+    await handlers.get('create_issue')!({ project_slug: 'web', title: 'Bug' });
+
+    const call = lastCall();
+    expect(call.headers['x-ferrtrack-api-version']).toBe('2026-08-04');
+    expect(call.url).not.toContain('/v1/');
   });
 
   it('every call goes to the FerrTrack API, not the unified one', async () => {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface Comment {
   id: string;
@@ -20,9 +20,9 @@ export function registerCommentTools(server: McpServer) {
     },
     async ({ issue_ref }) => {
       const token = await getToken();
-      const comments = await apiRequest<Comment[]>(
-        `/v1/issues/${encodeURIComponent(issue_ref)}/comments`,
-        { token, baseUrl: TRACK_API_URL },
+      const comments = await trackRequest<Comment[]>(
+        `/issues/${encodeURIComponent(issue_ref)}/comments`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(comments) }],
@@ -39,9 +39,9 @@ export function registerCommentTools(server: McpServer) {
     },
     async ({ issue_ref, body }) => {
       const token = await getToken();
-      const comment = await apiRequest<Comment>(
-        `/v1/issues/${encodeURIComponent(issue_ref)}/comments`,
-        { token, baseUrl: TRACK_API_URL, method: 'POST', body: { body } },
+      const comment = await trackRequest<Comment>(
+        `/issues/${encodeURIComponent(issue_ref)}/comments`,
+        { token, method: 'POST', body: { body } },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(comment) }],
@@ -59,9 +59,9 @@ export function registerCommentTools(server: McpServer) {
     },
     async ({ issue_ref, comment_id, body }) => {
       const token = await getToken();
-      const comment = await apiRequest<Comment>(
-        `/v1/issues/${encodeURIComponent(issue_ref)}/comments/${encodeURIComponent(comment_id)}`,
-        { token, baseUrl: TRACK_API_URL, method: 'PATCH', body: { body } },
+      const comment = await trackRequest<Comment>(
+        `/issues/${encodeURIComponent(issue_ref)}/comments/${encodeURIComponent(comment_id)}`,
+        { token, method: 'PATCH', body: { body } },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(comment) }],
@@ -78,9 +78,9 @@ export function registerCommentTools(server: McpServer) {
     },
     async ({ issue_ref, comment_id }) => {
       const token = await getToken();
-      await apiRequest<void>(
-        `/v1/issues/${encodeURIComponent(issue_ref)}/comments/${encodeURIComponent(comment_id)}`,
-        { token, baseUrl: TRACK_API_URL, method: 'DELETE' },
+      await trackRequest<void>(
+        `/issues/${encodeURIComponent(issue_ref)}/comments/${encodeURIComponent(comment_id)}`,
+        { token, method: 'DELETE' },
       );
       return {
         content: [{ type: 'text' as const, text: `Comment ${comment_id} deleted.` }],

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { TRACK_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { trackRequest } from '../api-base.js';
 
 interface Milestone {
   id: string;
@@ -22,9 +22,9 @@ export function registerMilestoneTools(server: McpServer) {
     },
     async ({ milestone_id }) => {
       const token = await getToken();
-      const milestone = await apiRequest<Milestone>(
-        `/v1/milestones/${encodeURIComponent(milestone_id)}`,
-        { token, baseUrl: TRACK_API_URL },
+      const milestone = await trackRequest<Milestone>(
+        `/milestones/${encodeURIComponent(milestone_id)}`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(milestone) }],
@@ -40,9 +40,9 @@ export function registerMilestoneTools(server: McpServer) {
     },
     async ({ project_slug }) => {
       const token = await getToken();
-      const milestones = await apiRequest<Milestone[]>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/milestones`,
-        { token, baseUrl: TRACK_API_URL },
+      const milestones = await trackRequest<Milestone[]>(
+        `/projects/${encodeURIComponent(project_slug)}/milestones`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(milestones) }],
@@ -61,11 +61,10 @@ export function registerMilestoneTools(server: McpServer) {
     },
     async ({ project_slug, name, description, due_at }) => {
       const token = await getToken();
-      const milestone = await apiRequest<Milestone>(
-        `/v1/projects/${encodeURIComponent(project_slug)}/milestones`,
+      const milestone = await trackRequest<Milestone>(
+        `/projects/${encodeURIComponent(project_slug)}/milestones`,
         {
           token,
-          baseUrl: TRACK_API_URL,
           method: 'POST',
           body: {
             name,
@@ -96,9 +95,9 @@ export function registerMilestoneTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const milestone = await apiRequest<Milestone>(
-        `/v1/milestones/${encodeURIComponent(milestone_id)}`,
-        { token, baseUrl: TRACK_API_URL, method: 'PATCH', body },
+      const milestone = await trackRequest<Milestone>(
+        `/milestones/${encodeURIComponent(milestone_id)}`,
+        { token, method: 'PATCH', body },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(milestone) }],
@@ -114,9 +113,8 @@ export function registerMilestoneTools(server: McpServer) {
     },
     async ({ milestone_id }) => {
       const token = await getToken();
-      await apiRequest<void>(`/v1/milestones/${encodeURIComponent(milestone_id)}`, {
+      await trackRequest<void>(`/milestones/${encodeURIComponent(milestone_id)}`, {
         token,
-        baseUrl: TRACK_API_URL,
         method: 'DELETE',
       });
       return {

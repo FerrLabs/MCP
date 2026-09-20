@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { GROWTH_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { growthRequest } from '../api-base.js';
 
 interface Page {
   id: string;
@@ -21,9 +21,8 @@ export function registerPageTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      const pages = await apiRequest<Page[]>(`/v1/sites/${encodeURIComponent(site_id)}/pages`, {
+      const pages = await growthRequest<Page[]>(`/sites/${encodeURIComponent(site_id)}/pages`, {
         token,
-        baseUrl: GROWTH_API_URL,
       });
       return {
         content: [{ type: 'text' as const, text: toToolText(pages) }],
@@ -40,9 +39,9 @@ export function registerPageTools(server: McpServer) {
     },
     async ({ site_id, page_slug }) => {
       const token = await getToken();
-      const page = await apiRequest<Page>(
-        `/v1/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}`,
-        { token, baseUrl: GROWTH_API_URL },
+      const page = await growthRequest<Page>(
+        `/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(page) }],
@@ -59,9 +58,9 @@ export function registerPageTools(server: McpServer) {
     },
     async ({ site_id, page_slug }) => {
       const token = await getToken();
-      const page = await apiRequest<Page>(
-        `/v1/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}/publish`,
-        { token, method: 'POST', baseUrl: GROWTH_API_URL },
+      const page = await growthRequest<Page>(
+        `/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}/publish`,
+        { token, method: 'POST' },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(page) }],
@@ -87,9 +86,8 @@ export function registerPageTools(server: McpServer) {
     },
     async ({ site_id, slug, title, content }) => {
       const token = await getToken();
-      const page = await apiRequest<Page>(`/v1/sites/${encodeURIComponent(site_id)}/pages`, {
+      const page = await growthRequest<Page>(`/sites/${encodeURIComponent(site_id)}/pages`, {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'POST',
         body: { slug, title, content: content ?? '' },
       });
@@ -122,9 +120,9 @@ export function registerPageTools(server: McpServer) {
       for (const [k, v] of Object.entries(rest)) {
         if (v !== undefined) body[k] = v;
       }
-      const page = await apiRequest<Page>(
-        `/v1/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}`,
-        { token, baseUrl: GROWTH_API_URL, method: 'PATCH', body },
+      const page = await growthRequest<Page>(
+        `/sites/${encodeURIComponent(site_id)}/pages/${encodeURIComponent(page_slug)}`,
+        { token, method: 'PATCH', body },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(page) }],
@@ -141,11 +139,10 @@ export function registerPageTools(server: McpServer) {
     },
     async ({ site_id, url }) => {
       const token = await getToken();
-      const result = await apiRequest<unknown>(
-        `/v1/sites/${encodeURIComponent(site_id)}/pages/discover`,
+      const result = await growthRequest<unknown>(
+        `/sites/${encodeURIComponent(site_id)}/pages/discover`,
         {
           token,
-          baseUrl: GROWTH_API_URL,
           method: 'POST',
           body: { url },
         },
@@ -174,11 +171,10 @@ export function registerPageTools(server: McpServer) {
     },
     async ({ site_id, pages }) => {
       const token = await getToken();
-      const result = await apiRequest<unknown>(
-        `/v1/sites/${encodeURIComponent(site_id)}/pages/import`,
+      const result = await growthRequest<unknown>(
+        `/sites/${encodeURIComponent(site_id)}/pages/import`,
         {
           token,
-          baseUrl: GROWTH_API_URL,
           method: 'POST',
           body: { pages },
         },

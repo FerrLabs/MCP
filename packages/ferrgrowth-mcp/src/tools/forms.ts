@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { GROWTH_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { growthRequest } from '../api-base.js';
 
 interface Form {
   id: string;
@@ -30,9 +30,9 @@ export function registerFormTools(server: McpServer) {
     },
     async ({ site_id, form_id }) => {
       const token = await getToken();
-      const form = await apiRequest<Form>(
-        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
-        { token, baseUrl: GROWTH_API_URL },
+      const form = await growthRequest<Form>(
+        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
+        { token },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(form) }],
@@ -48,9 +48,8 @@ export function registerFormTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      const forms = await apiRequest<Form[]>(`/v1/sites/${encodeURIComponent(site_id)}/forms`, {
+      const forms = await growthRequest<Form[]>(`/sites/${encodeURIComponent(site_id)}/forms`, {
         token,
-        baseUrl: GROWTH_API_URL,
       });
       return {
         content: [{ type: 'text' as const, text: toToolText(forms) }],
@@ -75,9 +74,9 @@ export function registerFormTools(server: McpServer) {
     async ({ site_id, form_id, limit }) => {
       const token = await getToken();
       const qs = limit !== undefined ? `?limit=${limit}` : '';
-      const subs = await apiRequest<FormSubmission[]>(
-        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}/submissions${qs}`,
-        { token, baseUrl: GROWTH_API_URL },
+      const subs = await growthRequest<FormSubmission[]>(
+        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}/submissions${qs}`,
+        { token },
       );
       return {
         content: [
@@ -113,9 +112,8 @@ export function registerFormTools(server: McpServer) {
     },
     async ({ site_id, name, fields }) => {
       const token = await getToken();
-      const form = await apiRequest<Form>(`/v1/sites/${encodeURIComponent(site_id)}/forms`, {
+      const form = await growthRequest<Form>(`/sites/${encodeURIComponent(site_id)}/forms`, {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'POST',
         body: { name, fields },
       });
@@ -148,9 +146,9 @@ export function registerFormTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const form = await apiRequest<Form>(
-        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
-        { token, baseUrl: GROWTH_API_URL, method: 'PATCH', body },
+      const form = await growthRequest<Form>(
+        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
+        { token, method: 'PATCH', body },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(form) }],
@@ -167,9 +165,9 @@ export function registerFormTools(server: McpServer) {
     },
     async ({ site_id, form_id }) => {
       const token = await getToken();
-      await apiRequest<void>(
-        `/v1/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
-        { token, baseUrl: GROWTH_API_URL, method: 'DELETE' },
+      await growthRequest<void>(
+        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
+        { token, method: 'DELETE' },
       );
       return {
         content: [{ type: 'text' as const, text: `Form ${form_id} deleted.` }],

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { apiRequest, getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { GROWTH_API_URL } from '../api-base.js';
+import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
+import { growthRequest } from '../api-base.js';
 
 interface Site {
   id: string;
@@ -19,7 +19,7 @@ export function registerSiteTools(server: McpServer) {
     {},
     async () => {
       const token = await getToken();
-      const sites = await apiRequest<Site[]>('/v1/sites', { token, baseUrl: GROWTH_API_URL });
+      const sites = await growthRequest<Site[]>('/sites', { token });
       return {
         content: [{ type: 'text' as const, text: toToolText(sites) }],
       };
@@ -34,10 +34,7 @@ export function registerSiteTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      const site = await apiRequest<Site>(`/v1/sites/${encodeURIComponent(site_id)}`, {
-        token,
-        baseUrl: GROWTH_API_URL,
-      });
+      const site = await growthRequest<Site>(`/sites/${encodeURIComponent(site_id)}`, { token });
       return {
         content: [{ type: 'text' as const, text: toToolText(site) }],
       };
@@ -57,9 +54,8 @@ export function registerSiteTools(server: McpServer) {
     },
     async ({ slug, name }) => {
       const token = await getToken();
-      const site = await apiRequest<Site>('/v1/sites', {
+      const site = await growthRequest<Site>('/sites', {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'POST',
         body: { slug, name },
       });
@@ -88,9 +84,8 @@ export function registerSiteTools(server: McpServer) {
       for (const [k, v] of Object.entries(patch)) {
         if (v !== undefined) body[k] = v;
       }
-      const site = await apiRequest<Site>(`/v1/sites/${encodeURIComponent(site_id)}`, {
+      const site = await growthRequest<Site>(`/sites/${encodeURIComponent(site_id)}`, {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'PATCH',
         body,
       });
@@ -108,9 +103,8 @@ export function registerSiteTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      await apiRequest<void>(`/v1/sites/${encodeURIComponent(site_id)}`, {
+      await growthRequest<void>(`/sites/${encodeURIComponent(site_id)}`, {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'DELETE',
       });
       return {
@@ -132,9 +126,8 @@ export function registerSiteTools(server: McpServer) {
     },
     async ({ site_id, domain }) => {
       const token = await getToken();
-      const result = await apiRequest<unknown>(`/v1/sites/${encodeURIComponent(site_id)}/domain`, {
+      const result = await growthRequest<unknown>(`/sites/${encodeURIComponent(site_id)}/domain`, {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'POST',
         body: { domain },
       });
@@ -152,9 +145,9 @@ export function registerSiteTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      const result = await apiRequest<unknown>(
-        `/v1/sites/${encodeURIComponent(site_id)}/domain/verify`,
-        { token, baseUrl: GROWTH_API_URL, method: 'POST' },
+      const result = await growthRequest<unknown>(
+        `/sites/${encodeURIComponent(site_id)}/domain/verify`,
+        { token, method: 'POST' },
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(result) }],
@@ -170,9 +163,8 @@ export function registerSiteTools(server: McpServer) {
     },
     async ({ site_id }) => {
       const token = await getToken();
-      await apiRequest<void>(`/v1/sites/${encodeURIComponent(site_id)}/domain`, {
+      await growthRequest<void>(`/sites/${encodeURIComponent(site_id)}/domain`, {
         token,
-        baseUrl: GROWTH_API_URL,
         method: 'DELETE',
       });
       return {
