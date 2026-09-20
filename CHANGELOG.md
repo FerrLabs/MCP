@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [8.2.0] - 2026-09-20
+
+### Features
+
+- feat(mcp): expose resources and prompts alongside the tools (#358)
+
 ## [8.1.1] - 2026-09-20
 
 ### Bug Fixes
