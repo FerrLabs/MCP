@@ -12,14 +12,18 @@ interface Project {
   updated_at: string;
 }
 
+export async function fetchProjects(): Promise<Project[]> {
+  const token = await getToken();
+  return trackRequest<Project[]>('/projects', { token });
+}
+
 export function registerProjectTools(server: McpServer) {
   server.tool(
     'list_projects',
     "List FerrTrack projects in the caller's active organization.",
     {},
     async () => {
-      const token = await getToken();
-      const projects = await trackRequest<Project[]>('/projects', { token });
+      const projects = await fetchProjects();
       return {
         content: [{ type: 'text' as const, text: toToolText(projects) }],
       };

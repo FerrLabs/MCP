@@ -9,6 +9,7 @@ import { registerVaultsTools } from './tools/vaults.js';
 import { registerIssuesTools } from './tools/issues.js';
 import { registerSubscriptionsTools } from './tools/subscriptions.js';
 import { registerDocsTools } from './tools/docs.js';
+import { registerOrgResources } from './resources/orgs.js';
 
 runMcp({
   name: 'ferrlabs',
@@ -23,6 +24,7 @@ runMcp({
     registerIssuesTools(server);
     registerSubscriptionsTools(server);
     registerDocsTools(server);
+    registerOrgResources(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrlabs-mcp fatal:', err instanceof Error ? err.message : err);

@@ -12,7 +12,7 @@ interface Org {
   updated_at: string;
 }
 
-interface OrgOverview {
+export interface OrgOverview {
   org: Org;
   member_count: number;
   active_subscriptions: Array<{ product: string; tier: string; status: string }>;
@@ -20,7 +20,7 @@ interface OrgOverview {
   recent_activity_count: number;
 }
 
-interface OrgUsage {
+export interface OrgUsage {
   org_slug: string;
   period: { from: string; to: string };
   per_product: Array<{
@@ -60,6 +60,16 @@ interface Team {
 
 function orgBase(slug: string): string {
   return `/orgs/${encodeURIComponent(slug)}`;
+}
+
+export async function fetchOrgOverview(orgSlug: string): Promise<OrgOverview> {
+  const token = await getToken();
+  return apiRequest<OrgOverview>(`${orgBase(orgSlug)}/overview`, { token });
+}
+
+export async function fetchOrgUsage(orgSlug: string): Promise<OrgUsage> {
+  const token = await getToken();
+  return apiRequest<OrgUsage>(`${orgBase(orgSlug)}/usage`, { token });
 }
 
 export function registerOrgAdminTools(server: McpServer) {
@@ -111,8 +121,7 @@ export function registerOrgAdminTools(server: McpServer) {
       org_slug: z.string().min(1).describe('Organization slug'),
     },
     async ({ org_slug }) => {
-      const token = await getToken();
-      const overview = await apiRequest<OrgOverview>(`${orgBase(org_slug)}/overview`, { token });
+      const overview = await fetchOrgOverview(org_slug);
       return { content: [{ type: 'text' as const, text: toToolText(overview) }] };
     },
   );
@@ -124,8 +133,7 @@ export function registerOrgAdminTools(server: McpServer) {
       org_slug: z.string().min(1).describe('Organization slug'),
     },
     async ({ org_slug }) => {
-      const token = await getToken();
-      const usage = await apiRequest<OrgUsage>(`${orgBase(org_slug)}/usage`, { token });
+      const usage = await fetchOrgUsage(org_slug);
       return { content: [{ type: 'text' as const, text: toToolText(usage) }] };
     },
   );
