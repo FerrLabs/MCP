@@ -7,7 +7,7 @@ ENV HUSKY=0 \
     CI=true
 RUN corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-RUN pnpm fetch --frozen-lockfile
+RUN pnpm fetch
 COPY packages packages
 RUN pnpm install --frozen-lockfile --offline
 RUN pnpm run build
