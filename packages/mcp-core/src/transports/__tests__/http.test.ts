@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
+import { request, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   unauthorizedChallenge,
   resolveAllowedOrigin,
-  isHostAllowed,
   defaultBindHost,
   parseList,
+  startHttpServer,
 } from '../http.js';
 
 describe('unauthorizedChallenge', () => {
@@ -55,24 +58,6 @@ describe('resolveAllowedOrigin', () => {
   });
 });
 
-describe('isHostAllowed', () => {
-  it('allows any host when no allowlist is configured', () => {
-    expect(isHostAllowed('anything.test', [])).toBe(true);
-  });
-
-  it('matches the host ignoring port and case', () => {
-    expect(isHostAllowed('MCP.ferrlabs.com:3000', ['mcp.ferrlabs.com'])).toBe(true);
-  });
-
-  it('rejects a host outside the allowlist (DNS-rebinding guard)', () => {
-    expect(isHostAllowed('attacker.test', ['mcp.ferrlabs.com'])).toBe(false);
-  });
-
-  it('rejects a missing host header when an allowlist is set', () => {
-    expect(isHostAllowed(undefined, ['mcp.ferrlabs.com'])).toBe(false);
-  });
-});
-
 describe('defaultBindHost', () => {
   it('defaults to loopback', () => {
     expect(defaultBindHost(undefined, false)).toBe('127.0.0.1');
@@ -94,5 +79,94 @@ describe('parseList', () => {
 
   it('returns an empty array for undefined', () => {
     expect(parseList(undefined)).toEqual([]);
+  });
+});
+
+describe('startHttpServer', () => {
+  let server: Server | undefined;
+
+  afterEach(async () => {
+    await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
+    server = undefined;
+  });
+
+  async function start(): Promise<number> {
+    server = await startHttpServer({
+      port: 0,
+      host: '127.0.0.1',
+      publicUrl: 'https://mcp.ferrlabs.test',
+      createServer: () => new McpServer({ name: 'test', version: '0.0.0' }),
+    });
+    return (server.address() as AddressInfo).port;
+  }
+
+  function get(
+    port: number,
+    path: string,
+    headers: Record<string, string>,
+  ): Promise<{ status: number; body: string; wwwAuthenticate?: string }> {
+    return new Promise((resolve, reject) => {
+      const req = request({ host: '127.0.0.1', port, path, method: 'GET', headers }, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (c: string) => (body += c));
+        res.on('end', () =>
+          resolve({
+            status: res.statusCode ?? 0,
+            body,
+            wwwAuthenticate: res.headers['www-authenticate'],
+          }),
+        );
+      });
+      req.on('error', reject);
+      req.end();
+    });
+  }
+
+  it('advertises the configured public URL whatever X-Forwarded-Host says', async () => {
+    const port = await start();
+    const res = await get(port, '/.well-known/oauth-protected-resource', {
+      Host: 'mcp.ferrlabs.test',
+      'X-Forwarded-Host': 'attacker.test',
+      'X-Forwarded-Proto': 'http',
+    });
+    expect(res.status).toBe(200);
+    expect(JSON.parse(res.body).resource).toBe('https://mcp.ferrlabs.test');
+  });
+
+  it('points the 401 challenge at the configured public URL', async () => {
+    const port = await start();
+    const res = await get(port, '/mcp', {
+      Host: 'mcp.ferrlabs.test',
+      'X-Forwarded-Host': 'attacker.test',
+    });
+    expect(res.status).toBe(401);
+    expect(res.wwwAuthenticate).toContain(
+      'resource_metadata="https://mcp.ferrlabs.test/.well-known/oauth-protected-resource"',
+    );
+  });
+
+  it('rejects a Host outside the allowlist derived from the public URL', async () => {
+    const port = await start();
+    const res = await get(port, '/.well-known/oauth-protected-resource', {
+      Host: 'attacker.test',
+    });
+    expect(res.status).toBe(421);
+  });
+
+  it('answers health probes whatever the Host header, so kubelet probes on the pod IP pass', async () => {
+    const port = await start();
+    const res = await get(port, '/health', { Host: '10.42.0.17:3000' });
+    expect(res.status).toBe(200);
+  });
+
+  it('refuses to start on a non-loopback address without a public URL', async () => {
+    await expect(
+      startHttpServer({
+        port: 0,
+        host: '0.0.0.0',
+        createServer: () => new McpServer({ name: 'test', version: '0.0.0' }),
+      }),
+    ).rejects.toThrow(/FERRLABS_MCP_PUBLIC_URL/);
   });
 });

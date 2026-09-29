@@ -1,12 +1,14 @@
 import {
   createServer as createHttpServer,
   type IncomingMessage,
+  type Server,
   type ServerResponse,
 } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runWithAuthContext } from '../auth/context.js';
+import { isHostAllowed, resolvePublicEndpoint } from './http-host.js';
 
 const MAX_BODY_BYTES = 1_000_000;
 
@@ -33,23 +35,9 @@ export function resolveAllowedOrigin(
   return allowlist.includes(requestOrigin) ? requestOrigin : undefined;
 }
 
-export function isHostAllowed(hostHeader: string | undefined, allowedHosts: string[]): boolean {
-  if (allowedHosts.length === 0) return true;
-  if (!hostHeader) return false;
-  const host = hostHeader.split(':')[0].toLowerCase();
-  return allowedHosts.some((allowed) => allowed.split(':')[0].toLowerCase() === host);
-}
-
 export function defaultBindHost(envHost: string | undefined, bindAll: boolean): string {
   if (envHost) return envHost;
   return bindAll ? '0.0.0.0' : '127.0.0.1';
-}
-
-function publicOrigin(req: IncomingMessage): string {
-  const proto =
-    (req.headers['x-forwarded-proto'] as string | undefined)?.split(',')[0]?.trim() ?? 'https';
-  const host = (req.headers['x-forwarded-host'] as string | undefined) ?? req.headers.host ?? '';
-  return `${proto}://${host}`;
 }
 
 const UNAUTHORIZED_DESCRIPTION =
@@ -72,6 +60,7 @@ export interface HttpServerOptions {
   port: number;
   host?: string;
   stateless?: boolean;
+  publicUrl?: string;
   createServer: () => McpServer;
   /**
    * URL of the OAuth 2.0 Authorization Server users authenticate against.
@@ -123,20 +112,24 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> 
   });
 }
 
-export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
+export async function startHttpServer(opts: HttpServerOptions): Promise<Server> {
   const { port, stateless = true } = opts;
   const bindAll = process.env.FERRLABS_MCP_BIND_ALL === '1';
   const host = defaultBindHost(opts.host, bindAll);
   const allowedOrigins = parseList(process.env.FERRLABS_MCP_ALLOWED_ORIGINS);
-  const allowedHosts = parseList(process.env.FERRLABS_MCP_ALLOWED_HOSTS);
+  const { publicUrl, allowedHosts } = resolvePublicEndpoint({
+    publicUrl: opts.publicUrl ?? process.env.FERRLABS_MCP_PUBLIC_URL,
+    allowedHosts: parseList(process.env.FERRLABS_MCP_ALLOWED_HOSTS),
+    bindHost: host,
+    port,
+  });
   const authServer =
     opts.authorizationServer ?? process.env.FERRLABS_AUTH_URL ?? 'https://api.ferrlabs.com';
   const transports = new Map<string, StreamableHTTPServerTransport>();
 
-  function sendUnauthorized(req: IncomingMessage, res: ServerResponse): void {
-    const origin = publicOrigin(req);
+  function sendUnauthorized(res: ServerResponse): void {
     const { wwwAuthenticate, body } = unauthorizedChallenge(
-      `${origin}/.well-known/oauth-protected-resource`,
+      `${publicUrl}/.well-known/oauth-protected-resource`,
     );
     res.writeHead(401, {
       'Content-Type': 'application/json',
@@ -145,12 +138,11 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
     res.end(body);
   }
 
-  function sendResourceMetadata(req: IncomingMessage, res: ServerResponse): void {
-    const origin = publicOrigin(req);
+  function sendResourceMetadata(res: ServerResponse): void {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({
-        resource: origin,
+        resource: publicUrl,
         authorization_servers: [authServer],
         bearer_methods_supported: ['header'],
         resource_documentation: 'https://ferrlabs.com',
@@ -161,7 +153,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
   async function handleMcpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const bearerToken = extractBearer(req);
     if (!bearerToken) {
-      sendUnauthorized(req, res);
+      sendUnauthorized(res);
       return;
     }
 
@@ -243,20 +235,21 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
       return;
     }
 
-    if (!isHostAllowed(req.headers.host, allowedHosts)) {
-      res.writeHead(421, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Host not allowed' }));
-      return;
-    }
-
     const url = req.url ?? '/';
     if (url === '/health' || url === '/livez' || url === '/readyz') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'ok', service: 'ferrlabs-mcp' }));
       return;
     }
+
+    if (!isHostAllowed(req.headers.host, allowedHosts)) {
+      res.writeHead(421, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Host not allowed' }));
+      return;
+    }
+
     if (url === '/.well-known/oauth-protected-resource') {
-      sendResourceMetadata(req, res);
+      sendResourceMetadata(res);
       return;
     }
     if (url === '/mcp' || url.startsWith('/mcp?')) {
@@ -278,8 +271,11 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     httpServer.once('error', reject);
     httpServer.listen(port, host, () => {
-      console.error(`ferrlabs-mcp HTTP transport listening on http://${host}:${port}/mcp`);
+      console.error(
+        `ferrlabs-mcp HTTP transport listening on http://${host}:${port}/mcp, advertised as ${publicUrl}`,
+      );
       resolve();
     });
   });
+  return httpServer;
 }
