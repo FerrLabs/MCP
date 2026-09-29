@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [8.2.1] - 2026-09-29
+
+### Bug Fixes
+
+- fix(release): drop the pnpm flags that pnpm 12 rejects (#386)
+
 ## [8.2.0] - 2026-09-20
 
 ### Features
