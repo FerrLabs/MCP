@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.0.0] - 2026-09-29
+
+### Breaking Changes
+
+- fix(transport)!: take the OAuth resource from FERRLABS_MCP_PUBLIC_URL and parse Host headers properly (#387)
+
 ## [8.2.1] - 2026-09-29
 
 ### Bug Fixes
