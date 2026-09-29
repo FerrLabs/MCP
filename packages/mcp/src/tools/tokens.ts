@@ -112,7 +112,7 @@ export function registerTokenTools(server: McpServer) {
     },
     async ({ token_id }) => {
       const token = await getToken();
-      await apiRequest<{ message: string }>(`/auth/tokens/${token_id}`, {
+      await apiRequest<{ message: string }>(`/auth/tokens/${encodeURIComponent(token_id)}`, {
         method: 'DELETE',
         token,
       });
