@@ -109,8 +109,8 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 
 | Tool                                                                                                               | Notes                                     |
 | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| `list_projects`, `get_project`, `create_project`, `update_project`                                                 | projects                                  |
-| `list_issues`, `get_issue`, `create_issue`, `update_issue`, `list_issue_links`                                     | issues                                    |
+| `list_track_projects`, `get_project`, `create_project`, `update_project`                                           | projects                                  |
+| `list_track_issues`, `get_issue`, `create_issue`, `update_issue`, `list_issue_links`                               | issues                                    |
 | `list_issue_comments`, `create_issue_comment`, `update_issue_comment`, `delete_issue_comment`                      | `delete_issue_comment` is **destructive** |
 | `list_cycles`, `get_cycle`, `create_cycle`, `update_cycle`, `delete_cycle`, `list_cycle_issues`, `plan_next_cycle` | `delete_cycle` is **destructive**         |
 | `list_milestones`, `get_milestone`, `create_milestone`, `update_milestone`, `delete_milestone`                     | `delete_milestone` is **destructive**     |

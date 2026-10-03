@@ -18,7 +18,7 @@ export function registerTriagePrompt(server: McpServer) {
             text: [
               `Triage the open backlog of the FerrTrack project \`${project_slug}\`.`,
               '',
-              `Start by reading \`ferrtrack://project/${project_slug}/issues\`, or call \`list_issues\` with status=open${
+              `Start by reading \`ferrtrack://project/${project_slug}/issues\`, or call \`list_track_issues\` with status=open${
                 limit ? ` and limit=${limit}` : ''
               } if the resource is not attached.`,
               '',
