@@ -39,6 +39,15 @@ interface OrgMember {
   joined_at: string;
 }
 
+interface OrgInvitation {
+  id: string;
+  email: string;
+  role: 'owner' | 'admin' | 'member';
+  status: string;
+  expires_at: string;
+  created_at: string;
+}
+
 interface AuditEntry {
   id: string;
   actor_id: string;
@@ -185,25 +194,23 @@ export function registerOrgAdminTools(server: McpServer) {
 
   server.tool(
     'invite_org_member',
-    'Invite a user (by email) to join an organization with a specific role. The user receives an invitation email; they appear in list_org_members once they accept.',
+    'Invite someone by email to join an organization with a specific role. Requires the admin or owner role. The invitee receives an email valid for 14 days and appears in list_org_members once they accept; until then the invitation is pending.',
     {
       org_slug: z.string().min(1).describe('Organization slug'),
       email: z.string().email().describe('Invitee email address'),
       role: z
-        .enum(['admin', 'member', 'viewer'])
+        .enum(['owner', 'admin', 'member'])
         .default('member')
-        .describe(
-          'Org-level role (default member). Owners can only be promoted from existing admins.',
-        ),
+        .describe('Org-level role (default member). Only an owner may invite another owner.'),
     },
     async ({ org_slug, email, role }) => {
       const token = await getToken();
-      const member = await apiRequest<OrgMember>(`${orgBase(org_slug)}/members`, {
+      const invitation = await apiRequest<OrgInvitation>(`${orgBase(org_slug)}/invitations`, {
         token,
         method: 'POST',
         body: { email, role },
       });
-      return { content: [{ type: 'text' as const, text: toToolText(member) }] };
+      return { content: [{ type: 'text' as const, text: toToolText(invitation) }] };
     },
   );
 
