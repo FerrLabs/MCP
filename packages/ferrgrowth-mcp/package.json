@@ -1,7 +1,7 @@
 {
   "name": "@ferrgrowth/mcp",
   "version": "9.5.0",
-  "description": "Model Context Protocol server for FerrGrowth â€” sites, pages, forms, audits",
+  "description": "Model Context Protocol server for FerrGrowth: sites, pages, forms, audits",
   "license": "MPL-2.0",
   "type": "module",
   "bin": {
@@ -12,7 +12,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "keywords": [
     "mcp",

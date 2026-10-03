@@ -28,6 +28,7 @@ jobs:
     name: Test
     uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@dc37316d0b31cb7a47455f2933202533f9c909bd # main
     with:
+      node-version: '24'
       pnpm-version: ''
       enable-sonar: true
       install-args: ''
