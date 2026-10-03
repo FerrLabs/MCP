@@ -6,8 +6,10 @@ interface Form {
   id: string;
   site_id: string;
   name: string;
-  fields: Array<{ name: string; type: string; required: boolean }>;
-  created_at: string;
+  fields: unknown;
+  destination: string;
+  destination_config: unknown;
+  submissions_30d: number;
   updated_at: string;
 }
 
@@ -23,17 +25,23 @@ interface FormSubmission {
 export function registerFormTools(server: McpServer) {
   server.tool(
     'get_form',
-    'Get the schema of a single FerrGrowth form (fields, validation, name).',
+    'Get a single FerrGrowth form: name, field schema, destination and 30-day submission count.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       form_id: z.string().min(1).describe('Form id'),
     },
     async ({ site_id, form_id }) => {
       const token = await getToken();
-      const form = await growthRequest<Form>(
-        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}`,
-        { token },
-      );
+      const forms = await growthRequest<Form[]>(`/sites/${encodeURIComponent(site_id)}/forms`, {
+        token,
+      });
+      const form = forms.find((f) => f.id === form_id);
+      if (!form) {
+        return {
+          isError: true,
+          content: [{ type: 'text' as const, text: `No form ${form_id} on site ${site_id}.` }],
+        };
+      }
       return {
         content: [{ type: 'text' as const, text: toToolText(form) }],
       };
@@ -44,7 +52,7 @@ export function registerFormTools(server: McpServer) {
     'list_forms',
     'List forms attached to a FerrGrowth site.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -61,7 +69,7 @@ export function registerFormTools(server: McpServer) {
     'list_form_submissions',
     'List submissions for a FerrGrowth form, most recent first.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       form_id: z.string().min(1).describe('Form id'),
       limit: z
         .number()
@@ -93,7 +101,7 @@ export function registerFormTools(server: McpServer) {
     'create_form',
     'Create a new form on a FerrGrowth site. Fields are typed; submissions land in list_form_submissions.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       name: z.string().min(1).max(100),
       fields: z
         .array(
@@ -127,7 +135,7 @@ export function registerFormTools(server: McpServer) {
     'update_form',
     'Patch a FerrGrowth form — rename it or replace the field schema. Only fields you pass are touched.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       form_id: z.string().min(1).describe('Form id'),
       name: z.string().min(1).max(100).optional(),
       fields: z
@@ -160,7 +168,7 @@ export function registerFormTools(server: McpServer) {
     'delete_form',
     'Delete a FerrGrowth form. Existing submissions are kept in the audit table; the form definition is removed.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       form_id: z.string().min(1).describe('Form id'),
     },
     async ({ site_id, form_id }) => {

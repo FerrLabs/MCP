@@ -16,7 +16,7 @@ export function registerReleaseTools(server: McpServer) {
     'get_release',
     'Get details of a single FerrGrowth release (build metadata, size, active flag).',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       release_id: z.string().min(1).describe('Release id'),
     },
     async ({ site_id, release_id }) => {
@@ -35,7 +35,7 @@ export function registerReleaseTools(server: McpServer) {
     'list_releases',
     'List bundle releases of a FerrGrowth site (built artefacts). The one with `active: true` is the one currently served.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -53,7 +53,7 @@ export function registerReleaseTools(server: McpServer) {
     'activate_release',
     'Switch the live serving release for a FerrGrowth site to a specific release id (rollback or roll-forward). Atomic — no downtime.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       release_id: z.string().min(1).describe('Release id'),
     },
     async ({ site_id, release_id }) => {
@@ -64,6 +64,25 @@ export function registerReleaseTools(server: McpServer) {
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(release) }],
+      };
+    },
+  );
+
+  server.tool(
+    'restore_release',
+    'Copy the page snapshot of an older FerrGrowth release back into the editor as drafts and return how many pages were restored. Overwrites the current draft of every page with the same slug; the live release is not changed.',
+    {
+      site_id: z.string().min(1).describe('Site slug'),
+      release_id: z.string().min(1).describe('Release id'),
+    },
+    async ({ site_id, release_id }) => {
+      const token = await getToken();
+      const result = await growthRequest<{ restored_pages: number }>(
+        `/sites/${encodeURIComponent(site_id)}/releases/${encodeURIComponent(release_id)}/restore`,
+        { token, method: 'POST' },
+      );
+      return {
+        content: [{ type: 'text' as const, text: toToolText(result) }],
       };
     },
   );

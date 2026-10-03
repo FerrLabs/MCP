@@ -9,6 +9,10 @@ import { registerSeoBulkTools } from './tools/seo-bulk.js';
 import { registerReleaseTools } from './tools/releases.js';
 import { registerFunnelTools } from './tools/funnels.js';
 import { registerContactTools } from './tools/contacts.js';
+import { registerMemberTools } from './tools/members.js';
+import { registerServerTokenTools } from './tools/server-tokens.js';
+import { registerIntegrationTools } from './tools/integrations.js';
+import { registerExternalSiteTools } from './tools/external-sites.js';
 
 runMcp({
   name: 'ferrgrowth',
@@ -23,6 +27,10 @@ runMcp({
     registerReleaseTools(server);
     registerFunnelTools(server);
     registerContactTools(server);
+    registerMemberTools(server);
+    registerServerTokenTools(server);
+    registerIntegrationTools(server);
+    registerExternalSiteTools(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrgrowth-mcp fatal:', err instanceof Error ? err.message : err);

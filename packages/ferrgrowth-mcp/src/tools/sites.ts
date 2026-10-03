@@ -30,7 +30,7 @@ export function registerSiteTools(server: McpServer) {
     'get_site',
     'Get details for a single FerrGrowth site (status, custom domain, etc.).',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -69,7 +69,7 @@ export function registerSiteTools(server: McpServer) {
     'update_site',
     'Rename a FerrGrowth site or change its slug. Slug changes also move the default subdomain.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       slug: z
         .string()
         .min(2)
@@ -97,9 +97,9 @@ export function registerSiteTools(server: McpServer) {
 
   server.tool(
     'archive_site',
-    "Archive a FerrGrowth site — takes it offline and stops serving its custom domain. Reversible via the dashboard; this MCP doesn't expose unarchive.",
+    'Archive a FerrGrowth site: takes it offline and stops serving its custom domain. Reversible with restore_site.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -114,10 +114,28 @@ export function registerSiteTools(server: McpServer) {
   );
 
   server.tool(
+    'restore_site',
+    'Unarchive a FerrGrowth site. It comes back as a draft and the updated site is returned; publish again to serve it.',
+    {
+      site_id: z.string().min(1).describe('Site slug'),
+    },
+    async ({ site_id }) => {
+      const token = await getToken();
+      const site = await growthRequest<Site>(`/sites/${encodeURIComponent(site_id)}/restore`, {
+        token,
+        method: 'POST',
+      });
+      return {
+        content: [{ type: 'text' as const, text: toToolText(site) }],
+      };
+    },
+  );
+
+  server.tool(
     'attach_domain',
     'Attach a custom domain to a FerrGrowth site. The domain is registered in the pending state until verify_domain succeeds — DNS-01 verification via a TXT record.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       domain: z
         .string()
         .min(3)
@@ -141,7 +159,7 @@ export function registerSiteTools(server: McpServer) {
     'verify_domain',
     "Verify the custom domain previously attached to a FerrGrowth site. Checks the DNS TXT challenge — succeeds when the challenge matches, fails otherwise. Idempotent: retry after fixing DNS if it's not propagated yet.",
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -159,7 +177,7 @@ export function registerSiteTools(server: McpServer) {
     'detach_domain',
     'Detach the custom domain from a FerrGrowth site. The site falls back to its `<slug>.ferrgrowth.app` subdomain.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();

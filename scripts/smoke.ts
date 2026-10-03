@@ -94,6 +94,11 @@ const SERVERS: ServerUnderTest[] = [
       'get_funnel_analytics',
       'get_tracking_status',
       'list_contacts',
+      'list_site_members',
+      'create_server_token',
+      'list_integrations',
+      'restore_release',
+      'discover_external_pages',
     ],
   },
   {
