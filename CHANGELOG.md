@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.1.0] - 2026-10-03
+
+### Features
+
+- feat(growth): add page-level and bulk SEO audit tools (#396)
+
 ## [9.0.0] - 2026-09-29
 
 ### Breaking Changes
