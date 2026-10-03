@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.4.1] - 2026-10-03
+
+### Bug Fixes
+
+- fix(growth): expose form destinations and stop sending an ignored submissions limit (#404)
+
 ## [9.4.0] - 2026-10-03
 
 ### Features
