@@ -37,7 +37,7 @@ export function registerAnalyticsTools(server: McpServer) {
     'get_analytics_summary',
     "Visit + referrer summary for a FerrGrowth site. Optional ISO date range, otherwise the API's default window applies.",
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       from: z
         .string()
         .optional()
@@ -64,7 +64,7 @@ export function registerAnalyticsTools(server: McpServer) {
     'get_realtime_analytics',
     'Live snapshot of a FerrGrowth site: distinct visitors in the last 30 seconds, pageviews in the last 5 minutes and the top 5 pages being viewed right now.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -82,7 +82,7 @@ export function registerAnalyticsTools(server: McpServer) {
     'get_tracking_status',
     'Check whether the tracking snippet of a FerrGrowth site is installed and firing: tracking id, first and last event timestamps (null when nothing was ever received), events in the last 24 hours and in total.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -100,7 +100,7 @@ export function registerAnalyticsTools(server: McpServer) {
     'get_page_heatmap',
     'Click heatmap of a FerrGrowth page: total clicks, a random sample of up to 5000 click points (x and y as 0..1 fractions of the page) and click counts per viewport width bucket.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       page_slug: z.string().min(1).describe('Page slug'),
       days: z
         .number()

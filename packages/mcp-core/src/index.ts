@@ -7,3 +7,9 @@ export type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 export { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 export { fetchWithTimeout, fetchTimeoutMs } from './http.js';
 export { toToolText, maxToolBytes } from './tool-text.js';
+export {
+  secretRevealRefusal,
+  revealedSecretText,
+  SECRET_REVEAL_ENV,
+  type SecretRevealRefusal,
+} from './secret-reveal.js';

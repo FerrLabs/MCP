@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { apiRequest, toToolText } from '@ferrlabs/mcp-core';
+import {
+  apiRequest,
+  revealedSecretText,
+  secretRevealRefusal,
+  toToolText,
+} from '@ferrlabs/mcp-core';
 import { getToken } from '@ferrlabs/mcp-core';
 
 interface UserProfile {
@@ -66,25 +71,11 @@ export function registerTokenTools(server: McpServer) {
       // Refuse before minting, not after. The API returns the plaintext once
       // and never again, so creating the token and then withholding the
       // secret would leave a live credential nobody can use.
-      if (process.env.FERRLABS_MCP_ALLOW_TOKEN_REVEAL !== '1') {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: [
-                'Refusing to create an API token.',
-                '',
-                'The secret is returned exactly once, at creation, so this tool would have to put it in its response — and tool results are written to the conversation transcript, which the client persists to disk and may ship in logs or telemetry. A long-lived credential would end up in places you did not choose.',
-                '',
-                'Create the token from app.ferrlabs.com → Settings → API Tokens instead.',
-                '',
-                'If you accept the exposure, restart the MCP server with FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1. It is an environment variable rather than an argument on purpose: the decision belongs to whoever runs the server.',
-              ].join('\n'),
-            },
-          ],
-        };
-      }
+      const refusal = secretRevealRefusal({
+        action: 'create an API token',
+        instead: 'Create the token from app.ferrlabs.com → Settings → API Tokens',
+      });
+      if (refusal) return refusal;
 
       const token = await getToken();
       const result = await apiRequest<CreateTokenResponse>('/auth/tokens', {
@@ -97,7 +88,12 @@ export function registerTokenTools(server: McpServer) {
         content: [
           {
             type: 'text' as const,
-            text: `Token created: ${plaintext}\n\nThis is the only time the secret is shown, and it is now in this transcript. Move it to your secret store, then treat the transcript as sensitive or revoke the token with revoke_token.\n\n${toToolText(meta)}`,
+            text: revealedSecretText({
+              label: 'Token created',
+              secret: plaintext,
+              revokeTool: 'revoke_token',
+              details: toToolText(meta),
+            }),
           },
         ],
       };

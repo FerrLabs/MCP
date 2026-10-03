@@ -17,7 +17,7 @@ export function registerPageTools(server: McpServer) {
     'list_pages',
     'List pages on a FerrGrowth site.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
     },
     async ({ site_id }) => {
       const token = await getToken();
@@ -34,7 +34,7 @@ export function registerPageTools(server: McpServer) {
     'get_page',
     'Get a single FerrGrowth page (full content + metadata).',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       page_slug: z.string().min(1).describe('Page slug'),
     },
     async ({ site_id, page_slug }) => {
@@ -53,7 +53,7 @@ export function registerPageTools(server: McpServer) {
     'publish_page',
     "Publish a FerrGrowth page — flips it live on the site's active release. Idempotent: re-publishing an already-live page is a no-op.",
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       page_slug: z.string().min(1).describe('Page slug'),
     },
     async ({ site_id, page_slug }) => {
@@ -72,7 +72,7 @@ export function registerPageTools(server: McpServer) {
     'create_page',
     'Create a new page on a FerrGrowth site. Newly created pages are unpublished by default — call publish_page when ready.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       slug: z
         .string()
         .min(1)
@@ -101,7 +101,7 @@ export function registerPageTools(server: McpServer) {
     'update_page',
     'Patch a FerrGrowth page — title, slug, or content. Only fields you pass are touched. Publishing remains via publish_page.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       page_slug: z.string().min(1).describe('Page slug'),
       title: z.string().min(1).max(200).optional(),
       new_slug: z
@@ -134,7 +134,7 @@ export function registerPageTools(server: McpServer) {
     'discover_pages',
     'Crawl a URL and discover candidate pages to import into a FerrGrowth site (sitemap / link graph). Returns a list of candidate page slugs + titles; no pages are created yet — feed the result to import_pages.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       url: z.string().url().describe('Origin URL to crawl.'),
     },
     async ({ site_id, url }) => {
@@ -157,7 +157,7 @@ export function registerPageTools(server: McpServer) {
     'import_pages',
     'Import the pages discovered by discover_pages into the site. Each item creates an unpublished page; review then publish_page when ready.',
     {
-      site_id: z.string().min(1).describe('Site id or slug'),
+      site_id: z.string().min(1).describe('Site slug'),
       pages: z
         .array(
           z.object({
