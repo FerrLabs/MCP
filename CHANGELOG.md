@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.1.0] - 2026-10-03
+
+### Features
+
+- feat(lens): add the @ferrlens/mcp server (#412)
+
 ## [10.0.1] - 2026-10-03
 
 ### Bug Fixes
