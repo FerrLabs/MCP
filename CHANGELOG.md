@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.5.0] - 2026-10-03
+
+### Features
+
+- feat(growth): upload media through the MCP (#405)
+
 ## [9.4.1] - 2026-10-03
 
 ### Bug Fixes
