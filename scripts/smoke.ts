@@ -1,7 +1,7 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -210,6 +210,31 @@ class McpClient {
   }
 }
 
+function checkVersionFlag(server: ServerUnderTest, entry: string): Check {
+  const pkgJson: unknown = JSON.parse(
+    readFileSync(resolve(__dirname, '..', 'packages', server.pkg, 'package.json'), 'utf8'),
+  );
+  const version = isRecord(pkgJson) ? String(pkgJson.version) : '?';
+  const expected = `${server.serverName} ${version}`;
+  try {
+    const output = execFileSync(process.execPath, [entry, '--version'], {
+      encoding: 'utf8',
+      timeout: TIMEOUT_MS,
+    }).trim();
+    return {
+      name: `${server.serverName}: --version`,
+      ok: output === expected,
+      detail: output === expected ? output : `expected '${expected}', got '${output}'`,
+    };
+  } catch (err) {
+    return {
+      name: `${server.serverName}: --version`,
+      ok: false,
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 async function checkServer(server: ServerUnderTest): Promise<Check[]> {
   const checks: Check[] = [];
   const entry = resolve(__dirname, '..', 'packages', server.pkg, 'dist', 'index.js');
@@ -223,6 +248,8 @@ async function checkServer(server: ServerUnderTest): Promise<Check[]> {
       },
     ];
   }
+
+  checks.push(checkVersionFlag(server, entry));
 
   const client = new McpClient(entry);
   try {
