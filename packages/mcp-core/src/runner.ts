@@ -15,6 +15,11 @@ function buildServer(opts: RunMcpOptions): McpServer {
 }
 
 export async function runMcp(opts: RunMcpOptions): Promise<void> {
+  if (process.argv.includes('--version') || process.argv.includes('-v')) {
+    process.stdout.write(`${opts.name} ${opts.version}\n`);
+    return;
+  }
+
   const mode =
     process.env.FERRLABS_MCP_MODE ?? (process.argv.includes('--http') ? 'http' : 'stdio');
 

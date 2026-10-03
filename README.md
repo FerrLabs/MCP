@@ -206,6 +206,17 @@ Resource handlers call the same fetch functions the tools use, so a path is defi
 | `FERRLABS_MCP_PUBLIC_URL`         | URL clients reach the HTTP transport at. Advertised as the OAuth `resource` and in the 401 challenge; request headers are never used for it. Required when `HOST` is not loopback.                                                           | `http://127.0.0.1:$PORT` on loopback                                          |
 | `FERRLABS_MCP_ALLOWED_HOSTS`      | Host headers the HTTP transport answers, comma separated, ports ignored. Anything else gets a 421, except the health endpoints.                                                                                                              | the host of `FERRLABS_MCP_PUBLIC_URL`, or the loopback names                  |
 
+### Checking the version
+
+Every server binary prints its name and version and exits when passed `--version` (or `-v`), without starting a transport:
+
+```bash
+npx -y @ferrtrack/mcp --version
+# ferrtrack 9.5.0
+```
+
+Clients get the same value at runtime in the `serverInfo` of the MCP `initialize` response.
+
 ### HTTP transport
 
 By default the server runs over stdio. Set `FERRLABS_MCP_MODE=http` (or pass `--http`) to expose the MCP over Streamable HTTP on `HOST:PORT` (`0.0.0.0:3000` by default), which is the mode the Docker image runs. Requests carry the bearer token in the `Authorization` header. Run the HTTP transport behind a gateway (e.g. Traefik) that terminates TLS and applies rate limiting / request-size caps; do not expose it directly on an untrusted network.
