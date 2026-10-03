@@ -4,6 +4,7 @@ import { register as registerFerrVault } from '../packages/ferrvault-mcp/src/reg
 import { register as registerFerrTrack } from '../packages/ferrtrack-mcp/src/register.js';
 import { register as registerFerrGrowth } from '../packages/ferrgrowth-mcp/src/register.js';
 import { register as registerFerrFleet } from '../packages/ferrfleet-mcp/src/register.js';
+import { register as registerFerrLens } from '../packages/ferrlens-mcp/src/register.js';
 
 type Register = typeof registerFerrLabs;
 type Server = Parameters<Register>[0];
@@ -14,6 +15,7 @@ const PACKAGES: Readonly<Record<string, Register>> = {
   '@ferrtrack/mcp': registerFerrTrack,
   '@ferrgrowth/mcp': registerFerrGrowth,
   '@ferrfleet/mcp': registerFerrFleet,
+  '@ferrlens/mcp': registerFerrLens,
 };
 
 function toolNames(register: Register): string[] {
