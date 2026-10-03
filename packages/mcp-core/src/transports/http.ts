@@ -62,6 +62,7 @@ export interface HttpServerOptions {
   stateless?: boolean;
   publicUrl?: string;
   createServer: () => McpServer;
+  requireBearer?: boolean;
   /**
    * URL of the OAuth 2.0 Authorization Server users authenticate against.
    * Surfaced to MCP clients via /.well-known/oauth-protected-resource so
@@ -113,7 +114,7 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> 
 }
 
 export async function startHttpServer(opts: HttpServerOptions): Promise<Server> {
-  const { port, stateless = true } = opts;
+  const { port, stateless = true, requireBearer = true } = opts;
   const bindAll = process.env.FERRLABS_MCP_BIND_ALL === '1';
   const host = defaultBindHost(opts.host, bindAll);
   const allowedOrigins = parseList(process.env.FERRLABS_MCP_ALLOWED_ORIGINS);
@@ -152,7 +153,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
 
   async function handleMcpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const bearerToken = extractBearer(req);
-    if (!bearerToken) {
+    if (!bearerToken && requireBearer) {
       sendUnauthorized(res);
       return;
     }

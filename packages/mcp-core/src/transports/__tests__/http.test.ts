@@ -90,15 +90,65 @@ describe('startHttpServer', () => {
     server = undefined;
   });
 
-  async function start(): Promise<number> {
+  async function start(requireBearer?: boolean): Promise<number> {
     server = await startHttpServer({
       port: 0,
       host: '127.0.0.1',
       publicUrl: 'https://mcp.ferrlabs.test',
       createServer: () => new McpServer({ name: 'test', version: '0.0.0' }),
+      requireBearer,
     });
     return (server.address() as AddressInfo).port;
   }
+
+  function initialize(port: number): Promise<{ status: number; body: string }> {
+    const payload = JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-03-26',
+        capabilities: {},
+        clientInfo: { name: 'test', version: '0.0.0' },
+      },
+    });
+    return new Promise((resolve, reject) => {
+      const req = request(
+        {
+          host: '127.0.0.1',
+          port,
+          path: '/mcp',
+          method: 'POST',
+          headers: {
+            Host: 'mcp.ferrlabs.test',
+            'Content-Type': 'application/json',
+            Accept: 'application/json, text/event-stream',
+          },
+        },
+        (res) => {
+          let body = '';
+          res.setEncoding('utf8');
+          res.on('data', (c: string) => (body += c));
+          res.on('end', () => resolve({ status: res.statusCode ?? 0, body }));
+        },
+      );
+      req.on('error', reject);
+      req.end(payload);
+    });
+  }
+
+  it('refuses an MCP request without a bearer by default', async () => {
+    const port = await start();
+    const res = await initialize(port);
+    expect(res.status).toBe(401);
+  });
+
+  it('serves an MCP request without a bearer when the server opts out of requiring one', async () => {
+    const port = await start(false);
+    const res = await initialize(port);
+    expect(res.status).toBe(200);
+    expect(res.body).toContain('"serverInfo"');
+  });
 
   function get(
     port: number,
