@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.3.0] - 2026-10-03
+
+### Features
+
+- feat(growth): add site admin tools and fix get_form (#399)
+
 ## [9.2.0] - 2026-10-03
 
 ### Features
