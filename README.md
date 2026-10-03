@@ -128,6 +128,9 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `get_analytics_summary`, `get_seo_overview`, `run_seo_audit`, `list_seo_audits`                          | read / audit                                                  |
 | `run_site_seo_audits`, `get_site_seo_queue_status`, `cancel_site_seo_audits`                             | queued bulk audits for one site                               |
 | `run_workspace_seo_audits`, `get_workspace_seo_queue_status`, `get_workspace_seo_overview`               | queued bulk audits across the token's organisation            |
+| `get_realtime_analytics`, `get_tracking_status`, `get_page_heatmap`                                      | read                                                          |
+| `list_funnels`, `create_funnel`, `update_funnel`, `delete_funnel`, `get_funnel_analytics`                | `delete_funnel` is **destructive**                            |
+| `list_contacts`, `get_contact`                                                                           | read, org-wide personal data                                  |
 
 ### `@ferrfleet/mcp`
 

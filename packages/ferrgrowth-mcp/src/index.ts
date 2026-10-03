@@ -7,6 +7,8 @@ import { registerAnalyticsTools } from './tools/analytics.js';
 import { registerSeoTools } from './tools/seo.js';
 import { registerSeoBulkTools } from './tools/seo-bulk.js';
 import { registerReleaseTools } from './tools/releases.js';
+import { registerFunnelTools } from './tools/funnels.js';
+import { registerContactTools } from './tools/contacts.js';
 
 runMcp({
   name: 'ferrgrowth',
@@ -19,6 +21,8 @@ runMcp({
     registerSeoTools(server);
     registerSeoBulkTools(server);
     registerReleaseTools(server);
+    registerFunnelTools(server);
+    registerContactTools(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrgrowth-mcp fatal:', err instanceof Error ? err.message : err);
