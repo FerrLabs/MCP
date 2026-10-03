@@ -13,6 +13,9 @@ import { registerMemberTools } from './tools/members.js';
 import { registerServerTokenTools } from './tools/server-tokens.js';
 import { registerIntegrationTools } from './tools/integrations.js';
 import { registerExternalSiteTools } from './tools/external-sites.js';
+import { registerBlogTools } from './tools/blog.js';
+import { registerEmailTemplateTools } from './tools/email-templates.js';
+import { registerMediaTools } from './tools/media.js';
 
 runMcp({
   name: 'ferrgrowth',
@@ -31,6 +34,9 @@ runMcp({
     registerServerTokenTools(server);
     registerIntegrationTools(server);
     registerExternalSiteTools(server);
+    registerBlogTools(server);
+    registerEmailTemplateTools(server);
+    registerMediaTools(server);
   },
 }).catch((err: unknown) => {
   console.error('ferrgrowth-mcp fatal:', err instanceof Error ? err.message : err);
