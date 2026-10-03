@@ -125,7 +125,9 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_pages`, `get_page`, `create_page`, `update_page`, `publish_page`, `discover_pages`, `import_pages` | pages                                                         |
 | `list_forms`, `get_form`, `create_form`, `update_form`, `delete_form`, `list_form_submissions`           | `delete_form` is **destructive**                              |
 | `list_releases`, `get_release`, `activate_release`                                                       | `activate_release` is **destructive** (switches live serving) |
-| `get_analytics_summary`, `get_seo_overview`, `run_seo_audit`                                             | read / audit                                                  |
+| `get_analytics_summary`, `get_seo_overview`, `run_seo_audit`, `list_seo_audits`                          | read / audit                                                  |
+| `run_site_seo_audits`, `get_site_seo_queue_status`, `cancel_site_seo_audits`                             | queued bulk audits for one site                               |
+| `run_workspace_seo_audits`, `get_workspace_seo_queue_status`, `get_workspace_seo_overview`               | queued bulk audits across the token's organisation            |
 
 ### `@ferrfleet/mcp`
 
