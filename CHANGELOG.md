@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.2.0] - 2026-10-03
+
+### Features
+
+- feat(growth): add funnel, realtime, heatmap, tracking and contact tools (#397)
+
 ## [9.1.0] - 2026-10-03
 
 ### Features
