@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { fetchWithTimeout } from '@ferrlabs/mcp-core';
+import { extractContent, htmlToText } from './docs-html.js';
 
 const PRODUCT_HOSTS: Record<string, string> = {
   ferrlabs: 'https://ferrlabs.com',
@@ -15,23 +16,14 @@ const PRODUCT_HOSTS: Record<string, string> = {
 const productEnum = z.enum(Object.keys(PRODUCT_HOSTS) as [keyof typeof PRODUCT_HOSTS, ...string[]]);
 
 const MAX_BYTES = 200_000;
+const MAX_REDIRECTS = 3;
+const CACHE_TTL_MS = 5 * 60_000;
+const CACHE_MAX_ENTRIES = 100;
 
-function stripHtml(html: string): string {
-  const article = html.match(/<main[\s\S]*?<\/main>/i)?.[0] ?? html;
-  return article
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+const cache = new Map<string, { readonly expiresAt: number; readonly text: string }>();
+
+const NO_CONTAINER_NOTICE =
+  '[fetch_docs: no docs article or <main> element found, returning the whole page body]';
 
 export function buildDocUrl(product: string, slug?: string): string {
   const host = PRODUCT_HOSTS[product];
@@ -49,32 +41,67 @@ export function buildDocUrl(product: string, slug?: string): string {
   return `${host}${path}`;
 }
 
+async function fetchSameOrigin(url: string): Promise<Response> {
+  let current = url;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const res = await fetchWithTimeout(current, {
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'ferrlabs-mcp',
+        Accept: 'text/html,text/markdown,text/plain',
+      },
+    });
+    if (res.status < 300 || res.status >= 400) return res;
+    const location = res.headers.get('location');
+    const next = location ? new URL(location, current) : undefined;
+    if (!next || next.origin !== new URL(url).origin) {
+      throw new Error(
+        `fetch_docs ${url}: refused to follow redirect (HTTP ${res.status}) off the allowlisted host`,
+      );
+    }
+    current = next.href;
+  }
+  throw new Error(`fetch_docs ${url}: more than ${MAX_REDIRECTS} redirects`);
+}
+
+function render(url: string, html: string): string {
+  const extraction = extractContent(html);
+  const text = htmlToText(extraction.html);
+  const body =
+    extraction.kind === 'none'
+      ? `${NO_CONTAINER_NOTICE}
+
+${text}`
+      : text;
+  const out =
+    body.length > MAX_BYTES
+      ? `${body.slice(0, MAX_BYTES)}
+
+[truncated]`
+      : body;
+  return `# ${url}
+
+${out}`;
+}
+
 export async function fetchDoc(product: string, slug?: string): Promise<string> {
   const url = buildDocUrl(product, slug);
+  const cached = cache.get(url);
+  if (cached && cached.expiresAt > Date.now()) return cached.text;
 
-  const res = await fetchWithTimeout(url, {
-    redirect: 'manual',
-    headers: {
-      'User-Agent': 'ferrlabs-mcp',
-      Accept: 'text/html,text/markdown,text/plain',
-    },
-  });
-
-  if (res.status >= 300 && res.status < 400) {
-    throw new Error(
-      `fetch_docs ${url}: refused to follow redirect (HTTP ${res.status}) off the allowlisted host`,
-    );
-  }
-
+  const res = await fetchSameOrigin(url);
   if (!res.ok) {
     throw new Error(`fetch_docs ${url}: HTTP ${res.status}`);
   }
 
-  const raw = await res.text();
-  const text = stripHtml(raw);
-  const truncated = text.length > MAX_BYTES;
-  const out = truncated ? `${text.slice(0, MAX_BYTES)}\n\n[truncated]` : text;
-  return `# ${url}\n\n${out}`;
+  const text = render(url, await res.text());
+  cache.delete(url);
+  if (cache.size >= CACHE_MAX_ENTRIES) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  cache.set(url, { expiresAt: Date.now() + CACHE_TTL_MS, text });
+  return text;
 }
 
 export function registerDocsTools(server: McpServer) {
