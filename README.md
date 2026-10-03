@@ -175,7 +175,7 @@ Resource handlers call the same fetch functions the tools use, so a path is defi
 
 | Component | Technology                         |
 | --------- | ---------------------------------- |
-| Runtime   | Node.js 24+                        |
+| Runtime   | Node.js 22+                        |
 | Language  | TypeScript                         |
 | MCP SDK   | @modelcontextprotocol/sdk          |
 | Transport | stdio (default) or Streamable HTTP |
