@@ -4,6 +4,20 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.0.0] - 2026-10-03
+
+### Breaking Changes
+
+- fix(track)!: prefix the FerrTrack issue and project list tools (#408)
+
+### Features
+
+- feat(core): add a --version flag to every server (#406)
+
+### Bug Fixes
+
+- fix(mcp): send invite_org_member to the invitations endpoint (#407)
+
 ## [9.5.0] - 2026-10-03
 
 ### Features
