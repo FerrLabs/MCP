@@ -137,7 +137,7 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_integrations`, `disconnect_integration`                                                            | `disconnect_integration` is **destructive**                                                                            |
 | `list_blog_posts`, `create_blog_post`, `update_blog_post`, `delete_blog_post`                            | `delete_blog_post` is **destructive**                                                                                  |
 | `list_email_templates`, `create_email_template`, `update_email_template`, `delete_email_template`        | `delete_email_template` is **destructive**                                                                             |
-| `list_media`, `delete_media`                                                                             | `delete_media` is **destructive**; upload is not exposed (multipart)                                                   |
+| `list_media`, `upload_media`, `delete_media`                                                             | `upload_media` takes base64, 10 MB cap; `delete_media` is **destructive**                                              |
 
 ### `@ferrfleet/mcp`
 

@@ -99,10 +99,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (token) assertCredentialTarget(url);
 
+  const isFormData = body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     'User-Agent': 'ferrlabs-mcp/4.0.0',
   };
+  if (!isFormData) headers['Content-Type'] = 'application/json';
 
   for (const [name, value] of Object.entries(extraHeaders ?? {})) {
     headers[name] = value;
@@ -116,7 +117,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const res = await fetchWithTimeout(url, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     // Redirects are followed with the credential headers still attached, so a
     // 3xx off an API host walks the token to wherever Location points. No
     // route in these APIs redirects, so treat one as the anomaly it is.
