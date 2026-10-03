@@ -91,6 +91,9 @@ const SERVERS: ServerUnderTest[] = [
       'run_site_seo_audits',
       'cancel_site_seo_audits',
       'get_workspace_seo_overview',
+      'get_funnel_analytics',
+      'get_tracking_status',
+      'list_contacts',
     ],
   },
   {
