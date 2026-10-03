@@ -181,6 +181,43 @@ describe('ferrgrowth content tools', () => {
     expect(lastCall().url).toBe(`${GROWTH}/sites/shop/media?offset=0`);
   });
 
+  it('upload_media posts the decoded bytes as the multipart file field', async () => {
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+    await call('upload_media', {
+      site_id: 'my shop',
+      filename: 'hero.png',
+      content_type: 'image/png',
+      content_base64: png.toString('base64'),
+    });
+
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(String(url)).toBe(`${GROWTH}/sites/my%20shop/media`);
+    expect(init.method).toBe('POST');
+    const file = (init.body as FormData).get('file') as File;
+    expect(file.name).toBe('hero.png');
+    expect(file.type).toBe('image/png');
+    expect(Buffer.from(await file.arrayBuffer())).toEqual(png);
+  });
+
+  it('upload_media refuses a file over the API limit without calling it', async () => {
+    const result = (await call('upload_media', {
+      site_id: 'shop',
+      filename: 'huge.png',
+      content_type: 'image/png',
+      content_base64: Buffer.alloc(10 * 1024 * 1024 + 1).toString('base64'),
+    })) as { isError?: boolean };
+
+    expect(result.isError).toBe(true);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('upload_media only accepts what the API can store, as valid base64', () => {
+    const shape = schemas.get('upload_media')!;
+    expect(shape.content_type.safeParse('image/svg+xml').success).toBe(false);
+    expect(shape.content_type.safeParse('font/woff2').success).toBe(true);
+    expect(shape.content_base64.safeParse('not base64!').success).toBe(false);
+  });
+
   it('delete_media deletes the asset', async () => {
     mockFetch.mockResolvedValue(noContent());
     const result = await call('delete_media', { site_id: 'shop', media_id: 'm1' });

@@ -86,6 +86,16 @@ describe('apiRequest', () => {
     expect(init.body).toBe(JSON.stringify({ name: 'ci', scopes: ['*'] }));
   });
 
+  it('sends a FormData body as is and lets fetch set the multipart boundary', async () => {
+    mockFetch.mockResolvedValue(makeResponse({ id: 'm-1' }));
+    const form = new FormData();
+    form.append('file', new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }), 'a.png');
+    await apiRequest('/sites/shop/media', { method: 'POST', body: form });
+    const [, init] = mockFetch.mock.calls[0];
+    expect(init.body).toBe(form);
+    expect(init.headers['Content-Type']).toBeUndefined();
+  });
+
   it('hands the rejected token to invalidateToken on a 401', async () => {
     mockFetch.mockResolvedValue(makeResponse({ error: 'unauthorized' }, 401));
     await expect(apiRequest('/orgs', { token: 'stale' })).rejects.toBeInstanceOf(UnauthorizedError);

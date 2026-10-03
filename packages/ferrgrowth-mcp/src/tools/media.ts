@@ -19,6 +19,18 @@ interface MediaList {
   items: MediaAsset[];
 }
 
+const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
+
+const MEDIA_CONTENT_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  'font/woff2',
+  'font/woff',
+] as const;
+
 const siteSlug = z.string().min(1).describe('Site slug');
 
 function mediaPath(site: string): string {
@@ -56,6 +68,42 @@ export function registerMediaTools(server: McpServer) {
             text: toToolText(media, { narrowWith: 'Pass a smaller limit or a kind.' }),
           },
         ],
+      };
+    },
+  );
+
+  server.tool(
+    'upload_media',
+    `Upload an image or a font to a FerrGrowth site's media library and get back its public URL, ready to use in a page, post or email. The file is passed as base64 and capped at ${MEDIA_MAX_BYTES / 1024 / 1024} MB; the API checks the bytes match the declared type.`,
+    {
+      site_id: siteSlug,
+      filename: z.string().min(1).max(255).describe('File name, e.g. hero.webp'),
+      content_type: z.enum(MEDIA_CONTENT_TYPES).describe('MIME type of the file'),
+      content_base64: z.base64().min(1).describe('File contents, base64 encoded'),
+    },
+    async ({ site_id, filename, content_type, content_base64 }) => {
+      const bytes = Buffer.from(content_base64, 'base64');
+      if (bytes.length > MEDIA_MAX_BYTES) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text' as const,
+              text: `${filename} is ${bytes.length} bytes, over the ${MEDIA_MAX_BYTES}-byte limit. Compress or resize it first.`,
+            },
+          ],
+        };
+      }
+      const form = new FormData();
+      form.append('file', new Blob([bytes], { type: content_type }), filename);
+      const token = await getToken();
+      const asset = await growthRequest<MediaAsset>(mediaPath(site_id), {
+        token,
+        method: 'POST',
+        body: form,
+      });
+      return {
+        content: [{ type: 'text' as const, text: toToolText(asset) }],
       };
     },
   );
