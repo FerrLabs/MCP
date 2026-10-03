@@ -81,7 +81,17 @@ const SERVERS: ServerUnderTest[] = [
   {
     pkg: 'ferrgrowth-mcp',
     serverName: 'ferrgrowth',
-    expectedTools: ['list_sites', 'create_site', 'publish_page', 'activate_release', 'delete_form'],
+    expectedTools: [
+      'list_sites',
+      'create_site',
+      'publish_page',
+      'activate_release',
+      'delete_form',
+      'list_seo_audits',
+      'run_site_seo_audits',
+      'cancel_site_seo_audits',
+      'get_workspace_seo_overview',
+    ],
   },
   {
     pkg: 'ferrfleet-mcp',

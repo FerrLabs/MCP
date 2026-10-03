@@ -5,6 +5,7 @@ import { registerPageTools } from './tools/pages.js';
 import { registerFormTools } from './tools/forms.js';
 import { registerAnalyticsTools } from './tools/analytics.js';
 import { registerSeoTools } from './tools/seo.js';
+import { registerSeoBulkTools } from './tools/seo-bulk.js';
 import { registerReleaseTools } from './tools/releases.js';
 
 runMcp({
@@ -16,6 +17,7 @@ runMcp({
     registerFormTools(server);
     registerAnalyticsTools(server);
     registerSeoTools(server);
+    registerSeoBulkTools(server);
     registerReleaseTools(server);
   },
 }).catch((err: unknown) => {
