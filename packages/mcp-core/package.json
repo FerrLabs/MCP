@@ -1,7 +1,7 @@
 {
   "name": "@ferrlabs/mcp-core",
   "version": "9.5.0",
-  "description": "Shared core for FerrLabs MCP servers â€” auth, transports (stdio + Streamable HTTP), api-client, runner",
+  "description": "Shared core for FerrLabs MCP servers: auth, transports (stdio + Streamable HTTP), api-client, runner",
   "license": "MPL-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,7 +13,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"

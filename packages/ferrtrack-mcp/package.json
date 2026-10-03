@@ -1,7 +1,7 @@
 {
   "name": "@ferrtrack/mcp",
   "version": "9.5.0",
-  "description": "Model Context Protocol server for FerrTrack â€” issues, labels, comments",
+  "description": "Model Context Protocol server for FerrTrack: issues, labels, comments",
   "license": "MPL-2.0",
   "type": "module",
   "bin": {
@@ -12,7 +12,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "keywords": [
     "mcp",
