@@ -4,6 +4,16 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [9.4.0] - 2026-10-03
+
+### Features
+
+- feat(growth): add blog post, email template and media tools (#398)
+
+### Bug Fixes
+
+- fix(growth): send get_analytics_summary's window as range_days (#401)
+
 ## [9.3.0] - 2026-10-03
 
 ### Features
