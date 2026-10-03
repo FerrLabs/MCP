@@ -16,11 +16,28 @@ interface Form {
 interface FormSubmission {
   id: string;
   form_id: string;
-  values: Record<string, unknown>;
-  ip: string | null;
-  user_agent: string | null;
-  created_at: string;
+  fields: Record<string, unknown>;
+  submitted_at: string;
 }
+
+const SUBMISSIONS_RETURNED_BY_API = 200;
+
+const FIELD_TYPES = ['text', 'email', 'phone', 'textarea', 'select', 'checkbox', 'number'] as const;
+
+const destination = z
+  .enum(['database', 'webhook', 'hubspot', 'salesforce', 'attio', 'customer_io'])
+  .describe('Where submissions are sent. The API defaults to database.');
+
+const destinationConfig = z
+  .record(z.string(), z.string())
+  .describe('Settings for the destination, as string key/value pairs (e.g. a webhook URL).');
+
+const fieldLabel = z.string().min(1).max(200).optional().describe('Label shown above the input.');
+
+const fieldOptions = z
+  .array(z.string().min(1).max(200))
+  .optional()
+  .describe('Choices for a select field.');
 
 export function registerFormTools(server: McpServer) {
   server.tool(
@@ -67,7 +84,7 @@ export function registerFormTools(server: McpServer) {
 
   server.tool(
     'list_form_submissions',
-    'List submissions for a FerrGrowth form, most recent first.',
+    `List submissions for a FerrGrowth form, most recent first. The API returns at most the latest ${SUBMISSIONS_RETURNED_BY_API}; older ones are not reachable from here.`,
     {
       site_id: z.string().min(1).describe('Site slug'),
       form_id: z.string().min(1).describe('Form id'),
@@ -75,17 +92,17 @@ export function registerFormTools(server: McpServer) {
         .number()
         .int()
         .min(1)
-        .max(500)
+        .max(SUBMISSIONS_RETURNED_BY_API)
         .optional()
-        .describe('Max submissions to return (default 50).'),
+        .describe(`Keep only the most recent N (default ${SUBMISSIONS_RETURNED_BY_API}).`),
     },
     async ({ site_id, form_id, limit }) => {
       const token = await getToken();
-      const qs = limit !== undefined ? `?limit=${limit}` : '';
-      const subs = await growthRequest<FormSubmission[]>(
-        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}/submissions${qs}`,
+      const latest = await growthRequest<FormSubmission[]>(
+        `/sites/${encodeURIComponent(site_id)}/forms/${encodeURIComponent(form_id)}/submissions`,
         { token },
       );
+      const subs = latest.slice(0, limit ?? SUBMISSIONS_RETURNED_BY_API);
       return {
         content: [
           {
@@ -99,7 +116,7 @@ export function registerFormTools(server: McpServer) {
 
   server.tool(
     'create_form',
-    'Create a new form on a FerrGrowth site. Fields are typed; submissions land in list_form_submissions.',
+    'Create a new form on a FerrGrowth site. Fields are typed; submissions land in list_form_submissions and are forwarded to the destination.',
     {
       site_id: z.string().min(1).describe('Site slug'),
       name: z.string().min(1).max(100),
@@ -111,19 +128,23 @@ export function registerFormTools(server: McpServer) {
               .min(1)
               .max(80)
               .regex(/^[a-z][a-z0-9_]*$/, 'snake_case identifier'),
-            type: z.enum(['text', 'email', 'phone', 'textarea', 'select', 'checkbox', 'number']),
+            label: fieldLabel,
+            type: z.enum(FIELD_TYPES),
             required: z.boolean().optional(),
+            options: fieldOptions,
           }),
         )
         .min(1)
-        .describe('Form schema — at least one field.'),
+        .describe('Form schema, at least one field.'),
+      destination: destination.optional(),
+      destination_config: destinationConfig.optional(),
     },
-    async ({ site_id, name, fields }) => {
+    async ({ site_id, ...formBody }) => {
       const token = await getToken();
       const form = await growthRequest<Form>(`/sites/${encodeURIComponent(site_id)}/forms`, {
         token,
         method: 'POST',
-        body: { name, fields },
+        body: formBody,
       });
       return {
         content: [{ type: 'text' as const, text: toToolText(form) }],
@@ -133,7 +154,7 @@ export function registerFormTools(server: McpServer) {
 
   server.tool(
     'update_form',
-    'Patch a FerrGrowth form — rename it or replace the field schema. Only fields you pass are touched.',
+    'Patch a FerrGrowth form: rename it, replace the field schema, or change where submissions go. Only fields you pass are touched.',
     {
       site_id: z.string().min(1).describe('Site slug'),
       form_id: z.string().min(1).describe('Form id'),
@@ -142,11 +163,15 @@ export function registerFormTools(server: McpServer) {
         .array(
           z.object({
             name: z.string().min(1).max(80),
-            type: z.enum(['text', 'email', 'phone', 'textarea', 'select', 'checkbox', 'number']),
+            label: fieldLabel,
+            type: z.enum(FIELD_TYPES),
             required: z.boolean().optional(),
+            options: fieldOptions,
           }),
         )
         .optional(),
+      destination: destination.optional(),
+      destination_config: destinationConfig.optional(),
     },
     async ({ site_id, form_id, ...patch }) => {
       const token = await getToken();
