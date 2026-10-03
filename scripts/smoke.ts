@@ -99,6 +99,9 @@ const SERVERS: ServerUnderTest[] = [
       'list_integrations',
       'restore_release',
       'discover_external_pages',
+      'create_blog_post',
+      'update_email_template',
+      'list_media',
     ],
   },
   {
