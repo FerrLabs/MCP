@@ -44,7 +44,7 @@ export async function fetchProjectIssues(
 
 export function registerIssueTools(server: McpServer) {
   server.tool(
-    'list_issues',
+    'list_track_issues',
     'List FerrTrack issues in a project. Filter by status (open|in_progress|review|closed|all), kind (bug|feat|chore|docs), assignee, limit.',
     {
       project_slug: z.string().min(1).describe('Project slug'),

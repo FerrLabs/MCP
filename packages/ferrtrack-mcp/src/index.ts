@@ -1,29 +1,11 @@
 #!/usr/bin/env node
 import { runMcp, readPackageVersion } from '@ferrlabs/mcp-core';
-import { registerIssueDetailsTool } from './tools/issue-details.js';
-import { registerIssueTools } from './tools/issues.js';
-import { registerCommentTools } from './tools/comments.js';
-import { registerProjectTools } from './tools/projects.js';
-import { registerCycleTools } from './tools/cycles.js';
-import { registerMilestoneTools } from './tools/milestones.js';
-import { registerSearchTools } from './tools/search.js';
-import { registerIssueResources } from './resources/issues.js';
-import { registerTriagePrompt } from './prompts/triage.js';
+import { register } from './register.js';
 
 runMcp({
   name: 'ferrtrack',
   version: readPackageVersion(import.meta.url),
-  register: (server) => {
-    registerProjectTools(server);
-    registerIssueDetailsTool(server);
-    registerIssueTools(server);
-    registerCommentTools(server);
-    registerCycleTools(server);
-    registerMilestoneTools(server);
-    registerSearchTools(server);
-    registerIssueResources(server);
-    registerTriagePrompt(server);
-  },
+  register,
 }).catch((err: unknown) => {
   console.error('ferrtrack-mcp fatal:', err instanceof Error ? err.message : err);
   process.exit(1);

@@ -19,7 +19,7 @@ export async function fetchProjects(): Promise<Project[]> {
 
 export function registerProjectTools(server: McpServer) {
   server.tool(
-    'list_projects',
+    'list_track_projects',
     "List FerrTrack projects in the caller's active organization.",
     {},
     async () => {

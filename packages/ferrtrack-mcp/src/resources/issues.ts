@@ -20,7 +20,7 @@ export function registerIssueResources(server: McpServer) {
     {
       title: 'Project issues',
       description:
-        'Open issues in one FerrTrack project, newest first. Use the list_issues tool to filter by kind, assignee or a different status.',
+        'Open issues in one FerrTrack project, newest first. Use the list_track_issues tool to filter by kind, assignee or a different status.',
       mimeType: 'application/json',
     },
     async (uri, { slug }) => {

@@ -69,7 +69,7 @@ const SERVERS: ServerUnderTest[] = [
     pkg: 'ferrtrack-mcp',
     serverName: 'ferrtrack',
     expectedTools: [
-      'list_issues',
+      'list_track_issues',
       'create_issue',
       'update_issue',
       'plan_next_cycle',
