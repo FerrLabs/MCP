@@ -2,13 +2,20 @@ import { z } from 'zod';
 import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
 import { growthRequest } from '../api-base.js';
 
-interface AnalyticsSummary {
-  site_id: string;
-  range: { from: string; to: string };
-  total_visits: number;
+interface PeriodTotals {
+  visits: number;
   unique_visitors: number;
-  top_pages: Array<{ path: string; visits: number }>;
+  conversions: number;
+}
+
+interface AnalyticsSummary extends PeriodTotals {
+  range_days: number;
+  conversion_rate: number;
+  series: Array<PeriodTotals & { date: string }>;
+  previous: PeriodTotals & { conversion_rate: number };
+  top_pages: Array<{ slug: string; title: string; visits: number; conversion_rate: number }>;
   top_referrers: Array<{ source: string; visits: number }>;
+  top_countries: Array<{ country_code: string; visits: number }>;
 }
 
 interface RealtimeSnapshot {
@@ -35,21 +42,20 @@ interface Heatmap {
 export function registerAnalyticsTools(server: McpServer) {
   server.tool(
     'get_analytics_summary',
-    "Visit + referrer summary for a FerrGrowth site. Optional ISO date range, otherwise the API's default window applies.",
+    'Visits, unique visitors, conversions and conversion rate for a FerrGrowth site over the last range_days days, with a daily series, the same totals for the previous period, and the top pages, referrers and countries.',
     {
       site_id: z.string().min(1).describe('Site slug'),
-      from: z
-        .string()
+      range_days: z
+        .number()
+        .int()
+        .min(1)
+        .max(365)
         .optional()
-        .describe('ISO 8601 start (e.g. 2026-05-01). Defaults to last 30 days.'),
-      to: z.string().optional().describe('ISO 8601 end (e.g. 2026-05-22).'),
+        .describe('Window in days, counted back from now (default 30).'),
     },
-    async ({ site_id, from, to }) => {
+    async ({ site_id, range_days }) => {
       const token = await getToken();
-      const params = new URLSearchParams();
-      if (from) params.set('from', from);
-      if (to) params.set('to', to);
-      const qs = params.toString() ? `?${params.toString()}` : '';
+      const qs = range_days !== undefined ? `?range_days=${range_days}` : '';
       const summary = await growthRequest<AnalyticsSummary>(
         `/sites/${encodeURIComponent(site_id)}/analytics${qs}`,
         { token },

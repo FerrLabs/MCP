@@ -118,6 +118,23 @@ describe('ferrgrowth insight tools', () => {
     expect(lastCall().url).toBe(`${GROWTH}/sites/shop/pages/pricing/heatmap`);
   });
 
+  it('get_analytics_summary sends the window as the range_days the API reads', async () => {
+    await call('get_analytics_summary', { site_id: 'my shop', range_days: 7 });
+    expect(lastCall().url).toBe(`${GROWTH}/sites/my%20shop/analytics?range_days=7`);
+  });
+
+  it('get_analytics_summary leaves the window to the API when range_days is omitted', async () => {
+    await call('get_analytics_summary', { site_id: 'shop' });
+    expect(lastCall().url).toBe(`${GROWTH}/sites/shop/analytics`);
+  });
+
+  it('get_analytics_summary bounds range_days the way the API clamps it', () => {
+    const rangeDays = schemas.get('get_analytics_summary')!.range_days;
+    expect(rangeDays.safeParse(0).success).toBe(false);
+    expect(rangeDays.safeParse(366).success).toBe(false);
+    expect(rangeDays.safeParse(365).success).toBe(true);
+  });
+
   it('get_realtime_analytics and get_tracking_status read their site sub-resources', async () => {
     await call('get_realtime_analytics', { site_id: 'shop' });
     expect(lastCall().url).toBe(`${GROWTH}/sites/shop/analytics/realtime`);
