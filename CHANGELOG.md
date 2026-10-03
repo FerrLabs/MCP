@@ -4,6 +4,13 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.0.1] - 2026-10-03
+
+### Bug Fixes
+
+- fix(mcp): extract fetch_docs content from the docs article and cache pages (#410)
+- fix: restore the node 22 engines floor (#411)
+
 ## [10.0.0] - 2026-10-03
 
 ### Breaking Changes
