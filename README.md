@@ -57,7 +57,7 @@ Create the token from `app.ferrlabs.com` → Settings → API Tokens. It's forwa
 
 ## MCP servers
 
-This repo ships six MCP servers as separate npm packages. `@ferrlabs/mcp` is the unified entrypoint (orgs, billing, profile, public stats, docs); the four sub-MCPs target a specific product API. Add only the servers you need to your client config.
+This repo ships six MCP servers as separate npm packages. `@ferrlabs/mcp` is the unified entrypoint (orgs, billing, profile, public stats, docs); the five sub-MCPs target a specific product API. Add only the servers you need to your client config.
 
 | Package           | npm               | Targets                      | Base URL env         |
 | ----------------- | ----------------- | ---------------------------- | -------------------- |
@@ -66,8 +66,9 @@ This repo ships six MCP servers as separate npm packages. `@ferrlabs/mcp` is the
 | `@ferrtrack/mcp`  | `@ferrtrack/mcp`  | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
 | `@ferrgrowth/mcp` | `@ferrgrowth/mcp` | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
 | `@ferrfleet/mcp`  | `@ferrfleet/mcp`  | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
+| `@ferrlens/mcp`   | `@ferrlens/mcp`   | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
 
-All servers share the same auth resolution (env token or OAuth loopback, see below). Register several at once:
+All servers except `@ferrlens/mcp` share the same auth resolution (env token or OAuth loopback, see below). `@ferrlens/mcp` is anonymous: the FerrLens free tools take no account, it never sends a token and never opens the OAuth flow, and the API rate limits each caller by IP. Register several at once:
 
 ```json
 {
@@ -76,7 +77,8 @@ All servers share the same auth resolution (env token or OAuth loopback, see bel
     "ferrvault": { "command": "npx", "args": ["-y", "@ferrvault/mcp"] },
     "ferrtrack": { "command": "npx", "args": ["-y", "@ferrtrack/mcp"] },
     "ferrgrowth": { "command": "npx", "args": ["-y", "@ferrgrowth/mcp"] },
-    "ferrfleet": { "command": "npx", "args": ["-y", "@ferrfleet/mcp"] }
+    "ferrfleet": { "command": "npx", "args": ["-y", "@ferrfleet/mcp"] },
+    "ferrlens": { "command": "npx", "args": ["-y", "@ferrlens/mcp"] }
   }
 }
 ```
@@ -147,6 +149,19 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_runs`, `get_run`, `get_run_transcript` | read                                                    |
 | `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota |
 
+### `@ferrlens/mcp`
+
+All tools are read-only and anonymous. Each one calls a public FerrLens endpoint on the caller's behalf, so the target has to be reachable from the internet; the API refuses URLs that point at private addresses.
+
+| Tool                                                                                                                     | Notes                                                       |
+| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `dns_lookup`, `dns_propagation`, `reverse_dns`                                                                           | DNS                                                         |
+| `check_email_auth`, `check_blacklist`, `verify_email`                                                                    | SPF, DMARC and DKIM; DNS blocklists; address checks         |
+| `get_http_headers`, `check_security_headers`, `get_page_meta`, `preview_open_graph`, `check_mixed_content`, `check_cors` | HTTP and page checks                                        |
+| `search_certificates`                                                                                                    | TLS certificates from Certificate Transparency logs         |
+| `check_seo`, `check_robots_txt`, `check_sitemap`, `check_links`                                                          | `check_seo` runs Lighthouse and `check_links` crawls a site |
+| `get_share`                                                                                                              | reads a published result snapshot                           |
+
 FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event`) were removed in v4.0.0. They required either a local FerrFlow CLI install or HMAC signing the MCP doesn't do. Use the FerrFlow CLI directly or fetch docs via `fetch_docs("ferrflow", "docs/...")`.
 
 ## Resources and prompts
@@ -199,6 +214,8 @@ Resource handlers call the same fetch functions the tools use, so a path is defi
 | `FERRFLEET_API_URL`               | Base URL for the FerrFleet API (`@ferrfleet/mcp`).                                                                                                                                                                                           | `https://api.ferrfleet.com`                                                   |
 | `FERRFLEET_API_VERSION`           | Contract version sent as `x-ferrfleet-api-version` by `@ferrfleet/mcp`.                                                                                                                                                                      | `2026-08-04`                                                                  |
 | `FERRTRACK_API_VERSION`           | Contract version sent as `x-ferrtrack-api-version` by `@ferrtrack/mcp`.                                                                                                                                                                      | `2026-08-04`                                                                  |
+| `FERRLENS_API_URL`                | Base URL for the FerrLens API (`@ferrlens/mcp`).                                                                                                                                                                                             | `https://api.ferrlens.com`                                                    |
+| `FERRLENS_API_VERSION`            | Contract version sent as `x-ferrlens-api-version` by `@ferrlens/mcp`.                                                                                                                                                                        | `2026-08-04`                                                                  |
 | `FERRGROWTH_API_VERSION`          | Contract version sent as `x-ferrgrowth-api-version` by `@ferrgrowth/mcp`.                                                                                                                                                                    | `2026-08-04`                                                                  |
 | `FERRLABS_MCP_MODE`               | Transport: `stdio` (default) or `http` (Streamable HTTP). `--http` also selects http.                                                                                                                                                        | `stdio`                                                                       |
 | `PORT`                            | Port for the HTTP transport (`FERRLABS_MCP_MODE=http`).                                                                                                                                                                                      | `3000`                                                                        |

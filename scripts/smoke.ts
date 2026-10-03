@@ -13,8 +13,8 @@ interface ServerUnderTest {
   /** A few tools that must be advertised. Not the full list: this is a boot check. */
   expectedTools: string[];
   /**
-   * Tools to actually invoke. Only the unified server has any: every sub-MCP
-   * tool needs a credential and a live product API.
+   * Tools to actually invoke. Only the servers with anonymous tools have any:
+   * every other sub-MCP tool needs a credential.
    */
   liveCalls?: LiveCall[];
   /** URI templates the server must advertise, if it exposes resources at all. */
@@ -25,6 +25,7 @@ interface ServerUnderTest {
 
 interface LiveCall {
   tool: string;
+  arguments?: Record<string, unknown>;
   check: (parsed: unknown) => boolean;
   describe: (parsed: unknown) => string;
 }
@@ -109,6 +110,27 @@ const SERVERS: ServerUnderTest[] = [
     serverName: 'ferrfleet',
     expectedTools: ['list_agents', 'get_agent', 'trigger_agent_run', 'list_runs', 'get_run'],
     expectedPrompts: ['review_run'],
+  },
+  {
+    pkg: 'ferrlens-mcp',
+    serverName: 'ferrlens',
+    expectedTools: [
+      'dns_lookup',
+      'check_email_auth',
+      'check_security_headers',
+      'search_certificates',
+      'check_seo',
+      'check_links',
+      'get_share',
+    ],
+    liveCalls: [
+      {
+        tool: 'dns_lookup',
+        arguments: { domain: 'ferrlabs.com' },
+        check: (p) => isRecord(p) && p.domain === 'ferrlabs.com' && Array.isArray(p.records),
+        describe: (p) => `records=${isRecord(p) ? String(p.total) : '?'}`,
+      },
+    ],
   },
 ];
 
@@ -284,7 +306,7 @@ async function checkServer(server: ServerUnderTest): Promise<Check[]> {
     for (const call of server.liveCalls ?? []) {
       const result = await client.rpc<ToolResult>('tools/call', {
         name: call.tool,
-        arguments: {},
+        arguments: call.arguments ?? {},
       });
       const text = result.content?.[0]?.text ?? '';
       let parsed: unknown;

@@ -41,6 +41,10 @@
         {
           "path": "packages/ferrfleet-mcp/package.json",
           "format": "json"
+        },
+        {
+          "path": "packages/ferrlens-mcp/package.json",
+          "format": "json"
         }
       ]
     }

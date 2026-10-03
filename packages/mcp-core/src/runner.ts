@@ -6,6 +6,7 @@ export interface RunMcpOptions {
   name: string;
   version: string;
   register: (server: McpServer) => void;
+  requireBearer?: boolean;
 }
 
 function buildServer(opts: RunMcpOptions): McpServer {
@@ -23,6 +24,7 @@ export async function runMcp(opts: RunMcpOptions): Promise<void> {
       port: Number(process.env.PORT ?? '3000'),
       host: process.env.HOST,
       stateless: process.env.FERRLABS_MCP_STATEFUL !== '1',
+      requireBearer: opts.requireBearer,
       createServer: () => buildServer(opts),
     });
     return;

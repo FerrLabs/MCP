@@ -216,6 +216,15 @@ importers:
         specifier: ^4.3.6
         version: 4.6.5
 
+  packages/ferrlens-mcp:
+    dependencies:
+      '@ferrlabs/mcp-core':
+        specifier: workspace:^
+        version: link:../mcp-core
+      zod:
+        specifier: ^4.3.6
+        version: 4.6.5
+
   packages/ferrtrack-mcp:
     dependencies:
       '@ferrlabs/mcp-core':
