@@ -110,18 +110,20 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 
 ### `@ferrvault/api-mcp`
 
-Targets the FerrVault API (`api.ferrvault.com`, or a self-hosted instance through `FERRVAULT_API_URL`): vaults, their environments, and the secrets of each environment. Vaults belong to the organization the token is signed in to.
+Targets the FerrVault API (`api.ferrvault.com`, or a self-hosted instance through `FERRVAULT_API_URL`): vaults, their environments, and the secrets and secret requests of each environment. Vaults belong to the organization the token is signed in to.
 
 The FerrVault API accepts FerrLabs session JWTs, not `fft_*` API tokens. Over HTTP, register the client with the IdP as an `eddsa_session_jwt` OAuth client and pass its id to the MCP client (`claude mcp add --client-id`); a dynamically registered client gets an `fft_*` token, which the API refuses.
 
-| Tool                                                   | Notes                                                                                        |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `list_ferrvault_vaults`, `list_ferrvault_environments` | read                                                                                         |
-| `list_ferrvault_secrets`                               | names, versions, tags and expiry; never values                                               |
-| `reveal_ferrvault_secret`                              | returns the plaintext value, audit-logged by FerrVault                                       |
-| `set_ferrvault_secret`                                 | creates the secret, or stores a new version when it exists                                   |
-| `generate_ferrvault_secret`                            | random value generated in the MCP server, stored like `set_ferrvault_secret`, never returned |
-| `delete_ferrvault_secret`                              | **destructive**                                                                              |
+| Tool                                                   | Notes                                                                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `list_ferrvault_vaults`, `list_ferrvault_environments` | read                                                                                                          |
+| `list_ferrvault_secrets`                               | names, versions, tags and expiry; never values                                                                |
+| `reveal_ferrvault_secret`                              | returns the plaintext value, audit-logged by FerrVault                                                        |
+| `set_ferrvault_secret`                                 | creates the secret, or stores a new version when it exists                                                    |
+| `generate_ferrvault_secret`                            | random value generated in the MCP server, stored like `set_ferrvault_secret`, never returned                  |
+| `delete_ferrvault_secret`                              | **destructive**                                                                                               |
+| `list_ferrvault_secret_requests`                       | pending requests only: names clients asked for that have no value, with counts, timestamps and requester kind |
+| `archive_ferrvault_secret_request`                     | by id, or by name (resolved to the pending request); stays archived even if clients keep asking               |
 
 ### `@ferrtrack/mcp`
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { environmentSlug, secretName, vaultSlug } from '../schemas.js';
+import { environmentSlug, secretName, secretRequestId, vaultSlug } from '../schemas.js';
 import { CHARSETS, generateValue } from '../generate.js';
 
 describe('path parameter schemas', () => {
@@ -19,6 +19,17 @@ describe('path parameter schemas', () => {
 
   it('accepts dotted and underscored secret names', () => {
     expect(secretName.safeParse('_tls.crt').success).toBe(true);
+  });
+
+  it.each(['..', '../archive', '0b0e3c4e-6c2f-4f0e-9a51-7a1f2d1c9e01/..', 'not-a-uuid'])(
+    'rejects %j as a secret request id',
+    (input) => {
+      expect(secretRequestId.safeParse(input).success).toBe(false);
+    },
+  );
+
+  it('accepts a secret request uuid', () => {
+    expect(secretRequestId.safeParse('0b0e3c4e-6c2f-4f0e-9a51-7a1f2d1c9e01').success).toBe(true);
   });
 });
 

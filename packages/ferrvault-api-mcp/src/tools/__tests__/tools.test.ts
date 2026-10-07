@@ -64,6 +64,26 @@ function call(name: string, params: Record<string, unknown> = {}): Promise<Resul
 
 const target = { vault: 'infra', environment: 'prod', name: 'DB_PASSWORD' };
 
+const REQUESTS = `${API}/vaults/infra/environments/prod/secret-requests`;
+const PENDING_ID = '0b0e3c4e-6c2f-4f0e-9a51-7a1f2d1c9e01';
+const ARCHIVED_ID = '5d7c1e2a-3b4f-4a6e-8c9d-0e1f2a3b4c5d';
+
+function secretRequest(id: string, name: string, state: string) {
+  return {
+    id,
+    vault_id: 'v1',
+    environment_id: 'e1',
+    name,
+    state,
+    first_requested_at: '2026-10-01T00:00:00Z',
+    last_requested_at: '2026-10-07T00:00:00Z',
+    request_count: 4,
+    last_requester_kind: 'operator_token',
+    last_requester_id: 'op-token-1',
+    fulfilled_at: null,
+  };
+}
+
 describe('ferrvault api tools', () => {
   beforeEach(async () => {
     vi.resetModules();
@@ -235,5 +255,142 @@ describe('ferrvault api tools', () => {
     await call('generate_ferrvault_secret', target);
 
     expect(sent(0).body?.value).not.toBe(sent(1).body?.value);
+  });
+  it('lists secret requests with counts, timestamps and requester kind', async () => {
+    mockFetch.mockResolvedValue(
+      respond({ requests: [secretRequest(PENDING_ID, 'STRIPE_KEY', 'pending')] }),
+    );
+    const result = await call('list_ferrvault_secret_requests', {
+      vault: 'infra',
+      environment: 'prod',
+    });
+
+    expect(sent().url).toBe(REQUESTS);
+    expect(sent().method).toBe('GET');
+    expect(sent().headers['x-ferrvault-api-version']).toBe('2026-08-04');
+    expect(JSON.parse(result.content[0].text)).toEqual([
+      {
+        id: PENDING_ID,
+        name: 'STRIPE_KEY',
+        state: 'pending',
+        request_count: 4,
+        first_requested_at: '2026-10-01T00:00:00Z',
+        last_requested_at: '2026-10-07T00:00:00Z',
+        fulfilled_at: null,
+        last_requester_kind: 'operator_token',
+      },
+    ]);
+  });
+
+  it('archives a request by id with a bodiless POST on its archive route', async () => {
+    mockFetch.mockResolvedValue(respond(undefined, 204));
+    const result = await call('archive_ferrvault_secret_request', {
+      vault: 'infra',
+      environment: 'prod',
+      id: PENDING_ID,
+    });
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(sent().method).toBe('POST');
+    expect(sent().url).toBe(`${REQUESTS}/${PENDING_ID}/archive`);
+    expect(sent().body).toBeUndefined();
+    expect(JSON.parse(result.content[0].text)).toMatchObject({
+      archived: PENDING_ID,
+      state: 'archived',
+    });
+  });
+
+  it('resolves a name to the id of its pending request before archiving', async () => {
+    mockFetch
+      .mockResolvedValueOnce(
+        respond({
+          requests: [
+            secretRequest(ARCHIVED_ID, 'STRIPE_KEY', 'archived'),
+            secretRequest('9f8e7d6c-5b4a-4321-8fed-cba987654321', 'OTHER', 'pending'),
+            secretRequest(PENDING_ID, 'STRIPE_KEY', 'pending'),
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(respond(undefined, 204));
+    const result = await call('archive_ferrvault_secret_request', {
+      vault: 'infra',
+      environment: 'prod',
+      name: 'STRIPE_KEY',
+    });
+
+    expect(sent(0).url).toBe(REQUESTS);
+    expect(sent(1).method).toBe('POST');
+    expect(sent(1).url).toBe(`${REQUESTS}/${PENDING_ID}/archive`);
+    expect(JSON.parse(result.content[0].text)).toMatchObject({
+      archived: PENDING_ID,
+      name: 'STRIPE_KEY',
+    });
+  });
+
+  it('fails without archiving anything when no pending request has the name', async () => {
+    mockFetch.mockResolvedValue(
+      respond({ requests: [secretRequest(ARCHIVED_ID, 'STRIPE_KEY', 'archived')] }),
+    );
+    const result = await call('archive_ferrvault_secret_request', {
+      vault: 'infra',
+      environment: 'prod',
+      name: 'STRIPE_KEY',
+    });
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe('no pending secret request named STRIPE_KEY in infra/prod');
+  });
+
+  it.each([
+    ['neither', {}],
+    ['both', { id: PENDING_ID, name: 'STRIPE_KEY' }],
+  ])('refuses an archive with %s of id and name', async (_label, ref) => {
+    const result = await call('archive_ferrvault_secret_request', {
+      vault: 'infra',
+      environment: 'prod',
+      ...ref,
+    });
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe('pass exactly one of id or name');
+  });
+
+  it('maps an already archived request to a tool error', async () => {
+    mockFetch.mockResolvedValue(
+      respond({ code: 'SECRET_REQUEST_NOT_FOUND', error: 'request already archived' }, 404),
+    );
+    const result = await call('archive_ferrvault_secret_request', {
+      vault: 'infra',
+      environment: 'prod',
+      id: PENDING_ID,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe(
+      'FerrVault API error (HTTP 404 SECRET_REQUEST_NOT_FOUND): request already archived',
+    );
+  });
+
+  it('forwards the caller bearer and the version header on both archive-by-name calls', async () => {
+    const { runWithAuthContext } = await import('@ferrlabs/mcp-core');
+    mockFetch
+      .mockResolvedValueOnce(
+        respond({ requests: [secretRequest(PENDING_ID, 'STRIPE_KEY', 'pending')] }),
+      )
+      .mockResolvedValueOnce(respond(undefined, 204));
+    await runWithAuthContext({ bearerToken: 'caller-token' }, () =>
+      call('archive_ferrvault_secret_request', {
+        vault: 'infra',
+        environment: 'prod',
+        name: 'STRIPE_KEY',
+      }),
+    );
+
+    for (const index of [0, 1]) {
+      expect(sent(index).headers['Authorization']).toBe('Bearer caller-token');
+      expect(sent(index).headers['x-ferrvault-api-version']).toBe('2026-08-04');
+    }
   });
 });

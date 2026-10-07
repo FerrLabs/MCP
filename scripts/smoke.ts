@@ -77,6 +77,8 @@ const SERVERS: ServerUnderTest[] = [
       'set_ferrvault_secret',
       'generate_ferrvault_secret',
       'delete_ferrvault_secret',
+      'list_ferrvault_secret_requests',
+      'archive_ferrvault_secret_request',
     ],
   },
   {
