@@ -67,6 +67,19 @@ const SERVERS: ServerUnderTest[] = [
     expectedResourceTemplates: ['ferrvault://org/{org}/project/{project}/vault/{id}'],
   },
   {
+    pkg: 'ferrvault-api-mcp',
+    serverName: 'ferrvault-api',
+    expectedTools: [
+      'list_ferrvault_vaults',
+      'list_ferrvault_environments',
+      'list_ferrvault_secrets',
+      'reveal_ferrvault_secret',
+      'set_ferrvault_secret',
+      'generate_ferrvault_secret',
+      'delete_ferrvault_secret',
+    ],
+  },
+  {
     pkg: 'ferrtrack-mcp',
     serverName: 'ferrtrack',
     expectedTools: [

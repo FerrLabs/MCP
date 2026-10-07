@@ -57,16 +57,19 @@ Create the token from `app.ferrlabs.com` → Settings → API Tokens. It's forwa
 
 ## MCP servers
 
-This repo ships six MCP servers as separate npm packages. `@ferrlabs/mcp` is the unified entrypoint (orgs, billing, profile, public stats, docs); the five sub-MCPs target a specific product API. Add only the servers you need to your client config.
+This repo ships seven MCP servers as separate npm packages. `@ferrlabs/mcp` is the unified entrypoint (orgs, billing, profile, public stats, docs); the six sub-MCPs target a specific product API. Add only the servers you need to your client config.
 
-| Package           | npm               | Targets                      | Base URL env         |
-| ----------------- | ----------------- | ---------------------------- | -------------------- |
-| `@ferrlabs/mcp`   | `@ferrlabs/mcp`   | `api.ferrlabs.com` (unified) | `API_URL`            |
-| `@ferrvault/mcp`  | `@ferrvault/mcp`  | FerrVault secrets            | `API_URL`            |
-| `@ferrtrack/mcp`  | `@ferrtrack/mcp`  | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
-| `@ferrgrowth/mcp` | `@ferrgrowth/mcp` | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
-| `@ferrfleet/mcp`  | `@ferrfleet/mcp`  | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
-| `@ferrlens/mcp`   | `@ferrlens/mcp`   | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
+| Package                 | npm                                                                         | Targets                      | Base URL env         |
+| ----------------------- | --------------------------------------------------------------------------- | ---------------------------- | -------------------- |
+| `@ferrlabs/mcp`         | `@ferrlabs/mcp`                                                             | `api.ferrlabs.com` (unified) | `API_URL`            |
+| `@ferrvault/mcp`        | `@ferrvault/mcp`                                                            | FerrVault secrets            | `API_URL`            |
+| `@ferrvault/api-mcp`    | `@ferrvault/api-mcp`                                                        | `api.ferrvault.com`          | `FERRVAULT_API_URL`  |
+| `@ferrtrack/mcp`        | `@ferrtrack/mcp`                                                            | `api.ferrtrack.com`          | `FERRVAULT_API_URL`  | Base URL for the FerrVault API (`@ferrvault/api-mcp`). Its host must be allowed (see `FERRLABS_MCP_ALLOWED_API_HOSTS`). For an internal CA, point `NODE_EXTRA_CA_CERTS` at the CA certificate. | `https://api.ferrvault.com` |
+| `FERRVAULT_API_VERSION` | Contract version sent as `x-ferrvault-api-version` by `@ferrvault/api-mcp`. | `2026-08-04`                 |
+| `FERRTRACK_API_URL`     |
+| `@ferrgrowth/mcp`       | `@ferrgrowth/mcp`                                                           | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
+| `@ferrfleet/mcp`        | `@ferrfleet/mcp`                                                            | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
+| `@ferrlens/mcp`         | `@ferrlens/mcp`                                                             | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
 
 All servers except `@ferrlens/mcp` share the same auth resolution (env token or OAuth loopback, see below). `@ferrlens/mcp` is anonymous: the FerrLens free tools take no account, it never sends a token and never opens the OAuth flow, and the API rate limits each caller by IP. Register several at once:
 
@@ -106,6 +109,21 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_secret_requests`, `archive_secret_request`                   | secret-request workflow                             |
 | `create_vault`, `update_vault`, `delete_vault`                     | `delete_vault` is **destructive**                   |
 | `create_secret`, `update_secret`, `rotate_secret`, `delete_secret` | `rotate_secret`/`delete_secret` are **destructive** |
+
+### `@ferrvault/api-mcp`
+
+Targets the FerrVault API (`api.ferrvault.com`, or a self-hosted instance through `FERRVAULT_API_URL`): vaults, their environments, and the secrets of each environment. Vaults belong to the organization the token is signed in to.
+
+The FerrVault API accepts FerrLabs session JWTs, not `fft_*` API tokens. Over HTTP, register the client with the IdP as an `eddsa_session_jwt` OAuth client and pass its id to the MCP client (`claude mcp add --client-id`); a dynamically registered client gets an `fft_*` token, which the API refuses.
+
+| Tool                                                   | Notes                                                                                        |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `list_ferrvault_vaults`, `list_ferrvault_environments` | read                                                                                         |
+| `list_ferrvault_secrets`                               | names, versions, tags and expiry; never values                                               |
+| `reveal_ferrvault_secret`                              | returns the plaintext value, audit-logged by FerrVault                                       |
+| `set_ferrvault_secret`                                 | creates the secret, or stores a new version when it exists                                   |
+| `generate_ferrvault_secret`                            | random value generated in the MCP server, stored like `set_ferrvault_secret`, never returned |
+| `delete_ferrvault_secret`                              | **destructive**                                                                              |
 
 ### `@ferrtrack/mcp`
 
