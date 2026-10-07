@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.3.0] - 2026-10-07
+
+### Features
+
+- feat(vault): add secret request tools to @ferrvault/api-mcp (#422)
+
 ## [10.2.0] - 2026-10-07
 
 ### Features
