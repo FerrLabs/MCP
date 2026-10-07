@@ -12,11 +12,11 @@ import {
 
 const TOKENS = `${API}/vaults/infra/environments/prod/operator/tokens`;
 const STORE_SECRETS = `${API}/vaults/infra/environments/ci/secrets`;
-const TOKEN_ID = '0b0e3c4e-6c2f-4f0e-9a51-7a1f2d1c9e01';
+const SAT_ID = '0b0e3c4e-6c2f-4f0e-9a51-7a1f2d1c9e01';
 const SAT = 'fvsat_Zm9vYmFyYmF6cXV4c2VjcmV0dG9rZW5ib2R5MTIzNDU2';
 
 const row = {
-  id: TOKEN_ID,
+  id: SAT_ID,
   label: 'k8s-operator-prod',
   role: 'viewer',
   token_preview: 'Zm9vYmFy',
@@ -27,7 +27,7 @@ const row = {
 };
 
 const tokenMetadata = {
-  id: TOKEN_ID,
+  id: SAT_ID,
   name: 'k8s-operator-prod',
   vault: 'infra',
   environment: 'prod',
@@ -146,11 +146,11 @@ describe('create_ferrvault_service_token', () => {
       .mockResolvedValueOnce(respond(undefined, 204));
     const result = await call('create_ferrvault_service_token', create);
 
-    expect(sent(2)).toMatchObject({ method: 'DELETE', url: `${TOKENS}/${TOKEN_ID}` });
+    expect(sent(2)).toMatchObject({ method: 'DELETE', url: `${TOKENS}/${SAT_ID}` });
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result)).not.toContain(SAT);
     expect(result.content[0].text).toBe(
-      `storing service token ${TOKEN_ID} failed (FerrVault API error (HTTP 400 VALIDATION): rejected [redacted]); the token was revoked`,
+      `storing service token ${SAT_ID} failed (FerrVault API error (HTTP 400 VALIDATION): rejected [redacted]); the token was revoked`,
     );
   });
 
@@ -217,14 +217,14 @@ describe('revoke_ferrvault_service_token', () => {
     const result = await call('revoke_ferrvault_service_token', {
       vault: 'infra',
       environment: 'prod',
-      id: TOKEN_ID,
+      id: SAT_ID,
     });
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(sent()).toMatchObject({ method: 'DELETE', url: `${TOKENS}/${TOKEN_ID}` });
+    expect(sent()).toMatchObject({ method: 'DELETE', url: `${TOKENS}/${SAT_ID}` });
     expect(sent().body).toBeUndefined();
     expect(JSON.parse(result.content[0].text)).toEqual({
-      revoked: TOKEN_ID,
+      revoked: SAT_ID,
       vault: 'infra',
       environment: 'prod',
     });
@@ -235,7 +235,7 @@ describe('revoke_ferrvault_service_token', () => {
     const result = await call('revoke_ferrvault_service_token', {
       vault: 'infra',
       environment: 'prod',
-      id: TOKEN_ID,
+      id: SAT_ID,
     });
 
     expect(result.isError).toBe(true);
@@ -244,7 +244,7 @@ describe('revoke_ferrvault_service_token', () => {
     );
   });
 
-  it.each(['..', `${TOKEN_ID}/..`, 'not-a-uuid'])('rejects %j as a token id', (id) => {
+  it.each(['..', `${SAT_ID}/..`, 'not-a-uuid'])('rejects %j as a token id', (id) => {
     expect(
       accepts('revoke_ferrvault_service_token', { vault: 'infra', environment: 'prod', id }),
     ).toBe(false);

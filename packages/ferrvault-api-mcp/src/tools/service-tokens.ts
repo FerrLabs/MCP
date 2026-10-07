@@ -11,7 +11,7 @@ import {
   vaultRole,
   vaultSlug,
 } from '../schemas.js';
-import { type Upserted, upsertSecret, versionOutcome } from '../upsert.js';
+import { type Upserted, upsertSecret, outcome } from '../upsert.js';
 
 interface ServiceTokenRow {
   id: string;
@@ -116,7 +116,7 @@ export function registerServiceTokenTools(server: McpServer): void {
         return textResult({
           token: metadata(created, scope),
           stored: {
-            outcome: versionOutcome(written),
+            outcome: outcome(written, 'versioned'),
             ...into,
             version: written.secret.current_version,
           },

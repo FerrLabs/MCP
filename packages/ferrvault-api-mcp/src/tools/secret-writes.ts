@@ -5,14 +5,14 @@ import { CHARSETS, type Charset, generateValue } from '../generate.js';
 import { guarded, textResult } from '../results.js';
 import { environmentSlug, secretName, vaultSlug } from '../schemas.js';
 import { withoutValue } from '../secret.js';
-import { type Upserted, upsertSecret } from '../upsert.js';
+import { type Upserted, outcome, upsertSecret } from '../upsert.js';
 
-function summary({ created, secret }: Upserted, target: SecretTarget, extra: object = {}) {
+function summary(written: Upserted, target: SecretTarget, extra: object = {}) {
   return {
-    outcome: created ? 'created' : 'rotated',
+    outcome: outcome(written, 'rotated'),
     ...target,
     ...extra,
-    secret: withoutValue(secret),
+    secret: withoutValue(written.secret),
   };
 }
 

@@ -4,7 +4,7 @@ import { secretPath, vaultRequest } from '../api.js';
 import { guarded, textResult } from '../results.js';
 import { environmentSlug, secretName, vaultSlug } from '../schemas.js';
 import type { RevealedSecret } from '../secret.js';
-import { upsertSecret, versionOutcome } from '../upsert.js';
+import { upsertSecret, outcome } from '../upsert.js';
 
 const source = z
   .object({ vault: vaultSlug, environment: environmentSlug, name: secretName })
@@ -44,7 +44,7 @@ export function registerSecretCopyTools(server: McpServer): void {
           revealed.value,
         );
         return textResult({
-          outcome: versionOutcome(written),
+          outcome: outcome(written, 'versioned'),
           target: dest,
           source_version: revealed.current_version,
           target_version: written.secret.current_version,

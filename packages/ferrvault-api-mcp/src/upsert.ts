@@ -35,6 +35,9 @@ export async function upsertSecret(
   return { created: false, secret };
 }
 
-export function versionOutcome({ created }: Upserted): 'created' | 'versioned' {
-  return created ? 'created' : 'versioned';
+export function outcome<Existing extends 'rotated' | 'versioned'>(
+  { created }: Upserted,
+  existing: Existing,
+): 'created' | Existing {
+  return created ? 'created' : existing;
 }
