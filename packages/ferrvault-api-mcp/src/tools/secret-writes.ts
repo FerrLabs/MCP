@@ -62,7 +62,7 @@ export function registerSecretWriteTools(server: McpServer): void {
         const token = await getToken();
         const target = { vault, environment };
         return textResult(summary(await upsertSecret(token, target, name, value), target));
-      }, value),
+      }),
   );
 
   server.tool(

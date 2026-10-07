@@ -14,18 +14,19 @@ function redact(message: string, secret: string | undefined): string {
   return secret ? message.split(secret).join('[redacted]') : message;
 }
 
-function describe(err: unknown): string {
+function describe(err: unknown, secret: string | undefined): string {
+  const message = redact(err instanceof Error ? err.message : String(err), secret);
   if (err instanceof ApiRequestError) {
     const code = err.code ? ` ${err.code}` : '';
-    return `FerrVault API error (HTTP ${err.status}${code}): ${err.message}`;
+    return `FerrVault API error (HTTP ${err.status}${code}): ${message}`;
   }
-  return err instanceof Error ? err.message : String(err);
+  return message;
 }
 
 function errorResult(err: unknown, secret?: string): ToolResult {
   return {
     isError: true,
-    content: [{ type: 'text', text: redact(describe(err), secret) }],
+    content: [{ type: 'text', text: describe(err, secret) }],
   };
 }
 

@@ -224,7 +224,9 @@ describe('ferrvault api tools', () => {
     const stored = String(sent().body?.value);
     expect(result.isError).toBe(true);
     expect(result.content[0].text).not.toContain(stored);
-    expect(result.content[0].text).toContain('bad value [redacted]');
+    expect(result.content[0].text).toBe(
+      'FerrVault API error (HTTP 400 VALIDATION): bad value [redacted]',
+    );
   });
 
   it('generates distinct values', async () => {
