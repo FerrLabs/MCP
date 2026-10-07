@@ -31,6 +31,10 @@
           "format": "json"
         },
         {
+          "path": "packages/ferrvault-api-mcp/package.json",
+          "format": "json"
+        },
+        {
           "path": "packages/ferrtrack-mcp/package.json",
           "format": "json"
         },

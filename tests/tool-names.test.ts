@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { register as registerFerrLabs } from '../packages/mcp/src/register.js';
 import { register as registerFerrVault } from '../packages/ferrvault-mcp/src/register.js';
+import { register as registerFerrVaultApi } from '../packages/ferrvault-api-mcp/src/register.js';
 import { register as registerFerrTrack } from '../packages/ferrtrack-mcp/src/register.js';
 import { register as registerFerrGrowth } from '../packages/ferrgrowth-mcp/src/register.js';
 import { register as registerFerrFleet } from '../packages/ferrfleet-mcp/src/register.js';
@@ -12,6 +13,7 @@ type Server = Parameters<Register>[0];
 const PACKAGES: Readonly<Record<string, Register>> = {
   '@ferrlabs/mcp': registerFerrLabs,
   '@ferrvault/mcp': registerFerrVault,
+  '@ferrvault/api-mcp': registerFerrVaultApi,
   '@ferrtrack/mcp': registerFerrTrack,
   '@ferrgrowth/mcp': registerFerrGrowth,
   '@ferrfleet/mcp': registerFerrFleet,

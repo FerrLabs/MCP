@@ -35,7 +35,7 @@ jobs:
       - name: Publish
         run: |
           packdir="$RUNNER_TEMP/pack"
-          for dir in mcp-core mcp ferrvault-mcp ferrtrack-mcp ferrgrowth-mcp ferrfleet-mcp ferrlens-mcp; do
+          for dir in mcp-core mcp ferrvault-mcp ferrvault-api-mcp ferrtrack-mcp ferrgrowth-mcp ferrfleet-mcp ferrlens-mcp; do
             name=$(node -p "require('./packages/$dir/package.json').name")
             version=$(node -p "require('./packages/$dir/package.json').version")
             if npm view "$name@$version" version >/dev/null 2>&1; then
@@ -58,6 +58,8 @@ jobs:
             image: mcp
           - package: '@ferrvault/mcp'
             image: ferrvault-mcp
+          - package: '@ferrvault/api-mcp'
+            image: ferrvault-api-mcp
           - package: '@ferrtrack/mcp'
             image: ferrtrack-mcp
           - package: '@ferrgrowth/mcp'
