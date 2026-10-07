@@ -47,3 +47,11 @@ export function secretRequestsPath({ vault, environment }: SecretTarget): string
 export function archiveSecretRequestPath(target: SecretTarget, id: string): string {
   return `${secretRequestsPath(target)}/${encodeURIComponent(id)}/archive`;
 }
+
+export function serviceTokensPath({ vault, environment }: SecretTarget): string {
+  return `${vaultPath(vault)}/environments/${encodeURIComponent(environment)}/operator/tokens`;
+}
+
+export function serviceTokenPath(target: SecretTarget, id: string): string {
+  return `${serviceTokensPath(target)}/${encodeURIComponent(id)}`;
+}

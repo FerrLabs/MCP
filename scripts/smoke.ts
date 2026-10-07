@@ -79,6 +79,10 @@ const SERVERS: ServerUnderTest[] = [
       'delete_ferrvault_secret',
       'list_ferrvault_secret_requests',
       'archive_ferrvault_secret_request',
+      'copy_ferrvault_secret',
+      'list_ferrvault_service_tokens',
+      'create_ferrvault_service_token',
+      'revoke_ferrvault_service_token',
     ],
   },
   {
