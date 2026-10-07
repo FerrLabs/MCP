@@ -47,6 +47,17 @@ export class UnauthorizedError extends Error {
   }
 }
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code: string | undefined,
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
+
 export class UntrustedApiHostError extends Error {
   constructor(message: string) {
     super(message);
@@ -154,11 +165,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!res.ok) {
-    const errMsg =
-      (data as { error?: string; message?: string } | undefined)?.error ??
-      (data as { error?: string; message?: string } | undefined)?.message ??
-      `API error: HTTP ${res.status}`;
-    throw new Error(errMsg);
+    const payload = data as { error?: string; message?: string; code?: string } | undefined;
+    const errMsg = payload?.error ?? payload?.message ?? `API error: HTTP ${res.status}`;
+    throw new ApiRequestError(errMsg, res.status, payload?.code);
   }
 
   return data as T;

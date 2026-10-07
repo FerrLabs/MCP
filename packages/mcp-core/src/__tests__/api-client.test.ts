@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiRequest, UnauthorizedError, UntrustedApiHostError } from '../api-client.js';
+import {
+  apiRequest,
+  ApiRequestError,
+  UnauthorizedError,
+  UntrustedApiHostError,
+} from '../api-client.js';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -72,6 +77,19 @@ describe('apiRequest', () => {
   it('throws an error when the response is not ok', async () => {
     mockFetch.mockResolvedValue(makeResponse({ error: 'Not found' }, 404));
     await expect(apiRequest('/missing')).rejects.toThrow('Not found');
+  });
+
+  it('carries the HTTP status and the API error code on a failed call', async () => {
+    mockFetch.mockResolvedValue(
+      makeResponse({ code: 'SECRET_EXISTS', error: 'a secret with that name already exists' }, 409),
+    );
+    const err = await apiRequest('/secrets', { method: 'POST' }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ApiRequestError);
+    expect(err).toMatchObject({
+      status: 409,
+      code: 'SECRET_EXISTS',
+      message: 'a secret with that name already exists',
+    });
   });
 
   it('throws a generic error when response has no error field', async () => {
