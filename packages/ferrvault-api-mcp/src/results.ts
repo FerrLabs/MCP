@@ -6,16 +6,18 @@ export interface ToolResult {
   isError?: true;
 }
 
+export type Redact = (secret: string) => void;
+
 export function textResult(value: unknown): ToolResult {
   return { content: [{ type: 'text', text: toToolText(value) }] };
 }
 
-function redact(message: string, secret: string | undefined): string {
-  return secret ? message.split(secret).join('[redacted]') : message;
+function redact(message: string, secrets: readonly string[]): string {
+  return secrets.reduce((text, secret) => text.split(secret).join('[redacted]'), message);
 }
 
-function describe(err: unknown, secret: string | undefined): string {
-  const message = redact(err instanceof Error ? err.message : String(err), secret);
+export function describeError(err: unknown, secrets: readonly string[] = []): string {
+  const message = redact(err instanceof Error ? err.message : String(err), secrets);
   if (err instanceof ApiRequestError) {
     const code = err.code ? ` ${err.code}` : '';
     return `FerrVault API error (HTTP ${err.status}${code}): ${message}`;
@@ -23,20 +25,23 @@ function describe(err: unknown, secret: string | undefined): string {
   return message;
 }
 
-function errorResult(err: unknown, secret?: string): ToolResult {
+function errorResult(err: unknown, secrets: readonly string[]): ToolResult {
   return {
     isError: true,
-    content: [{ type: 'text', text: describe(err, secret) }],
+    content: [{ type: 'text', text: describeError(err, secrets) }],
   };
 }
 
 export async function guarded(
-  run: () => Promise<ToolResult>,
+  run: (redactLater: Redact) => Promise<ToolResult>,
   secret?: string,
 ): Promise<ToolResult> {
+  const secrets = secret ? [secret] : [];
   try {
-    return await run();
+    return await run((later) => {
+      if (later) secrets.push(later);
+    });
   } catch (err) {
-    return errorResult(err, secret);
+    return errorResult(err, secrets);
   }
 }

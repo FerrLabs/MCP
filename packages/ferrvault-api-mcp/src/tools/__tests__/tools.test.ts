@@ -1,66 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { McpServer } from '@ferrlabs/mcp-core';
+import { describe, it, expect } from 'vitest';
+import { API, call, metadata, mockFetch, respond, sent, useRegisteredTools } from './harness.js';
 
-type Result = { content: { text: string }[]; isError?: boolean };
-type Handler = (params: Record<string, unknown>) => Promise<Result>;
-
-const handlers = new Map<string, Handler>();
-const server = {
-  tool: (name: string, _description: string, _schema: unknown, handler: Handler) => {
-    handlers.set(name, handler);
-  },
-} as unknown as McpServer;
-
-const mockFetch = vi.fn();
-vi.stubGlobal('fetch', mockFetch);
-
-const API = 'https://api.ferrvault.ferrlabs';
 const SECRETS = `${API}/vaults/infra/environments/prod/secrets`;
-
-const metadata = {
-  id: 's1',
-  vault_id: 'v1',
-  environment_id: 'e1',
-  name: 'DB_PASSWORD',
-  current_version: 1,
-  tags: [],
-  expires_at: null,
-  expiry_action: 'notify',
-  expired: false,
-  created_at: '2026-10-07T00:00:00Z',
-  updated_at: '2026-10-07T00:00:00Z',
-};
-
-function respond(body: unknown, status = 200): Response {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    text: () => Promise.resolve(body === undefined ? '' : JSON.stringify(body)),
-  } as unknown as Response;
-}
-
-interface Sent {
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-  body: Record<string, unknown> | undefined;
-}
-
-function sent(index = 0): Sent {
-  const [url, init] = mockFetch.mock.calls[index];
-  return {
-    url: String(url),
-    method: init.method,
-    headers: init.headers,
-    body: init.body ? JSON.parse(init.body) : undefined,
-  };
-}
-
-function call(name: string, params: Record<string, unknown> = {}): Promise<Result> {
-  const handler = handlers.get(name);
-  if (!handler) throw new Error(`tool ${name} is not registered`);
-  return handler(params);
-}
 
 const target = { vault: 'infra', environment: 'prod', name: 'DB_PASSWORD' };
 
@@ -85,22 +26,7 @@ function secretRequest(id: string, name: string, state: string) {
 }
 
 describe('ferrvault api tools', () => {
-  beforeEach(async () => {
-    vi.resetModules();
-    mockFetch.mockReset();
-    handlers.clear();
-    process.env.FERRLABS_API_TOKEN = 'jwt-from-idp';
-    process.env.FERRVAULT_API_URL = `${API}/`;
-    process.env.FERRLABS_MCP_ALLOWED_API_HOSTS = 'api.ferrvault.ferrlabs';
-    const { register } = await import('../../register.js');
-    register(server);
-  });
-
-  afterEach(() => {
-    delete process.env.FERRLABS_API_TOKEN;
-    delete process.env.FERRVAULT_API_URL;
-    delete process.env.FERRLABS_MCP_ALLOWED_API_HOSTS;
-  });
+  useRegisteredTools();
 
   it('sends the bearer token and pins the contract version on every call', async () => {
     mockFetch.mockResolvedValue(respond([]));

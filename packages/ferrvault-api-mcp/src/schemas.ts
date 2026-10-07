@@ -31,3 +31,21 @@ export const requestedName = z
   .min(1)
   .max(200)
   .describe('Secret name a client requested, as listed by list_ferrvault_secret_requests');
+
+export const serviceTokenId = z
+  .uuid()
+  .describe('Service token id, as listed by list_ferrvault_service_tokens');
+
+export const serviceTokenName = z
+  .string()
+  .min(1)
+  .max(100)
+  .describe('Label shown for the token in FerrVault (e.g. k8s-operator-prod)');
+
+export const vaultRole = z
+  .enum(['viewer', 'writer', 'admin'])
+  .describe('Role the token acts with on its vault environment');
+
+export const expiresAt = z.iso
+  .datetime({ offset: true })
+  .describe('ISO-8601 instant after which the token stops working; omit for no expiry');

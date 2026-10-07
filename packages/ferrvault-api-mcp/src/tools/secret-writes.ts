@@ -1,48 +1,19 @@
 import { z } from 'zod';
-import { ApiRequestError, getToken, type McpServer } from '@ferrlabs/mcp-core';
-import { type SecretTarget, secretPath, secretsPath, vaultRequest } from '../api.js';
+import { getToken, type McpServer } from '@ferrlabs/mcp-core';
+import type { SecretTarget } from '../api.js';
 import { CHARSETS, type Charset, generateValue } from '../generate.js';
 import { guarded, textResult } from '../results.js';
 import { environmentSlug, secretName, vaultSlug } from '../schemas.js';
-import { type SecretMetadata, withoutValue } from '../secret.js';
+import { withoutValue } from '../secret.js';
+import { type Upserted, outcome, upsertSecret } from '../upsert.js';
 
-type Outcome = 'created' | 'rotated';
-
-interface Written {
-  outcome: Outcome;
-  secret: SecretMetadata;
-}
-
-function isAlreadyThere(err: unknown): boolean {
-  return err instanceof ApiRequestError && err.status === 409 && err.code === 'SECRET_EXISTS';
-}
-
-async function upsertSecret(
-  token: string,
-  target: SecretTarget,
-  name: string,
-  value: string,
-): Promise<Written> {
-  try {
-    const secret = await vaultRequest<SecretMetadata>(secretsPath(target), {
-      token,
-      method: 'POST',
-      body: { name, value },
-    });
-    return { outcome: 'created', secret };
-  } catch (err) {
-    if (!isAlreadyThere(err)) throw err;
-  }
-  const secret = await vaultRequest<SecretMetadata>(secretPath(target, name), {
-    token,
-    method: 'PUT',
-    body: { value },
-  });
-  return { outcome: 'rotated', secret };
-}
-
-function summary({ outcome, secret }: Written, target: SecretTarget, extra: object = {}) {
-  return { outcome, ...target, ...extra, secret: withoutValue(secret) };
+function summary(written: Upserted, target: SecretTarget, extra: object = {}) {
+  return {
+    outcome: outcome(written, 'rotated'),
+    ...target,
+    ...extra,
+    secret: withoutValue(written.secret),
+  };
 }
 
 const charsetNames = Object.keys(CHARSETS) as [Charset, ...Charset[]];
