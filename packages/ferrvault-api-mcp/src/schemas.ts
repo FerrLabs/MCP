@@ -21,3 +21,13 @@ export const secretName = z
     'must start with a letter or underscore, then letters, digits, underscores or dots',
   )
   .describe('Secret name (e.g. STRIPE_API_KEY)');
+
+export const secretRequestId = z
+  .uuid()
+  .describe('Secret request id, as listed by list_ferrvault_secret_requests');
+
+export const requestedName = z
+  .string()
+  .min(1)
+  .max(200)
+  .describe('Secret name a client requested, as listed by list_ferrvault_secret_requests');

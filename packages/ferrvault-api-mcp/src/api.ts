@@ -39,3 +39,11 @@ export function secretsPath({ vault, environment }: SecretTarget): string {
 export function secretPath(target: SecretTarget, name: string): string {
   return `${secretsPath(target)}/${encodeURIComponent(name)}`;
 }
+
+export function secretRequestsPath({ vault, environment }: SecretTarget): string {
+  return `${vaultPath(vault)}/environments/${encodeURIComponent(environment)}/secret-requests`;
+}
+
+export function archiveSecretRequestPath(target: SecretTarget, id: string): string {
+  return `${secretRequestsPath(target)}/${encodeURIComponent(id)}/archive`;
+}
