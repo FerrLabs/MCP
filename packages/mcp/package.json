@@ -1,6 +1,6 @@
 {
   "name": "@ferrlabs/mcp",
-  "version": "10.4.0",
+  "version": "10.5.0",
   "description": "Model Context Protocol server for the FerrLabs platform (orgs, projects, subscriptions, docs, tokens, public stats)",
   "license": "MPL-2.0",
   "type": "module",
