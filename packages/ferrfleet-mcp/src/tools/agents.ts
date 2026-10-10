@@ -12,6 +12,8 @@ interface Agent {
   updated_at: string;
 }
 
+const RUNNER_MODES = ['managed', 'external'] as const;
+
 export function registerAgentTools(server: McpServer) {
   server.tool(
     'list_agents',
@@ -68,6 +70,65 @@ export function registerAgentTools(server: McpServer) {
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(run) }],
+      };
+    },
+  );
+
+  server.tool(
+    'update_agent',
+    'Update a FerrFleet agent. Only the fields you pass change; at least one is required. WARNING: setting runner_mode=external stops FerrFleet starting that agent itself for every caller (schedules, webhooks and tickets stop producing runs); its own pipeline must then create and execute the runs. Use runner_mode=managed to hand it back.',
+    {
+      agent_id: z.string().min(1).describe('Agent id'),
+      name: z.string().min(1).max(100).optional().describe('Display name'),
+      prompt: z.string().min(1).max(20000).optional().describe('System prompt'),
+      additional_prompt: z
+        .string()
+        .max(20000)
+        .optional()
+        .describe('Extra prompt appended to the base prompt'),
+      model: z
+        .string()
+        .max(100)
+        .optional()
+        .describe('Model id; an empty string restores the CLI default'),
+      working_dir: z.string().min(1).max(256).optional().describe('Working directory of the run'),
+      description: z.string().max(500).optional().describe('Short description'),
+      enabled: z.boolean().optional().describe('Whether the agent can be triggered'),
+      notify_url: z
+        .string()
+        .url()
+        .max(2048)
+        .optional()
+        .describe('Webhook notified when a run finishes'),
+      options: z
+        .record(z.string(), z.unknown())
+        .optional()
+        .describe('Replaces the whole options object; it is not merged with the existing one'),
+      runner_mode: z
+        .enum(RUNNER_MODES)
+        .optional()
+        .describe('managed: FerrFleet starts the runner. external: the caller starts it'),
+    },
+    async ({ agent_id, ...fields }) => {
+      const body = Object.fromEntries(
+        Object.entries(fields).filter(([, value]) => value !== undefined),
+      );
+      if (Object.keys(body).length === 0) {
+        return {
+          isError: true,
+          content: [
+            { type: 'text' as const, text: 'update_agent needs at least one field to change.' },
+          ],
+        };
+      }
+      const token = await getToken();
+      const agent = await fleetRequest<Agent>(`/agents/${encodeURIComponent(agent_id)}`, {
+        token,
+        method: 'PATCH',
+        body,
+      });
+      return {
+        content: [{ type: 'text' as const, text: toToolText(agent) }],
       };
     },
   );

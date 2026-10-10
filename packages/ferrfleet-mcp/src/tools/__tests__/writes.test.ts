@@ -4,7 +4,9 @@ import type { McpServer } from '@ferrlabs/mcp-core';
 
 process.env.FERRLABS_API_TOKEN = 'test-token';
 
-type Handler = (params: Record<string, unknown>) => Promise<{ content: { text?: string }[] }>;
+type Handler = (
+  params: Record<string, unknown>,
+) => Promise<{ isError?: boolean; content: { text?: string }[] }>;
 
 const handlers = new Map<string, Handler>();
 const schemas = new Map<string, Record<string, ZodTypeAny>>();
@@ -115,5 +117,44 @@ describe('ferrfleet tools', () => {
     expect(limit.safeParse(25).success).toBe(true);
     expect(limit.safeParse(0).success).toBe(false);
     expect(limit.safeParse(101).success).toBe(false);
+  });
+
+  it('update_agent patches the agent with only the fields given', async () => {
+    await handlers.get('update_agent')!({ agent_id: 'a1', runner_mode: 'external' });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/agents/a1`);
+    expect(call.method).toBe('PATCH');
+    expect(call.body).toEqual({ runner_mode: 'external' });
+  });
+
+  it('update_agent keeps falsy values that are real changes', async () => {
+    await handlers.get('update_agent')!({
+      agent_id: 'a1',
+      enabled: false,
+      model: '',
+      additional_prompt: '',
+    });
+    expect(lastCall().body).toEqual({ enabled: false, model: '', additional_prompt: '' });
+  });
+
+  it('update_agent refuses an empty update without calling the API', async () => {
+    const result = await handlers.get('update_agent')!({ agent_id: 'a1' });
+
+    expect(result).toMatchObject({ isError: true });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('update_agent only accepts the runner modes the API knows', () => {
+    const mode = schemas.get('update_agent')!.runner_mode;
+    expect(mode.safeParse('managed').success).toBe(true);
+    expect(mode.safeParse('external').success).toBe(true);
+    expect(mode.safeParse('hybrid').success).toBe(false);
+    expect(mode.safeParse('External').success).toBe(false);
+  });
+
+  it('update_agent escapes the agent id', async () => {
+    await handlers.get('update_agent')!({ agent_id: '../runs', enabled: true });
+    expect(lastCall().url).toBe(`${FLEET}/agents/..%2Fruns`);
   });
 });
