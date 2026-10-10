@@ -88,16 +88,17 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 
 ### `@ferrlabs/mcp` (unified)
 
-| Tool                                                                                               | Scope  | Notes                                                                                                    |
-| -------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- |
-| `get_stats`, `health_check`, `fetch_docs`                                                          | public | No auth required                                                                                         |
-| `get_me`, `update_me`, `export_my_account`, `list_my_sessions`, `revoke_my_session`                | auth   | Current user                                                                                             |
-| `list_orgs`, `get_org`, `get_org_overview`, `get_org_usage`, `update_org`, `list_org_audit`        | auth   | Organizations                                                                                            |
-| `list_org_members`, `invite_org_member`, `remove_org_member`, `update_org_member_role`             | auth   | `invite_org_member` emails an invitation the invitee must accept; `remove_org_member` is **destructive** |
-| `list_teams`, `create_team`, `update_team`, `delete_team`, `add_team_member`, `remove_team_member` | auth   | `delete_team` is **destructive**                                                                         |
-| `list_projects`, `list_vaults`, `list_issues`                                                      | auth   | Cross-product lists                                                                                      |
-| `list_subscriptions`, `activate_subscription`, `update_subscription`, `cancel_subscription`        | auth   | `cancel_subscription` is **destructive**                                                                 |
-| `list_tokens`, `create_token`, `revoke_token`                                                      | auth   | `create_token` is disabled unless `FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1`; `revoke_token` is **destructive** |
+| Tool                                                                                               | Scope  | Notes                                                                                                            |
+| -------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `get_stats`, `health_check`, `fetch_docs`                                                          | public | No auth required                                                                                                 |
+| `get_me`, `update_me`, `export_my_account`, `list_my_sessions`, `revoke_my_session`                | auth   | Current user                                                                                                     |
+| `list_orgs`, `get_org`, `get_org_overview`, `get_org_usage`, `update_org`, `list_org_audit`        | auth   | Organizations                                                                                                    |
+| `list_org_members`, `invite_org_member`, `remove_org_member`, `update_org_member_role`             | auth   | `invite_org_member` emails an invitation the invitee must accept; `remove_org_member` is **destructive**         |
+| `list_teams`, `create_team`, `update_team`, `delete_team`, `add_team_member`, `remove_team_member` | auth   | `delete_team` is **destructive**                                                                                 |
+| `list_projects`, `list_vaults`, `list_issues`                                                      | auth   | Cross-product lists                                                                                              |
+| `list_subscriptions`, `activate_subscription`, `update_subscription`, `cancel_subscription`        | auth   | `cancel_subscription` is **destructive**                                                                         |
+| `list_tokens`, `create_token`, `revoke_token`                                                      | auth   | `create_token` is disabled unless `FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1`; `revoke_token` is **destructive**         |
+| `list_org_tokens`, `create_org_token`, `revoke_org_token`                                          | auth   | `create_org_token` is disabled unless `FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1`; `revoke_org_token` is **destructive** |
 
 ### `@ferrvault/mcp`
 
@@ -165,11 +166,12 @@ The FerrVault API accepts FerrLabs session JWTs, not `fft_*` API tokens. Over HT
 
 ### `@ferrfleet/mcp`
 
-| Tool                                         | Notes                                                   |
-| -------------------------------------------- | ------------------------------------------------------- |
-| `list_agents`, `get_agent`                   | read                                                    |
-| `list_runs`, `get_run`, `get_run_transcript` | read                                                    |
-| `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota |
+| Tool                                         | Notes                                                            |
+| -------------------------------------------- | ---------------------------------------------------------------- |
+| `list_agents`, `get_agent`                   | read                                                             |
+| `list_runs`, `get_run`, `get_run_transcript` | read                                                             |
+| `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota          |
+| `update_agent`                               | `runner_mode=external` stops FerrFleet starting the agent itself |
 
 ### `@ferrlens/mcp`
 
