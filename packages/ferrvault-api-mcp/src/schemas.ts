@@ -12,6 +12,18 @@ export const environmentSlug = slug.describe(
   'Environment slug inside the vault, as listed by list_ferrvault_environments (e.g. prod)',
 );
 
+const newSlug = slug.min(2);
+
+export const newVaultSlug = newSlug.describe(
+  'Slug of the new vault, unique in the organization (e.g. ferrlabs-infra)',
+);
+
+export const newEnvironmentSlug = newSlug.describe(
+  'Slug of the new environment, unique in the vault (e.g. staging)',
+);
+
+export const displayName = z.string().min(1).max(100).describe('Display name (e.g. Staging)');
+
 export const secretName = z
   .string()
   .min(1)
