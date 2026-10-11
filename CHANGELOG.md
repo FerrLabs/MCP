@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.8.0] - 2026-10-11
+
+### Features
+
+- feat(ferrfleet-mcp): choose the organization per tool call (#430)
+
 ## [10.7.0] - 2026-10-11
 
 ### Features
