@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ZodTypeAny } from 'zod';
 import type { McpServer } from '@ferrlabs/mcp-core';
 
@@ -47,6 +47,8 @@ function lastCall(): {
 }
 
 const FLEET = 'https://api.ferrfleet.com';
+const ORG_ID = '3f0c6a52-8d1e-4b7a-9c2f-5e6d7a8b9c01';
+const ENV_ORG_ID = '7a1d9e34-2b5c-4f80-8e6a-1c3b5d7f9a02';
 
 describe('ferrfleet tools', () => {
   beforeEach(async () => {
@@ -56,8 +58,10 @@ describe('ferrfleet tools', () => {
     mockFetch.mockResolvedValue(ok());
     const { registerAgentTools } = await import('../agents.js');
     const { registerRunTools } = await import('../runs.js');
+    const { registerOrgTools } = await import('../orgs.js');
     registerAgentTools(mockServer);
     registerRunTools(mockServer);
+    registerOrgTools(mockServer);
   });
 
   it('every call goes to the FerrFleet API', async () => {
@@ -156,5 +160,90 @@ describe('ferrfleet tools', () => {
   it('update_agent escapes the agent id', async () => {
     await handlers.get('update_agent')!({ agent_id: '../runs', enabled: true });
     expect(lastCall().url).toBe(`${FLEET}/agents/..%2Fruns`);
+  });
+
+  describe('org selection', () => {
+    afterEach(() => {
+      delete process.env.FERRFLEET_ORG_ID;
+    });
+
+    const CALLS: readonly (readonly [string, Record<string, unknown>])[] = [
+      ['list_agents', {}],
+      ['get_agent', { agent_id: 'a1' }],
+      ['trigger_agent_run', { agent_id: 'a1' }],
+      ['update_agent', { agent_id: 'a1', enabled: true }],
+      ['list_runs', {}],
+      ['get_run', { run_id: 'r1' }],
+      ['get_run_transcript', { run_id: 'r1' }],
+    ];
+
+    it.each(CALLS)('%s sends the org_id param as x-ferrfleet-org', async (name, params) => {
+      await handlers.get(name)!({ ...params, org_id: ORG_ID });
+      expect(lastCall().headers['x-ferrfleet-org']).toBe(ORG_ID);
+    });
+
+    it.each(CALLS)('%s declares an optional uuid org_id', (name) => {
+      const orgId = schemas.get(name)!.org_id;
+      expect(orgId.safeParse(undefined).success).toBe(true);
+      expect(orgId.safeParse(ORG_ID).success).toBe(true);
+      expect(orgId.safeParse('nope').success).toBe(false);
+    });
+
+    it('org_id is not forwarded in the update_agent body', async () => {
+      await handlers.get('update_agent')!({ agent_id: 'a1', enabled: true, org_id: ORG_ID });
+      expect(lastCall().body).toEqual({ enabled: true });
+    });
+
+    it('org_id param overrides FERRFLEET_ORG_ID', async () => {
+      process.env.FERRFLEET_ORG_ID = ENV_ORG_ID;
+      await handlers.get('list_agents')!({ org_id: ORG_ID });
+      expect(lastCall().headers['x-ferrfleet-org']).toBe(ORG_ID);
+    });
+
+    it('falls back to FERRFLEET_ORG_ID when org_id is absent', async () => {
+      process.env.FERRFLEET_ORG_ID = ENV_ORG_ID;
+      await handlers.get('list_agents')!({});
+      expect(lastCall().headers['x-ferrfleet-org']).toBe(ENV_ORG_ID);
+    });
+
+    it('sends no org header when neither is set', async () => {
+      await handlers.get('list_agents')!({});
+      expect(lastCall().headers).not.toHaveProperty('x-ferrfleet-org');
+    });
+
+    it('rejects an invalid org_id before any fetch', async () => {
+      await expect(handlers.get('list_agents')!({ org_id: 'nope' })).rejects.toThrow(/org_id/);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('list_ferrfleet_orgs', () => {
+    it('reads /orgs from the identity API, not FerrFleet, with no org header', async () => {
+      process.env.FERRFLEET_ORG_ID = ENV_ORG_ID;
+      mockFetch.mockResolvedValue(ok([]));
+      await handlers.get('list_ferrfleet_orgs')!({});
+
+      const call = lastCall();
+      expect(call.method).toBe('GET');
+      expect(new URL(call.url).pathname).toMatch(/\/orgs$/);
+      expect(call.url.startsWith(FLEET)).toBe(false);
+      expect(call.headers).not.toHaveProperty('x-ferrfleet-org');
+      delete process.env.FERRFLEET_ORG_ID;
+    });
+
+    it('returns id, name, slug and role only', async () => {
+      mockFetch.mockResolvedValue(
+        ok([
+          { id: ORG_ID, name: 'Acme', slug: 'acme', role: 'admin', member_count: 3 },
+          { id: ENV_ORG_ID, name: 'Beta', slug: 'beta', member_count: 1 },
+        ]),
+      );
+      const result = await handlers.get('list_ferrfleet_orgs')!({});
+
+      expect(JSON.parse(result.content[0].text!)).toEqual([
+        { id: ORG_ID, name: 'Acme', slug: 'acme', role: 'admin' },
+        { id: ENV_ORG_ID, name: 'Beta', slug: 'beta' },
+      ]);
+    });
   });
 });
