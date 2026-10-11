@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.7.0] - 2026-10-11
+
+### Features
+
+- feat(ferrfleet): send x-ferrfleet-org header when FERRFLEET_ORG_ID is set (#429)
+
 ## [10.6.0] - 2026-10-11
 
 ### Features
