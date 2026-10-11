@@ -189,6 +189,11 @@ describe('ferrfleet tools', () => {
       expect(orgId.safeParse('nope').success).toBe(false);
     });
 
+    it.each(CALLS)('%s accepts the non RFC 4122 ids FerrLabs issues', (name) => {
+      const orgId = schemas.get(name)!.org_id;
+      expect(orgId.safeParse('019ddfca-92ba-e1e5-2a5d-7602d4b77ae6').success).toBe(true);
+    });
+
     it('org_id is not forwarded in the update_agent body', async () => {
       await handlers.get('update_agent')!({ agent_id: 'a1', enabled: true, org_id: ORG_ID });
       expect(lastCall().body).toEqual({ enabled: true });

@@ -9,7 +9,7 @@ const ORG_HEADER = 'x-ferrfleet-org';
 export const FLEET_API_VERSION = process.env.FERRFLEET_API_VERSION ?? '2026-08-04';
 
 export const orgIdSchema = z
-  .uuid()
+  .guid()
   .optional()
   .describe('Organization id. Find it with list_ferrfleet_orgs.');
 
@@ -22,14 +22,14 @@ interface FleetRequestOptions {
 
 function orgHeader(orgId: string | undefined): Record<string, string> {
   if (orgId !== undefined) {
-    if (!z.uuid().safeParse(orgId).success) {
+    if (!z.guid().safeParse(orgId).success) {
       throw new Error('org_id must be a UUID');
     }
     return { [ORG_HEADER]: orgId };
   }
   const fallback = process.env.FERRFLEET_ORG_ID;
   if (fallback === undefined || fallback === '') return {};
-  if (!z.uuid().safeParse(fallback).success) {
+  if (!z.guid().safeParse(fallback).success) {
     throw new Error('FERRFLEET_ORG_ID must be a UUID');
   }
   return { [ORG_HEADER]: fallback };
