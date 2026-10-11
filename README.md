@@ -168,12 +168,15 @@ The FerrVault API accepts FerrLabs session JWTs, not `fft_*` API tokens. Over HT
 
 ### `@ferrfleet/mcp`
 
+Every tool except `list_ferrfleet_orgs` takes an optional `org_id` (UUID) that selects the organization for that call, sent as `x-ferrfleet-org`. It overrides `FERRFLEET_ORG_ID`.
+
 | Tool                                         | Notes                                                            |
 | -------------------------------------------- | ---------------------------------------------------------------- |
 | `list_agents`, `get_agent`                   | read                                                             |
 | `list_runs`, `get_run`, `get_run_transcript` | read                                                             |
 | `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota          |
 | `update_agent`                               | `runner_mode=external` stops FerrFleet starting the agent itself |
+| `list_ferrfleet_orgs`                        | read, returns the `org_id` to pass to the other tools            |
 
 ### `@ferrlens/mcp`
 
@@ -241,7 +244,7 @@ Resource handlers call the same fetch functions the tools use, so a path is defi
 | `FERRGROWTH_API_URL`              | Base URL for the FerrGrowth API (`@ferrgrowth/mcp`).                                                                                                                                                                                         | `https://api.ferrgrowth.com`                                                  |
 | `FERRFLEET_API_URL`               | Base URL for the FerrFleet API (`@ferrfleet/mcp`).                                                                                                                                                                                           | `https://api.ferrfleet.com`                                                   |
 | `FERRFLEET_API_VERSION`           | Contract version sent as `x-ferrfleet-api-version` by `@ferrfleet/mcp`.                                                                                                                                                                      | `2026-08-04`                                                                  |
-| `FERRFLEET_ORG_ID`                | Organization UUID sent as `x-ferrfleet-org` by `@ferrfleet/mcp`. Must be a UUID; unset sends no header.                                                                                                                                      |
+| `FERRFLEET_ORG_ID`                | Default organization UUID sent as `x-ferrfleet-org` by `@ferrfleet/mcp` when a tool call has no `org_id`. Must be a UUID; unset sends no header.                                                                                             |
 | `FERRTRACK_API_VERSION`           | Contract version sent as `x-ferrtrack-api-version` by `@ferrtrack/mcp`.                                                                                                                                                                      | `2026-08-04`                                                                  |
 | `FERRLENS_API_URL`                | Base URL for the FerrLens API (`@ferrlens/mcp`).                                                                                                                                                                                             | `https://api.ferrlens.com`                                                    |
 | `FERRLENS_API_VERSION`            | Contract version sent as `x-ferrlens-api-version` by `@ferrlens/mcp`.                                                                                                                                                                        | `2026-08-04`                                                                  |

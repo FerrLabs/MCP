@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fleetRequest } from '../api-base.js';
+import { fleetRequest, orgIdSchema } from '../api-base.js';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 const ORG_ID = '3f0c6a52-8d1e-4b7a-9c2f-5e6d7a8b9c01';
+const OTHER_ORG_ID = '7a1d9e34-2b5c-4f80-8e6a-1c3b5d7f9a02';
 
 function ok(): Response {
   const body = { ok: true };
@@ -44,5 +45,29 @@ describe('fleetRequest org header', () => {
     process.env.FERRFLEET_ORG_ID = 'not-a-uuid';
     await expect(fleetRequest('/agents', { token: 't' })).rejects.toThrow(/FERRFLEET_ORG_ID/);
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('sends the per-call org id when no env default is set', async () => {
+    await fleetRequest('/agents', { token: 't', orgId: ORG_ID });
+    expect(mockFetch.mock.calls[0][1].headers['x-ferrfleet-org']).toBe(ORG_ID);
+  });
+
+  it('prefers the per-call org id over FERRFLEET_ORG_ID', async () => {
+    process.env.FERRFLEET_ORG_ID = ORG_ID;
+    await fleetRequest('/agents', { token: 't', orgId: OTHER_ORG_ID });
+    expect(mockFetch.mock.calls[0][1].headers['x-ferrfleet-org']).toBe(OTHER_ORG_ID);
+  });
+
+  it('rejects an invalid per-call org id without calling fetch, even with a valid env default', async () => {
+    process.env.FERRFLEET_ORG_ID = ORG_ID;
+    await expect(fleetRequest('/agents', { token: 't', orgId: 'nope' })).rejects.toThrow(/org_id/);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('org_id schema is optional and only accepts UUIDs', () => {
+    expect(orgIdSchema.safeParse(undefined).success).toBe(true);
+    expect(orgIdSchema.safeParse(ORG_ID).success).toBe(true);
+    expect(orgIdSchema.safeParse('nope').success).toBe(false);
+    expect(orgIdSchema.safeParse('').success).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { getToken, type McpServer, toToolText } from '@ferrlabs/mcp-core';
-import { fleetRequest } from '../api-base.js';
+import { fleetRequest, orgIdSchema } from '../api-base.js';
 
 interface Agent {
   id: string;
@@ -18,10 +18,10 @@ export function registerAgentTools(server: McpServer) {
   server.tool(
     'list_agents',
     'List FerrFleet agents available to the authenticated user (marketplace + custom).',
-    {},
-    async () => {
+    { org_id: orgIdSchema },
+    async ({ org_id }) => {
       const token = await getToken();
-      const agents = await fleetRequest<Agent[]>('/agents', { token });
+      const agents = await fleetRequest<Agent[]>('/agents', { token, orgId: org_id });
       return {
         content: [{ type: 'text' as const, text: toToolText(agents) }],
       };
@@ -33,10 +33,14 @@ export function registerAgentTools(server: McpServer) {
     'Get full details of a FerrFleet agent (manifest, scopes, last run).',
     {
       agent_id: z.string().min(1).describe('Agent id'),
+      org_id: orgIdSchema,
     },
-    async ({ agent_id }) => {
+    async ({ agent_id, org_id }) => {
       const token = await getToken();
-      const agent = await fleetRequest<Agent>(`/agents/${encodeURIComponent(agent_id)}`, { token });
+      const agent = await fleetRequest<Agent>(`/agents/${encodeURIComponent(agent_id)}`, {
+        token,
+        orgId: org_id,
+      });
       return {
         content: [{ type: 'text' as const, text: toToolText(agent) }],
       };
@@ -48,6 +52,7 @@ export function registerAgentTools(server: McpServer) {
     'Trigger a new run of a FerrFleet agent. Returns the freshly-created run id — poll get_run for status or pull get_run_transcript when finished.',
     {
       agent_id: z.string().min(1).describe('Agent id'),
+      org_id: orgIdSchema,
       input: z
         .record(z.string(), z.unknown())
         .optional()
@@ -58,12 +63,13 @@ export function registerAgentTools(server: McpServer) {
         .optional()
         .describe('Free-text reason recorded with the run (audit trail).'),
     },
-    async ({ agent_id, input, reason }) => {
+    async ({ agent_id, input, reason, org_id }) => {
       const token = await getToken();
       const run = await fleetRequest<{ id: string; status: string; created_at: string }>(
         `/agents/${encodeURIComponent(agent_id)}/runs`,
         {
           token,
+          orgId: org_id,
           method: 'POST',
           body: { input: input ?? {}, reason: reason ?? null },
         },
@@ -79,6 +85,7 @@ export function registerAgentTools(server: McpServer) {
     'Update a FerrFleet agent. Only the fields you pass change; at least one is required. WARNING: setting runner_mode=external stops FerrFleet starting that agent itself for every caller (schedules, webhooks and tickets stop producing runs); its own pipeline must then create and execute the runs. Use runner_mode=managed to hand it back.',
     {
       agent_id: z.string().min(1).describe('Agent id'),
+      org_id: orgIdSchema,
       name: z.string().min(1).max(100).optional().describe('Display name'),
       prompt: z.string().min(1).max(20000).optional().describe('System prompt'),
       additional_prompt: z
@@ -109,7 +116,7 @@ export function registerAgentTools(server: McpServer) {
         .optional()
         .describe('managed: FerrFleet starts the runner. external: the caller starts it'),
     },
-    async ({ agent_id, ...fields }) => {
+    async ({ agent_id, org_id, ...fields }) => {
       const body = Object.fromEntries(
         Object.entries(fields).filter(([, value]) => value !== undefined),
       );
@@ -124,6 +131,7 @@ export function registerAgentTools(server: McpServer) {
       const token = await getToken();
       const agent = await fleetRequest<Agent>(`/agents/${encodeURIComponent(agent_id)}`, {
         token,
+        orgId: org_id,
         method: 'PATCH',
         body,
       });
