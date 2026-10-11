@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.6.0] - 2026-10-11
+
+### Features
+
+- feat(ferrvault-api-mcp): add create_ferrvault_vault and create_ferrvault_environment tools (#427)
+
 ## [10.5.0] - 2026-10-10
 
 ### Features
