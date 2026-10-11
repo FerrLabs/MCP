@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.8.1] - 2026-10-11
+
+### Bug Fixes
+
+- fix(ferrfleet-mcp): accept the org ids FerrLabs issues (#435)
+
 ## [10.8.0] - 2026-10-11
 
 ### Features
