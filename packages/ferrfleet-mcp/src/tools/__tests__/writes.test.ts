@@ -123,6 +123,61 @@ describe('ferrfleet tools', () => {
     expect(limit.safeParse(101).success).toBe(false);
   });
 
+  it('create_agent posts only the fields given', async () => {
+    await handlers.get('create_agent')!({
+      id: 'triage-bot',
+      name: 'Triage bot',
+      prompt: 'Triage issues',
+      org_id: ORG_ID,
+    });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/agents`);
+    expect(call.method).toBe('POST');
+    expect(call.body).toEqual({ id: 'triage-bot', name: 'Triage bot', prompt: 'Triage issues' });
+  });
+
+  it('create_agent forwards the optional fields', async () => {
+    const params = {
+      id: 'triage-bot',
+      name: 'Triage bot',
+      prompt: 'Triage issues',
+      additional_prompt: 'Be brief',
+      model: 'sonnet',
+      working_dir: '/repo',
+      description: 'Triages',
+      notify_url: 'https://example.com/hook',
+    };
+    await handlers.get('create_agent')!(params);
+    expect(lastCall().body).toEqual(params);
+  });
+
+  it('create_agent requires id, name and prompt', () => {
+    const shape = schemas.get('create_agent')!;
+    expect(shape.id.safeParse(undefined).success).toBe(false);
+    expect(shape.name.safeParse(undefined).success).toBe(false);
+    expect(shape.prompt.safeParse(undefined).success).toBe(false);
+    expect(shape.model.safeParse(undefined).success).toBe(true);
+  });
+
+  it('create_agent only accepts ids the API accepts', () => {
+    const id = schemas.get('create_agent')!.id;
+    expect(id.safeParse('triage-bot').success).toBe(true);
+    expect(id.safeParse('ab').success).toBe(true);
+    expect(id.safeParse('Triage').success).toBe(false);
+    expect(id.safeParse('a').success).toBe(false);
+    expect(id.safeParse('-bot').success).toBe(false);
+    expect(id.safeParse('bot-').success).toBe(false);
+    expect(id.safeParse('a'.repeat(65)).success).toBe(false);
+  });
+
+  it('create_agent exposes no fields the API ignores', () => {
+    const keys = Object.keys(schemas.get('create_agent')!);
+    expect(keys).not.toContain('runner_mode');
+    expect(keys).not.toContain('enabled');
+    expect(keys).not.toContain('options');
+  });
+
   it('update_agent patches the agent with only the fields given', async () => {
     await handlers.get('update_agent')!({ agent_id: 'a1', runner_mode: 'external' });
 
@@ -171,6 +226,7 @@ describe('ferrfleet tools', () => {
       ['list_agents', {}],
       ['get_agent', { agent_id: 'a1' }],
       ['trigger_agent_run', { agent_id: 'a1' }],
+      ['create_agent', { id: 'bot', name: 'Bot', prompt: 'Go' }],
       ['update_agent', { agent_id: 'a1', enabled: true }],
       ['list_runs', {}],
       ['get_run', { run_id: 'r1' }],
