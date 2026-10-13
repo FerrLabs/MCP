@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.11.0] - 2026-10-13
+
+### Features
+
+- feat(ferrfleet-mcp): list and set repository bindings of an agent (#444)
+
 ## [10.10.0] - 2026-10-13
 
 ### Features
