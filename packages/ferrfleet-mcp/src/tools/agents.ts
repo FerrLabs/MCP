@@ -13,6 +13,7 @@ interface Agent {
 }
 
 const RUNNER_MODES = ['managed', 'external'] as const;
+const AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}[a-z0-9]$/;
 
 export function registerAgentTools(server: McpServer) {
   server.tool(
@@ -76,6 +77,54 @@ export function registerAgentTools(server: McpServer) {
       );
       return {
         content: [{ type: 'text' as const, text: toToolText(run) }],
+      };
+    },
+  );
+
+  server.tool(
+    'create_agent',
+    'Create a FerrFleet agent in the organization. The agent starts with default options and runner_mode=managed; use update_agent to change those or to set enabled.',
+    {
+      id: z
+        .string()
+        .regex(AGENT_ID_PATTERN)
+        .describe('Unique slug: lowercase letters, digits and hyphens, 2 to 64 characters'),
+      org_id: orgIdSchema,
+      name: z.string().min(1).max(100).describe('Display name'),
+      prompt: z.string().min(1).max(20000).describe('System prompt'),
+      additional_prompt: z
+        .string()
+        .max(20000)
+        .optional()
+        .describe('Extra prompt appended to the base prompt'),
+      model: z.string().min(1).max(100).optional().describe('Model id; omit for the CLI default'),
+      working_dir: z
+        .string()
+        .min(1)
+        .max(256)
+        .optional()
+        .describe('Working directory of the run; defaults to /workdir'),
+      description: z.string().max(500).optional().describe('Short description'),
+      notify_url: z
+        .string()
+        .url()
+        .max(2048)
+        .optional()
+        .describe('Webhook notified when a run finishes'),
+    },
+    async ({ org_id, ...fields }) => {
+      const body = Object.fromEntries(
+        Object.entries(fields).filter(([, value]) => value !== undefined),
+      );
+      const token = await getToken();
+      const agent = await fleetRequest<Agent>('/agents', {
+        token,
+        orgId: org_id,
+        method: 'POST',
+        body,
+      });
+      return {
+        content: [{ type: 'text' as const, text: toToolText(agent) }],
       };
     },
   );
