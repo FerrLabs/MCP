@@ -64,7 +64,9 @@ describe('ferrfleet tools', () => {
     registerAgentTools(mockServer);
     registerRunTools(mockServer);
     registerOrgTools(mockServer);
+    const { registerRepoTools } = await import('../repos.js');
     registerRunnerPoolTools(mockServer);
+    registerRepoTools(mockServer);
   });
 
   it('every call goes to the FerrFleet API', async () => {
@@ -260,6 +262,48 @@ describe('ferrfleet tools', () => {
   it('exposes no tool that creates or rotates a pool token', () => {
     const names = [...handlers.keys()].filter((name) => /pool|token/.test(name));
     expect(names).toEqual(['list_runner_pools']);
+  });
+
+  it('bind_repo upserts the binding with the repository and agent', async () => {
+    await handlers.get('bind_repo')!({
+      repo_full_name: 'IdleWarden/idlewarden',
+      agent_id: 'pr-review',
+    });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/repos/bindings`);
+    expect(call.method).toBe('POST');
+    expect(call.body).toEqual({ repo_full_name: 'IdleWarden/idlewarden', agent_id: 'pr-review' });
+  });
+
+  it('bind_repo keeps enabled=false so a binding can be switched off', async () => {
+    await handlers.get('bind_repo')!({
+      repo_full_name: 'IdleWarden/idlewarden',
+      agent_id: 'pr-review',
+      enabled: false,
+    });
+    expect(lastCall().body).toEqual({
+      repo_full_name: 'IdleWarden/idlewarden',
+      agent_id: 'pr-review',
+      enabled: false,
+    });
+  });
+
+  it('bind_repo only accepts owner/name repositories', () => {
+    const repo = schemas.get('bind_repo')!.repo_full_name;
+    expect(repo.safeParse('IdleWarden/idlewarden').success).toBe(true);
+    expect(repo.safeParse('idlewarden').success).toBe(false);
+    expect(repo.safeParse('a/b/c').success).toBe(false);
+    expect(repo.safeParse('../agents').success).toBe(false);
+  });
+
+  it('list_repo_bindings reads the bindings collection', async () => {
+    mockFetch.mockResolvedValue(ok([]));
+    await handlers.get('list_repo_bindings')!({});
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/repos/bindings`);
+    expect(call.method).toBe('GET');
   });
 
   it('update_agent escapes the agent id', async () => {

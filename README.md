@@ -178,6 +178,7 @@ Every tool except `list_ferrfleet_orgs` takes an optional `org_id` (UUID) that s
 | `create_agent`                               | takes `id` (slug), `name`, `prompt`; options and runner mode via `update_agent`                                                                                         |
 | `update_agent`                               | `runner_mode=external` stops FerrFleet starting the agent itself; `runner_pool_id` (pool id or `null`) moves its runs to a runner pool or back to the FerrFleet cluster |
 | `list_runner_pools`                          | read; pools and their tokens are created and rotated in the FerrFleet UI only                                                                                           |
+| `list_repo_bindings`, `bind_repo`            | repositories bound to agents; a pool token can only dispatch an agent on a bound repository                                                                             |
 | `list_ferrfleet_orgs`                        | read, returns the `org_id` to pass to the other tools                                                                                                                   |
 
 ### `@ferrlens/mcp`
