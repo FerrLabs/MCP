@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.10.0] - 2026-10-13
+
+### Features
+
+- feat(ferrfleet-mcp): add list_runner_pools and runner_pool_id on update_agent (#442)
+
 ## [10.9.0] - 2026-10-13
 
 ### Features
