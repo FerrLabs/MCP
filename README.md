@@ -170,14 +170,15 @@ The FerrVault API accepts FerrLabs session JWTs, not `fft_*` API tokens. Over HT
 
 Every tool except `list_ferrfleet_orgs` takes an optional `org_id` (UUID) that selects the organization for that call, sent as `x-ferrfleet-org`. It overrides `FERRFLEET_ORG_ID`.
 
-| Tool                                         | Notes                                                                           |
-| -------------------------------------------- | ------------------------------------------------------------------------------- |
-| `list_agents`, `get_agent`                   | read                                                                            |
-| `list_runs`, `get_run`, `get_run_transcript` | read                                                                            |
-| `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota                         |
-| `create_agent`                               | takes `id` (slug), `name`, `prompt`; options and runner mode via `update_agent` |
-| `update_agent`                               | `runner_mode=external` stops FerrFleet starting the agent itself                |
-| `list_ferrfleet_orgs`                        | read, returns the `org_id` to pass to the other tools                           |
+| Tool                                         | Notes                                                                                                                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_agents`, `get_agent`                   | read                                                                                                                                                                    |
+| `list_runs`, `get_run`, `get_run_transcript` | read                                                                                                                                                                    |
+| `trigger_agent_run`                          | **destructive**, executes an agent and spends run quota                                                                                                                 |
+| `create_agent`                               | takes `id` (slug), `name`, `prompt`; options and runner mode via `update_agent`                                                                                         |
+| `update_agent`                               | `runner_mode=external` stops FerrFleet starting the agent itself; `runner_pool_id` (pool id or `null`) moves its runs to a runner pool or back to the FerrFleet cluster |
+| `list_runner_pools`                          | read; pools and their tokens are created and rotated in the FerrFleet UI only                                                                                           |
+| `list_ferrfleet_orgs`                        | read, returns the `org_id` to pass to the other tools                                                                                                                   |
 
 ### `@ferrlens/mcp`
 

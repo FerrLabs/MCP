@@ -48,6 +48,7 @@ function lastCall(): {
 
 const FLEET = 'https://api.ferrfleet.com';
 const ORG_ID = '3f0c6a52-8d1e-4b7a-9c2f-5e6d7a8b9c01';
+const POOL_ID = '0192f3a4-5b6c-7d8e-9f01-23456789abcd';
 const ENV_ORG_ID = '7a1d9e34-2b5c-4f80-8e6a-1c3b5d7f9a02';
 
 describe('ferrfleet tools', () => {
@@ -59,9 +60,11 @@ describe('ferrfleet tools', () => {
     const { registerAgentTools } = await import('../agents.js');
     const { registerRunTools } = await import('../runs.js');
     const { registerOrgTools } = await import('../orgs.js');
+    const { registerRunnerPoolTools } = await import('../runner-pools.js');
     registerAgentTools(mockServer);
     registerRunTools(mockServer);
     registerOrgTools(mockServer);
+    registerRunnerPoolTools(mockServer);
   });
 
   it('every call goes to the FerrFleet API', async () => {
@@ -212,6 +215,53 @@ describe('ferrfleet tools', () => {
     expect(mode.safeParse('External').success).toBe(false);
   });
 
+  it('update_agent sets the runner pool by id', async () => {
+    await handlers.get('update_agent')!({ agent_id: 'a1', runner_pool_id: POOL_ID });
+    expect(lastCall().body).toEqual({ runner_pool_id: POOL_ID });
+  });
+
+  it('update_agent sends a null runner_pool_id to detach the pool', async () => {
+    await handlers.get('update_agent')!({ agent_id: 'a1', runner_pool_id: null });
+    expect(lastCall().body).toEqual({ runner_pool_id: null });
+    expect(lastCall().body).toHaveProperty('runner_pool_id', null);
+  });
+
+  it('update_agent leaves runner_pool_id out of the body when omitted', async () => {
+    await handlers.get('update_agent')!({ agent_id: 'a1', enabled: true });
+    expect(lastCall().body).not.toHaveProperty('runner_pool_id');
+  });
+
+  it('update_agent accepts a pool change as the only field', async () => {
+    const result = await handlers.get('update_agent')!({ agent_id: 'a1', runner_pool_id: null });
+    expect(result.isError).toBeUndefined();
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('update_agent only accepts a uuid or null as runner_pool_id', () => {
+    const pool = schemas.get('update_agent')!.runner_pool_id;
+    expect(pool.safeParse(POOL_ID).success).toBe(true);
+    expect(pool.safeParse(null).success).toBe(true);
+    expect(pool.safeParse(undefined).success).toBe(true);
+    expect(pool.safeParse('default').success).toBe(false);
+    expect(pool.safeParse('').success).toBe(false);
+  });
+
+  it('list_runner_pools reads the runner pool collection and returns it unchanged', async () => {
+    const pools = [{ id: POOL_ID, name: 'build-farm', status: 'active' }];
+    mockFetch.mockResolvedValue(ok(pools));
+    const result = await handlers.get('list_runner_pools')!({});
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/runner-pools`);
+    expect(call.method).toBe('GET');
+    expect(JSON.parse(result.content[0].text!)).toEqual(pools);
+  });
+
+  it('exposes no tool that creates or rotates a pool token', () => {
+    const names = [...handlers.keys()].filter((name) => /pool|token/.test(name));
+    expect(names).toEqual(['list_runner_pools']);
+  });
+
   it('update_agent escapes the agent id', async () => {
     await handlers.get('update_agent')!({ agent_id: '../runs', enabled: true });
     expect(lastCall().url).toBe(`${FLEET}/agents/..%2Fruns`);
@@ -228,6 +278,7 @@ describe('ferrfleet tools', () => {
       ['trigger_agent_run', { agent_id: 'a1' }],
       ['create_agent', { id: 'bot', name: 'Bot', prompt: 'Go' }],
       ['update_agent', { agent_id: 'a1', enabled: true }],
+      ['list_runner_pools', {}],
       ['list_runs', {}],
       ['get_run', { run_id: 'r1' }],
       ['get_run_transcript', { run_id: 'r1' }],
