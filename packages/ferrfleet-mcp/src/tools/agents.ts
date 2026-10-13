@@ -131,7 +131,7 @@ export function registerAgentTools(server: McpServer) {
 
   server.tool(
     'update_agent',
-    'Update a FerrFleet agent. Only the fields you pass change; at least one is required. WARNING: setting runner_mode=external stops FerrFleet starting that agent itself for every caller (schedules, webhooks and tickets stop producing runs); its own pipeline must then create and execute the runs. Use runner_mode=managed to hand it back.',
+    "Update a FerrFleet agent. Only the fields you pass change; at least one is required. WARNING: setting runner_mode=external stops FerrFleet starting that agent itself for every caller (schedules, webhooks and tickets stop producing runs); its own pipeline must then create and execute the runs. Use runner_mode=managed to hand it back. Setting runner_pool_id changes where the agent's runs execute: on that runner pool instead of the FerrFleet cluster. runner_pool_id=null hands the agent back to the FerrFleet cluster.",
     {
       agent_id: z.string().min(1).describe('Agent id'),
       org_id: orgIdSchema,
@@ -164,6 +164,13 @@ export function registerAgentTools(server: McpServer) {
         .enum(RUNNER_MODES)
         .optional()
         .describe('managed: FerrFleet starts the runner. external: the caller starts it'),
+      runner_pool_id: z
+        .guid()
+        .nullable()
+        .optional()
+        .describe(
+          'Runner pool id from list_runner_pools to run this agent on; null detaches it and returns the agent to the FerrFleet cluster; omit to leave it unchanged',
+        ),
     },
     async ({ agent_id, org_id, ...fields }) => {
       const body = Object.fromEntries(
