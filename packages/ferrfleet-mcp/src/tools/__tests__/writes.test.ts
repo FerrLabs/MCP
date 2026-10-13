@@ -65,8 +65,10 @@ describe('ferrfleet tools', () => {
     registerRunTools(mockServer);
     registerOrgTools(mockServer);
     const { registerRepoTools } = await import('../repos.js');
+    const { registerGithubTools } = await import('../github.js');
     registerRunnerPoolTools(mockServer);
     registerRepoTools(mockServer);
+    registerGithubTools(mockServer);
   });
 
   it('every call goes to the FerrFleet API', async () => {
@@ -303,6 +305,32 @@ describe('ferrfleet tools', () => {
 
     const call = lastCall();
     expect(call.url).toBe(`${FLEET}/repos/bindings`);
+    expect(call.method).toBe('GET');
+  });
+
+  it('create_github_connector posts a github connector with only the name', async () => {
+    await handlers.get('create_github_connector')!({ name: 'github' });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/connectors`);
+    expect(call.method).toBe('POST');
+    expect(call.body).toEqual({ type: 'github', name: 'github' });
+  });
+
+  it('create_github_connector only accepts names the API accepts', () => {
+    const name = schemas.get('create_github_connector')!.name;
+    expect(name.safeParse('github').success).toBe(true);
+    expect(name.safeParse('').success).toBe(false);
+    expect(name.safeParse('-github').success).toBe(false);
+    expect(name.safeParse('a/b').success).toBe(false);
+  });
+
+  it('list_github_installations reads the installations collection', async () => {
+    mockFetch.mockResolvedValue(ok([]));
+    await handlers.get('list_github_installations')!({});
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/github/installations`);
     expect(call.method).toBe('GET');
   });
 
