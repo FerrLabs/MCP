@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.9.0] - 2026-10-13
+
+### Features
+
+- feat(ferrfleet-mcp): add create_agent tool (#440)
+
 ## [10.8.1] - 2026-10-11
 
 ### Bug Fixes
