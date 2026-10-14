@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.13.0] - 2026-10-14
+
+### Features
+
+- feat(ferrfleet-mcp): add marketplace import and connector tools (#446)
+
 ## [10.12.0] - 2026-10-13
 
 ### Features
