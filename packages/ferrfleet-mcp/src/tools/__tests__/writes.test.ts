@@ -69,6 +69,10 @@ describe('ferrfleet tools', () => {
     registerRunnerPoolTools(mockServer);
     registerRepoTools(mockServer);
     registerGithubTools(mockServer);
+    const { registerMarketplaceTools } = await import('../marketplace.js');
+    const { registerConnectorTools } = await import('../connectors.js');
+    registerMarketplaceTools(mockServer);
+    registerConnectorTools(mockServer);
   });
 
   it('every call goes to the FerrFleet API', async () => {
@@ -339,6 +343,122 @@ describe('ferrfleet tools', () => {
     expect(lastCall().url).toBe(`${FLEET}/agents/..%2Fruns`);
   });
 
+  it('list_marketplace_agents reads the catalog and returns it unchanged', async () => {
+    const templates = [{ id: 'pr-review', name: 'PR review', imported: false }];
+    mockFetch.mockResolvedValue(ok(templates));
+    const result = await handlers.get('list_marketplace_agents')!({});
+
+    expect(lastCall().url).toBe(`${FLEET}/marketplace/agents`);
+    expect(lastCall().method).toBe('GET');
+    expect(JSON.parse(result.content[0].text!)).toEqual(templates);
+  });
+
+  it('import_marketplace_agent escapes the template id and sends an empty body by default', async () => {
+    await handlers.get('import_marketplace_agent')!({ template_id: '../agents' });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/marketplace/agents/..%2Fagents/import`);
+    expect(call.method).toBe('POST');
+    expect(call.body).toEqual({});
+  });
+
+  it('import_marketplace_agent sends only the overrides given', async () => {
+    await handlers.get('import_marketplace_agent')!({ template_id: 'pr-review', name: 'Mine' });
+    expect(lastCall().body).toEqual({ name: 'Mine' });
+
+    mockFetch.mockClear();
+    await handlers.get('import_marketplace_agent')!({ template_id: 'pr-review', id: 'my-pr' });
+    expect(lastCall().body).toEqual({ id: 'my-pr' });
+  });
+
+  it('import_marketplace_agent only accepts ids the API accepts for agents', () => {
+    const id = schemas.get('import_marketplace_agent')!.id;
+    expect(id.safeParse('my-pr-agent').success).toBe(true);
+    expect(id.safeParse('My_Agent').success).toBe(false);
+    expect(id.safeParse('-bad').success).toBe(false);
+    expect(id.safeParse('a').success).toBe(false);
+    expect(id.safeParse('a'.repeat(65)).success).toBe(false);
+  });
+
+  it('list_connectors reads the connector collection', async () => {
+    const connectors = [{ id: 'c1', type: 'github', name: 'Gh', has_secret: true }];
+    mockFetch.mockResolvedValue(ok(connectors));
+    const result = await handlers.get('list_connectors')!({});
+
+    expect(lastCall().url).toBe(`${FLEET}/connectors`);
+    expect(lastCall().method).toBe('GET');
+    expect(JSON.parse(result.content[0].text!)).toEqual(connectors);
+  });
+
+  it('set_agent_connectors puts exactly the given list and escapes the agent id', async () => {
+    await handlers.get('set_agent_connectors')!({
+      agent_id: '../runs',
+      connector_ids: ['c1', 'c2'],
+    });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/agents/..%2Fruns/connectors`);
+    expect(call.method).toBe('PUT');
+    expect(call.body).toEqual({ connector_ids: ['c1', 'c2'] });
+  });
+
+  it('set_agent_connectors sends an empty list to detach everything', async () => {
+    await handlers.get('set_agent_connectors')!({ agent_id: 'a1', connector_ids: [] });
+    expect(lastCall().body).toEqual({ connector_ids: [] });
+  });
+
+  it('set_agent_connectors requires the list and rejects empty ids', () => {
+    const ids = schemas.get('set_agent_connectors')!.connector_ids;
+    expect(ids.safeParse(undefined).success).toBe(false);
+    expect(ids.safeParse(['']).success).toBe(false);
+    expect(ids.safeParse(['c1']).success).toBe(true);
+  });
+
+  it('update_connector patches with only the fields given', async () => {
+    await handlers.get('update_connector')!({ connector_id: 'c1', name: 'Renamed' });
+
+    const call = lastCall();
+    expect(call.url).toBe(`${FLEET}/connectors/c1`);
+    expect(call.method).toBe('PATCH');
+    expect(call.body).toEqual({ name: 'Renamed' });
+  });
+
+  it('update_connector sends config as given, without merging it client side', async () => {
+    await handlers.get('update_connector')!({ connector_id: 'c1', config: { url: 'https://x' } });
+    expect(lastCall().body).toEqual({ config: { url: 'https://x' } });
+  });
+
+  it('update_connector refuses an empty update without calling the API', async () => {
+    const result = await handlers.get('update_connector')!({ connector_id: 'c1' });
+    expect(result.isError).toBe(true);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('update_connector escapes the connector id', async () => {
+    await handlers.get('update_connector')!({ connector_id: '../agents', name: 'x' });
+    expect(lastCall().url).toBe(`${FLEET}/connectors/..%2Fagents`);
+  });
+
+  it('update_connector does not expose the secret', async () => {
+    expect(Object.keys(schemas.get('update_connector')!)).not.toContain('secret');
+    await handlers.get('update_connector')!({ connector_id: 'c1', name: 'x', secret: 'hunter2' });
+    expect(lastCall().body).toEqual({ name: 'x' });
+  });
+
+  it('update_connector only accepts names the API accepts', () => {
+    const name = schemas.get('update_connector')!.name;
+    expect(name.safeParse('GitHub main_1').success).toBe(true);
+    expect(name.safeParse('').success).toBe(false);
+    expect(name.safeParse(' lead').success).toBe(false);
+    expect(name.safeParse('a'.repeat(64)).success).toBe(false);
+  });
+
+  it('update_connector only accepts an object as config', () => {
+    const config = schemas.get('update_connector')!.config;
+    expect(config.safeParse('x').success).toBe(false);
+    expect(config.safeParse(['a']).success).toBe(false);
+  });
+
   describe('org selection', () => {
     afterEach(() => {
       delete process.env.FERRFLEET_ORG_ID;
@@ -351,6 +471,11 @@ describe('ferrfleet tools', () => {
       ['create_agent', { id: 'bot', name: 'Bot', prompt: 'Go' }],
       ['update_agent', { agent_id: 'a1', enabled: true }],
       ['list_runner_pools', {}],
+      ['list_marketplace_agents', {}],
+      ['import_marketplace_agent', { template_id: 't1' }],
+      ['list_connectors', {}],
+      ['set_agent_connectors', { agent_id: 'a1', connector_ids: [] }],
+      ['update_connector', { connector_id: 'c1', name: 'Gh' }],
       ['list_runs', {}],
       ['get_run', { run_id: 'r1' }],
       ['get_run_transcript', { run_id: 'r1' }],
