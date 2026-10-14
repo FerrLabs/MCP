@@ -13,7 +13,7 @@ interface Agent {
 }
 
 const RUNNER_MODES = ['managed', 'external'] as const;
-const AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}[a-z0-9]$/;
+export const AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}[a-z0-9]$/;
 
 export function registerAgentTools(server: McpServer) {
   server.tool(
