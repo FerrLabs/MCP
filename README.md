@@ -57,19 +57,19 @@ Create the token from `app.ferrlabs.com` → Settings → API Tokens. It's forwa
 
 ## MCP servers
 
-This repo ships seven MCP servers as separate npm packages. `@ferrlabs/mcp` is the unified entrypoint (orgs, billing, profile, public stats, docs); the six sub-MCPs target a specific product API. Add only the servers you need to your client config.
+This repo ships `@ferrlabs/mcp`, the unified entrypoint (orgs, billing, profile, public stats, docs), and `@ferrlabs/mcp-core`, the shared core every FerrLabs MCP server is built on. The product servers live next to their product. Add only the servers you need to your client config.
 
-| Package              | npm                  | Targets                      | Base URL env         |
-| -------------------- | -------------------- | ---------------------------- | -------------------- |
-| `@ferrlabs/mcp`      | `@ferrlabs/mcp`      | `api.ferrlabs.com` (unified) | `API_URL`            |
-| `@ferrvault/mcp`     | `@ferrvault/mcp`     | FerrVault secrets            | `API_URL`            |
-| `@ferrvault/api-mcp` | `@ferrvault/api-mcp` | `api.ferrvault.com`          | `FERRVAULT_API_URL`  |
-| `@ferrtrack/mcp`     | `@ferrtrack/mcp`     | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
-| `@ferrgrowth/mcp`    | `@ferrgrowth/mcp`    | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
-| `@ferrfleet/mcp`     | `@ferrfleet/mcp`     | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
-| `@ferrlens/mcp`      | `@ferrlens/mcp`      | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
+| Package              | Repo                                                 | Targets                      | Base URL env         |
+| -------------------- | ---------------------------------------------------- | ---------------------------- | -------------------- |
+| `@ferrlabs/mcp`      | this repo                                            | `api.ferrlabs.com` (unified) | `API_URL`            |
+| `@ferrvault/mcp`     | [FerrVault](https://github.com/FerrLabs/FerrVault)   | FerrVault secrets            | `API_URL`            |
+| `@ferrvault/api-mcp` | [FerrVault](https://github.com/FerrLabs/FerrVault)   | `api.ferrvault.com`          | `FERRVAULT_API_URL`  |
+| `@ferrtrack/mcp`     | [FerrTrack](https://github.com/FerrLabs/FerrTrack)   | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
+| `@ferrgrowth/mcp`    | [FerrGrowth](https://github.com/FerrLabs/FerrGrowth) | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
+| `@ferrfleet/mcp`     | [FerrFleet](https://github.com/FerrLabs/FerrFleet)   | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
+| `@ferrlens/mcp`      | [FerrLens](https://github.com/FerrLabs/FerrLens)     | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
 
-All servers except `@ferrlens/mcp` share the same auth resolution (env token or OAuth loopback, see below). `@ferrlens/mcp` is anonymous: the FerrLens free tools take no account, it never sends a token and never opens the OAuth flow, and the API rate limits each caller by IP. Register several at once:
+Tool lists, product variables and development notes for each product server are in the `mcp/` README of its repo. All servers except `@ferrlens/mcp` share the same auth resolution (env token or OAuth loopback, see below). `@ferrlens/mcp` is anonymous: the FerrLens free tools take no account, it never sends a token and never opens the OAuth flow, and the API rate limits each caller by IP. Register several at once:
 
 ```json
 {
@@ -100,127 +100,18 @@ Tools marked **destructive** below are irreversible or high-impact (spend quota,
 | `list_tokens`, `create_token`, `revoke_token`                                                      | auth   | `create_token` is disabled unless `FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1`; `revoke_token` is **destructive**         |
 | `list_org_tokens`, `create_org_token`, `revoke_org_token`                                          | auth   | `create_org_token` is disabled unless `FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1`; `revoke_org_token` is **destructive** |
 
-### `@ferrvault/mcp`
-
-| Tool                                                               | Notes                                               |
-| ------------------------------------------------------------------ | --------------------------------------------------- |
-| `get_vault`, `list_secrets`, `get_secret`, `get_vault_audit_log`   | read                                                |
-| `list_secret_requests`, `archive_secret_request`                   | secret-request workflow                             |
-| `create_vault`, `update_vault`, `delete_vault`                     | `delete_vault` is **destructive**                   |
-| `create_secret`, `update_secret`, `rotate_secret`, `delete_secret` | `rotate_secret`/`delete_secret` are **destructive** |
-
-### `@ferrvault/api-mcp`
-
-Targets the FerrVault API (`api.ferrvault.com`, or a self-hosted instance through `FERRVAULT_API_URL`): vaults, their environments, and the secrets, secret requests and service tokens of each environment. Vaults belong to the organization the token is signed in to.
-
-The FerrVault API accepts FerrLabs session JWTs, not `fft_*` API tokens. Over HTTP, register the client with the IdP as an `eddsa_session_jwt` OAuth client and pass its id to the MCP client (`claude mcp add --client-id`); a dynamically registered client gets an `fft_*` token, which the API refuses.
-
-| Tool                                                   | Notes                                                                                                                                                                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `list_ferrvault_vaults`, `list_ferrvault_environments` | read                                                                                                                                                                                                       |
-| `create_ferrvault_vault`                               | slug and display name, in the signed-in organization; FerrVault provisions its key, makes you admin and creates a `default` environment                                                                    |
-| `create_ferrvault_environment`                         | slug and display name in an existing vault; vault admin                                                                                                                                                    |
-| `list_ferrvault_secrets`                               | names, versions, tags and expiry; never values                                                                                                                                                             |
-| `reveal_ferrvault_secret`                              | returns the plaintext value, audit-logged by FerrVault                                                                                                                                                     |
-| `set_ferrvault_secret`                                 | creates the secret, or stores a new version when it exists                                                                                                                                                 |
-| `generate_ferrvault_secret`                            | random value generated in the MCP server, stored like `set_ferrvault_secret`, never returned                                                                                                               |
-| `delete_ferrvault_secret`                              | **destructive**                                                                                                                                                                                            |
-| `list_ferrvault_secret_requests`                       | pending requests only: names clients asked for that have no value, with counts, timestamps and requester kind                                                                                              |
-| `archive_ferrvault_secret_request`                     | by id, or by name (resolved to the pending request); stays archived even if clients keep asking                                                                                                            |
-| `copy_ferrvault_secret`                                | copies a value to another vault, environment or name (name defaults to the source), stored like `set_ferrvault_secret`; read and written in the MCP server, never returned; refuses source equal to target |
-| `list_ferrvault_service_tokens`                        | operator tokens of one environment: id, name, role, creator, created, expiry, last use; never the token; vault admin                                                                                       |
-| `create_ferrvault_service_token`                       | name, role, optional expiry; the token is written into a target secret (created or versioned) and never returned, and revoked again if that write fails; vault admin                                       |
-| `revoke_ferrvault_service_token`                       | by id; **destructive**, workloads using it lose access; vault admin                                                                                                                                        |
-
-### `@ferrtrack/mcp`
-
-| Tool                                                                                                               | Notes                                     |
-| ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| `list_track_projects`, `get_project`, `create_project`, `update_project`                                           | projects                                  |
-| `list_track_issues`, `get_issue`, `create_issue`, `update_issue`, `list_issue_links`                               | issues                                    |
-| `list_issue_comments`, `create_issue_comment`, `update_issue_comment`, `delete_issue_comment`                      | `delete_issue_comment` is **destructive** |
-| `list_cycles`, `get_cycle`, `create_cycle`, `update_cycle`, `delete_cycle`, `list_cycle_issues`, `plan_next_cycle` | `delete_cycle` is **destructive**         |
-| `list_milestones`, `get_milestone`, `create_milestone`, `update_milestone`, `delete_milestone`                     | `delete_milestone` is **destructive**     |
-| `list_track_users`, `search_track`                                                                                 | read                                      |
-
-### `@ferrgrowth/mcp`
-
-| Tool                                                                                                     | Notes                                                                                                                  |
-| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `list_sites`, `get_site`, `create_site`, `update_site`, `archive_site`                                   | `archive_site` is **destructive**                                                                                      |
-| `attach_domain`, `detach_domain`, `verify_domain`                                                        | custom domains                                                                                                         |
-| `list_pages`, `get_page`, `create_page`, `update_page`, `publish_page`, `discover_pages`, `import_pages` | pages                                                                                                                  |
-| `list_forms`, `get_form`, `create_form`, `update_form`, `delete_form`, `list_form_submissions`           | `delete_form` is **destructive**                                                                                       |
-| `list_releases`, `get_release`, `activate_release`                                                       | `activate_release` is **destructive** (switches live serving)                                                          |
-| `get_analytics_summary`, `get_seo_overview`, `run_seo_audit`, `list_seo_audits`                          | read / audit                                                                                                           |
-| `run_site_seo_audits`, `get_site_seo_queue_status`, `cancel_site_seo_audits`                             | queued bulk audits for one site                                                                                        |
-| `run_workspace_seo_audits`, `get_workspace_seo_queue_status`, `get_workspace_seo_overview`               | queued bulk audits across the token's organisation                                                                     |
-| `get_realtime_analytics`, `get_tracking_status`, `get_page_heatmap`                                      | read                                                                                                                   |
-| `list_funnels`, `create_funnel`, `update_funnel`, `delete_funnel`, `get_funnel_analytics`                | `delete_funnel` is **destructive**                                                                                     |
-| `list_contacts`, `get_contact`                                                                           | read, org-wide personal data                                                                                           |
-| `verify_external_url`, `discover_external_pages`                                                         | external sites                                                                                                         |
-| `list_site_members`, `update_site_member`, `remove_site_member`                                          | `remove_site_member` is **destructive**                                                                                |
-| `list_server_tokens`, `create_server_token`, `revoke_server_token`                                       | `create_server_token` is disabled unless `FERRLABS_MCP_ALLOW_TOKEN_REVEAL=1`; `revoke_server_token` is **destructive** |
-| `list_integrations`, `disconnect_integration`                                                            | `disconnect_integration` is **destructive**                                                                            |
-| `list_blog_posts`, `create_blog_post`, `update_blog_post`, `delete_blog_post`                            | `delete_blog_post` is **destructive**                                                                                  |
-| `list_email_templates`, `create_email_template`, `update_email_template`, `delete_email_template`        | `delete_email_template` is **destructive**                                                                             |
-| `list_media`, `upload_media`, `delete_media`                                                             | `upload_media` takes base64, 10 MB cap; `delete_media` is **destructive**                                              |
-
-### `@ferrfleet/mcp`
-
-Every tool except `list_ferrfleet_orgs` takes an optional `org_id` (UUID) that selects the organization for that call, sent as `x-ferrfleet-org`. It overrides `FERRFLEET_ORG_ID`.
-
-| Tool                                                   | Notes                                                                                                                                                                   |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `list_agents`, `get_agent`                             | read                                                                                                                                                                    |
-| `list_runs`, `get_run`, `get_run_transcript`           | read                                                                                                                                                                    |
-| `trigger_agent_run`                                    | **destructive**, executes an agent and spends run quota                                                                                                                 |
-| `create_agent`                                         | takes `id` (slug), `name`, `prompt`; options and runner mode via `update_agent`                                                                                         |
-| `update_agent`                                         | `runner_mode=external` stops FerrFleet starting the agent itself; `runner_pool_id` (pool id or `null`) moves its runs to a runner pool or back to the FerrFleet cluster |
-| `list_runner_pools`                                    | read; pools and their tokens are created and rotated in the FerrFleet UI only                                                                                           |
-| `list_marketplace_agents`, `import_marketplace_agent`  | marketplace templates; import copies one into the org as a regular agent, optionally under another `id` or `name`                                                       |
-| `list_connectors`, `update_connector`                  | read; update changes `name` or `config` (replaces the whole object); secrets never go through this server                                                               |
-| `set_agent_connectors`                                 | replaces the agent's whole connector list; `connector_ids: []` detaches all                                                                                             |
-| `list_repo_bindings`, `bind_repo`                      | repositories bound to agents; a pool token can only dispatch an agent on a bound repository                                                                             |
-| `list_github_installations`, `create_github_connector` | GitHub App installations claimed by the org; the connector repository bindings require                                                                                  |
-| `list_ferrfleet_orgs`                                  | read, returns the `org_id` to pass to the other tools                                                                                                                   |
-
-### `@ferrlens/mcp`
-
-All tools are read-only and anonymous. Each one calls a public FerrLens endpoint on the caller's behalf, so the target has to be reachable from the internet; the API refuses URLs that point at private addresses.
-
-| Tool                                                                                                                     | Notes                                                       |
-| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| `dns_lookup`, `dns_propagation`, `reverse_dns`                                                                           | DNS                                                         |
-| `check_email_auth`, `check_blacklist`, `verify_email`                                                                    | SPF, DMARC and DKIM; DNS blocklists; address checks         |
-| `get_http_headers`, `check_security_headers`, `get_page_meta`, `preview_open_graph`, `check_mixed_content`, `check_cors` | HTTP and page checks                                        |
-| `search_certificates`                                                                                                    | TLS certificates from Certificate Transparency logs         |
-| `check_seo`, `check_robots_txt`, `check_sitemap`, `check_links`                                                          | `check_seo` runs Lighthouse and `check_links` crawls a site |
-| `get_share`                                                                                                              | reads a published result snapshot                           |
-
 FerrFlow CLI-specific tools (`dry_run`, `validate_config`, `read_config`, `read_changelog`, `list_release_tags`, `record_event`) were removed in v4.0.0. They required either a local FerrFlow CLI install or HMAC signing the MCP doesn't do. Use the FerrFlow CLI directly or fetch docs via `fetch_docs("ferrflow", "docs/...")`.
 
 ## Resources and prompts
 
-Tools are not the only surface. A resource is content a client attaches once and keeps, instead of spending a turn on a tool call and leaving a blob in the transcript. A prompt is a workflow the user picks by name.
+Tools are not the only surface. A resource is content a client attaches once and keeps, instead of spending a turn on a tool call and leaving a blob in the transcript.
 
-| Server           | Resource                                             | What it holds                                                                    |
-| ---------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `@ferrlabs/mcp`  | `ferrlabs://org/{slug}/overview`                     | member count, active subscriptions per product, pending invites, recent activity |
-| `@ferrlabs/mcp`  | `ferrlabs://org/{slug}/usage`                        | current-period metered usage per product, with the tier limit                    |
-| `@ferrtrack/mcp` | `ferrtrack://project/{slug}/issues`                  | open issues in one project                                                       |
-| `@ferrvault/mcp` | `ferrvault://org/{org}/project/{project}/vault/{id}` | vault name, description, secret count, timestamps                                |
+| Server          | Resource                         | What it holds                                                                    |
+| --------------- | -------------------------------- | -------------------------------------------------------------------------------- |
+| `@ferrlabs/mcp` | `ferrlabs://org/{slug}/overview` | member count, active subscriptions per product, pending invites, recent activity |
+| `@ferrlabs/mcp` | `ferrlabs://org/{slug}/usage`    | current-period metered usage per product, with the tier limit                    |
 
-The org and project resources enumerate themselves, so a client can browse them. The vault one does not: listing every vault would mean walking every org and every project on each request, so a vault is addressed directly by URI.
-
-**Vault resources carry metadata only.** Secret values stay behind `get_secret`, which needs `reveal=true` and is audit-logged server-side. No resource ever returns one.
-
-| Server           | Prompt           | What it does                                                                                                      |
-| ---------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `@ferrtrack/mcp` | `triage_backlog` | walks a project's open issues and proposes a decision per issue, grouped by action, without applying anything     |
-| `@ferrfleet/mcp` | `review_run`     | reads a run and reports what it did, what it changed outside its workspace, and whether the result can be trusted |
-
-Resource handlers call the same fetch functions the tools use, so a path is defined once. Capabilities are declared by the SDK when a resource or prompt is registered, so a server that exposes neither advertises neither.
+The org resources enumerate themselves, so a client can browse them. Resource handlers call the same fetch functions the tools use, so a path is defined once. Capabilities are declared by the SDK when a resource or prompt is registered, so a server that exposes neither advertises neither. The product servers document their own resources and prompts in their repos.
 
 ## Stack
 
@@ -245,17 +136,6 @@ Resource handlers call the same fetch functions the tools use, so a path is defi
 | `FERRLABS_MCP_ALLOWED_API_HOSTS`  | Extra hosts a token may be sent to, comma separated. The FerrLabs product APIs are allowed by default; anything else is refused. Loopback is always allowed.                                                                                 | —                                                                             |
 | `FERRLABS_MCP_ALLOW_TOKEN_REVEAL` | Set to `1` to let `create_token` and `create_server_token` mint a token and return its secret. Off by default: the secret is shown once, so the tool has to put it in its response, and tool results are persisted to the client transcript. | —                                                                             |
 | `FERRLABS_MCP_MAX_TOOL_BYTES`     | Ceiling on a single tool response, in bytes. Beyond it the payload is cut and explicitly marked as incomplete.                                                                                                                               | `100000`                                                                      |
-| `FERRVAULT_API_URL`               | Base URL for the FerrVault API (`@ferrvault/api-mcp`). Its host must be allowed (see `FERRLABS_MCP_ALLOWED_API_HOSTS`). For an internal CA, point `NODE_EXTRA_CA_CERTS` at the CA certificate.                                               | `https://api.ferrvault.com`                                                   |
-| `FERRVAULT_API_VERSION`           | Contract version sent as `x-ferrvault-api-version` by `@ferrvault/api-mcp`.                                                                                                                                                                  | `2026-08-04`                                                                  |
-| `FERRTRACK_API_URL`               | Base URL for the FerrTrack API (`@ferrtrack/mcp`).                                                                                                                                                                                           | `https://api.ferrtrack.com`                                                   |
-| `FERRGROWTH_API_URL`              | Base URL for the FerrGrowth API (`@ferrgrowth/mcp`).                                                                                                                                                                                         | `https://api.ferrgrowth.com`                                                  |
-| `FERRFLEET_API_URL`               | Base URL for the FerrFleet API (`@ferrfleet/mcp`).                                                                                                                                                                                           | `https://api.ferrfleet.com`                                                   |
-| `FERRFLEET_API_VERSION`           | Contract version sent as `x-ferrfleet-api-version` by `@ferrfleet/mcp`.                                                                                                                                                                      | `2026-08-04`                                                                  |
-| `FERRFLEET_ORG_ID`                | Default organization UUID sent as `x-ferrfleet-org` by `@ferrfleet/mcp` when a tool call has no `org_id`. Must be a UUID; unset sends no header.                                                                                             |
-| `FERRTRACK_API_VERSION`           | Contract version sent as `x-ferrtrack-api-version` by `@ferrtrack/mcp`.                                                                                                                                                                      | `2026-08-04`                                                                  |
-| `FERRLENS_API_URL`                | Base URL for the FerrLens API (`@ferrlens/mcp`).                                                                                                                                                                                             | `https://api.ferrlens.com`                                                    |
-| `FERRLENS_API_VERSION`            | Contract version sent as `x-ferrlens-api-version` by `@ferrlens/mcp`.                                                                                                                                                                        | `2026-08-04`                                                                  |
-| `FERRGROWTH_API_VERSION`          | Contract version sent as `x-ferrgrowth-api-version` by `@ferrgrowth/mcp`.                                                                                                                                                                    | `2026-08-04`                                                                  |
 | `FERRLABS_MCP_MODE`               | Transport: `stdio` (default) or `http` (Streamable HTTP). `--http` also selects http.                                                                                                                                                        | `stdio`                                                                       |
 | `PORT`                            | Port for the HTTP transport (`FERRLABS_MCP_MODE=http`).                                                                                                                                                                                      | `3000`                                                                        |
 | `HOST`                            | Bind address for the HTTP transport.                                                                                                                                                                                                         | `127.0.0.1` (`0.0.0.0` in the Docker image or with `FERRLABS_MCP_BIND_ALL=1`) |
