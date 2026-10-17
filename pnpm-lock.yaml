@@ -198,60 +198,6 @@ importers:
         specifier: ^5.0.0
         version: 5.0.4(@types/node@25.9.9)(@vitest/coverage-v8@5.0.4)(vite@8.3.1(@types/node@25.9.9)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  packages/ferrfleet-mcp:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.6.7
-
-  packages/ferrgrowth-mcp:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.6.7
-
-  packages/ferrlens-mcp:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.6.7
-
-  packages/ferrtrack-mcp:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.6.7
-
-  packages/ferrvault-api-mcp:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.6.7
-
-  packages/ferrvault-mcp:
-    dependencies:
-      '@ferrlabs/mcp-core':
-        specifier: workspace:^
-        version: link:../mcp-core
-      zod:
-        specifier: ^4.3.6
-        version: 4.6.7
-
   packages/mcp:
     dependencies:
       '@ferrlabs/mcp-core':

@@ -25,30 +25,6 @@
         {
           "path": "packages/mcp/package.json",
           "format": "json"
-        },
-        {
-          "path": "packages/ferrvault-mcp/package.json",
-          "format": "json"
-        },
-        {
-          "path": "packages/ferrvault-api-mcp/package.json",
-          "format": "json"
-        },
-        {
-          "path": "packages/ferrtrack-mcp/package.json",
-          "format": "json"
-        },
-        {
-          "path": "packages/ferrgrowth-mcp/package.json",
-          "format": "json"
-        },
-        {
-          "path": "packages/ferrfleet-mcp/package.json",
-          "format": "json"
-        },
-        {
-          "path": "packages/ferrlens-mcp/package.json",
-          "format": "json"
         }
       ]
     }
