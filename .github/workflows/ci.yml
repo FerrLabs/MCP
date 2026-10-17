@@ -32,7 +32,8 @@ jobs:
       pnpm-version: ''
       enable-sonar: true
       install-args: ''
-      enable-lint: false
+      enable-lint: true
+      lint-script: format:check
       enable-knip: true
       enable-madge: true
       madge-paths: packages/*/src
