@@ -59,15 +59,14 @@ Create the token from `app.ferrlabs.com` → Settings → API Tokens. It's forwa
 
 This repo ships `@ferrlabs/mcp`, the unified entrypoint (orgs, billing, profile, public stats, docs), and `@ferrlabs/mcp-core`, the shared core every FerrLabs MCP server is built on. The product servers live next to their product. Add only the servers you need to your client config.
 
-| Package              | Repo                                                 | Targets                      | Base URL env         |
-| -------------------- | ---------------------------------------------------- | ---------------------------- | -------------------- |
-| `@ferrlabs/mcp`      | this repo                                            | `api.ferrlabs.com` (unified) | `API_URL`            |
-| `@ferrvault/mcp`     | [FerrVault](https://github.com/FerrLabs/FerrVault)   | FerrVault secrets            | `API_URL`            |
-| `@ferrvault/api-mcp` | [FerrVault](https://github.com/FerrLabs/FerrVault)   | `api.ferrvault.com`          | `FERRVAULT_API_URL`  |
-| `@ferrtrack/mcp`     | [FerrTrack](https://github.com/FerrLabs/FerrTrack)   | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
-| `@ferrgrowth/mcp`    | [FerrGrowth](https://github.com/FerrLabs/FerrGrowth) | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
-| `@ferrfleet/mcp`     | [FerrFleet](https://github.com/FerrLabs/FerrFleet)   | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
-| `@ferrlens/mcp`      | [FerrLens](https://github.com/FerrLabs/FerrLens)     | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
+| Package           | Repo                                                 | Targets                      | Base URL env         |
+| ----------------- | ---------------------------------------------------- | ---------------------------- | -------------------- |
+| `@ferrlabs/mcp`   | this repo                                            | `api.ferrlabs.com` (unified) | `API_URL`            |
+| `@ferrvault/mcp`  | [FerrVault](https://github.com/FerrLabs/FerrVault)   | `api.ferrvault.com`          | `FERRVAULT_API_URL`  |
+| `@ferrtrack/mcp`  | [FerrTrack](https://github.com/FerrLabs/FerrTrack)   | `api.ferrtrack.com`          | `FERRTRACK_API_URL`  |
+| `@ferrgrowth/mcp` | [FerrGrowth](https://github.com/FerrLabs/FerrGrowth) | `api.ferrgrowth.com`         | `FERRGROWTH_API_URL` |
+| `@ferrfleet/mcp`  | [FerrFleet](https://github.com/FerrLabs/FerrFleet)   | `api.ferrfleet.com`          | `FERRFLEET_API_URL`  |
+| `@ferrlens/mcp`   | [FerrLens](https://github.com/FerrLabs/FerrLens)     | `api.ferrlens.com`           | `FERRLENS_API_URL`   |
 
 Tool lists, product variables and development notes for each product server are in the `mcp/` README of its repo. All servers except `@ferrlens/mcp` share the same auth resolution (env token or OAuth loopback, see below). `@ferrlens/mcp` is anonymous: the FerrLens free tools take no account, it never sends a token and never opens the OAuth flow, and the API rate limits each caller by IP. Register several at once:
 
