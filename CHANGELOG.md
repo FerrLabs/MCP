@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.14.0] - 2026-10-20
+
+### Features
+
+- feat(tokens): accept an org allowlist in create_token (#457)
+
 ## [10.13.0] - 2026-10-14
 
 ### Features
