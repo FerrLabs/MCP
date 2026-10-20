@@ -80,6 +80,17 @@ describe('create_token', () => {
     expect(text).toMatch(/now in this transcript/);
   });
 
+  it('forwards the org allowlist to the API', async () => {
+    process.env.FERRLABS_MCP_ALLOW_TOKEN_REVEAL = '1';
+    mockFetch.mockResolvedValue(makeResponse({ plaintext: SECRET }));
+    const orgId = '0b6f9f0e-6c1d-4f43-9d0e-5a1f7d3c2b11';
+
+    await handlers.get('create_token')!({ name: 'ci', scopes: ['sites:read'], org_ids: [orgId] });
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+    expect(body.org_ids).toEqual([orgId]);
+  });
+
   it('leaks nothing on the default path', async () => {
     mockFetch.mockResolvedValue(makeResponse({ plaintext: SECRET }));
     const result = await handlers.get('create_token')!({ name: 'ci', scopes: ['*'] });
