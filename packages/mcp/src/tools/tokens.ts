@@ -23,6 +23,7 @@ interface ApiTokenResponse {
   name: string;
   token_prefix: string;
   scopes: string[];
+  org_ids?: string[];
   expires_at: string | null;
   last_used_at: string | null;
   created_at: string;
@@ -65,9 +66,14 @@ export function registerTokenTools(server: McpServer) {
     {
       name: z.string().min(1).max(100).describe('Token name'),
       scopes: z.array(z.string()).describe('Token scopes (e.g. ["*"] for all)'),
+      org_ids: z
+        .array(z.string().uuid())
+        .min(1)
+        .optional()
+        .describe('Organization ids the token may act in (default: all your organizations)'),
       expires_at: z.string().optional().describe('Expiration date (ISO 8601)'),
     },
-    async ({ name, scopes, expires_at }) => {
+    async ({ name, scopes, org_ids, expires_at }) => {
       // Refuse before minting, not after. The API returns the plaintext once
       // and never again, so creating the token and then withholding the
       // secret would leave a live credential nobody can use.
@@ -80,7 +86,7 @@ export function registerTokenTools(server: McpServer) {
       const token = await getToken();
       const result = await apiRequest<CreateTokenResponse>('/auth/tokens', {
         method: 'POST',
-        body: { name, scopes, expires_at },
+        body: { name, scopes, org_ids, expires_at },
         token,
       });
       const { plaintext, ...meta } = result;
