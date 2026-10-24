@@ -5,7 +5,11 @@ injectWorkspacePackages: true
 allowBuilds:
   esbuild: false
 overrides:
-  'fast-uri': '>=4.1.3'
-  'hono': '>=4.12.34'
+  'body-parser': '>=2.4.0'
+  'fast-uri': '>=4.2.3'
+  'hono': '>=4.13.11'
+  'ip-address': '>=10.7.4'
   'nanoid': '>=3.3.18'
   'qs': '>=6.16.0'
+  'source-map-js': '>=1.2.2'
+  'vite': '>=8.3.3'
