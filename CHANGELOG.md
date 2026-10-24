@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.14.1] - 2026-10-24
+
+### Bug Fixes
+
+- fix(deps): override vulnerable transitive deps flagged by pnpm audit (#469)
+
 ## [10.14.0] - 2026-10-20
 
 ### Features
