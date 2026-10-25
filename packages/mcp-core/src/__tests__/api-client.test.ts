@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   apiRequest,
   ApiRequestError,
+  InvalidApiPathError,
   UnauthorizedError,
   UntrustedApiHostError,
 } from '../api-client.js';
@@ -132,6 +133,27 @@ describe('apiRequest', () => {
     mockFetch.mockResolvedValue(makeResponse({ error: 'unauthorized' }, 401));
     await expect(apiRequest('/orgs')).rejects.toThrow('unauthorized');
     expect(invalidateTokenMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    '/orgs/acme/teams/..',
+    '/orgs/../subscriptions',
+    '/orgs/./acme',
+    '/orgs/acme/..?x=1',
+    '/orgs/%2e%2e/subscriptions',
+    '/orgs/.%2E/x',
+    '/orgs\\..\\subscriptions',
+    '/orgs/.\t./subscriptions',
+    '/orgs/%2e\n%2e/x',
+  ])('rejects the dot segment in %s before fetching', async (path) => {
+    await expect(apiRequest(path, { token: 'secret' })).rejects.toBeInstanceOf(InvalidApiPathError);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('allows dots inside a segment and in the query string', async () => {
+    mockFetch.mockResolvedValue(makeResponse({}));
+    await apiRequest('/orgs/a.b/files/..hidden?next=../x');
+    expect(mockFetch).toHaveBeenCalledOnce();
   });
 
   it('refuses to send a token to a host outside the allowlist', async () => {
