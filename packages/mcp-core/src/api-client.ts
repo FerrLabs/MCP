@@ -65,6 +65,20 @@ export class UntrustedApiHostError extends Error {
   }
 }
 
+export class InvalidApiPathError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidApiPathError';
+  }
+}
+
+export function assertNoDotSegments(path: string): void {
+  const [pathname = ''] = path.split(/[?#]/, 1);
+  if (pathname.split('/').some((segment) => segment === '.' || segment === '..')) {
+    throw new InvalidApiPathError(`refusing a request path with a dot segment: ${path}`);
+  }
+}
+
 function allowedApiHosts(): string[] {
   const extra = (process.env.FERRLABS_MCP_ALLOWED_API_HOSTS ?? '')
     .split(',')
@@ -106,6 +120,7 @@ export function assertCredentialTarget(url: string): void {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, token, baseUrl, headers: extraHeaders } = options;
   const base = baseUrl ?? DEFAULT_API_URL;
+  assertNoDotSegments(path);
   const url = `${base}${path}`;
 
   if (token) assertCredentialTarget(url);
