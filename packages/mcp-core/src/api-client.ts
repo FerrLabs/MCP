@@ -74,7 +74,10 @@ export class InvalidApiPathError extends Error {
 
 export function assertNoDotSegments(path: string): void {
   const [pathname = ''] = path.split(/[?#]/, 1);
-  const segments = pathname.split(/[\\/]/).map((segment) => segment.replace(/%2e/gi, '.'));
+  const segments = pathname
+    .replace(/[\t\n\r]/g, '')
+    .split(/[\\/]/)
+    .map((segment) => segment.replace(/%2e/gi, '.'));
   if (segments.some((segment) => segment === '.' || segment === '..')) {
     throw new InvalidApiPathError(`refusing a request path with a dot segment: ${path}`);
   }

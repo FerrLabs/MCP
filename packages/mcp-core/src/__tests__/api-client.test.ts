@@ -143,6 +143,8 @@ describe('apiRequest', () => {
     '/orgs/%2e%2e/subscriptions',
     '/orgs/.%2E/x',
     '/orgs\\..\\subscriptions',
+    '/orgs/.\t./subscriptions',
+    '/orgs/%2e\n%2e/x',
   ])('rejects the dot segment in %s before fetching', async (path) => {
     await expect(apiRequest(path, { token: 'secret' })).rejects.toBeInstanceOf(InvalidApiPathError);
     expect(mockFetch).not.toHaveBeenCalled();
