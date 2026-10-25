@@ -135,15 +135,18 @@ describe('apiRequest', () => {
     expect(invalidateTokenMock).not.toHaveBeenCalled();
   });
 
-  it.each(['/orgs/acme/teams/..', '/orgs/../subscriptions', '/orgs/./acme', '/orgs/acme/..?x=1'])(
-    'rejects the dot segment in %s before fetching',
-    async (path) => {
-      await expect(apiRequest(path, { token: 'secret' })).rejects.toBeInstanceOf(
-        InvalidApiPathError,
-      );
-      expect(mockFetch).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    '/orgs/acme/teams/..',
+    '/orgs/../subscriptions',
+    '/orgs/./acme',
+    '/orgs/acme/..?x=1',
+    '/orgs/%2e%2e/subscriptions',
+    '/orgs/.%2E/x',
+    '/orgs\\..\\subscriptions',
+  ])('rejects the dot segment in %s before fetching', async (path) => {
+    await expect(apiRequest(path, { token: 'secret' })).rejects.toBeInstanceOf(InvalidApiPathError);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 
   it('allows dots inside a segment and in the query string', async () => {
     mockFetch.mockResolvedValue(makeResponse({}));
