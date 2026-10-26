@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { assertCredentialTarget } from '../api-client.js';
 import { fetchWithTimeout } from '../http.js';
 
 export type BearerVerdict = 'valid' | 'invalid' | 'unavailable';
@@ -12,6 +13,8 @@ export function createBearerValidator(
   authServer: string,
   ttlMs: number = DEFAULT_TTL_MS,
 ): BearerValidator {
+  const meUrl = `${authServer.replace(/\/+$/, '')}/auth/me`;
+  assertCredentialTarget(meUrl);
   const accepted = new Map<string, number>();
 
   return async (token) => {
@@ -24,7 +27,7 @@ export function createBearerValidator(
 
     let status: number;
     try {
-      const res = await fetchWithTimeout(`${authServer.replace(/\/+$/, '')}/auth/me`, {
+      const res = await fetchWithTimeout(meUrl, {
         headers: { Authorization: `Bearer ${token}`, 'x-api-token': token },
         redirect: 'manual',
       });
@@ -34,7 +37,7 @@ export function createBearerValidator(
     }
 
     if (status >= 200 && status < 300) {
-      if (accepted.size >= MAX_CACHED) accepted.clear();
+      if (accepted.size >= MAX_CACHED) accepted.delete(accepted.keys().next().value!);
       accepted.set(key, Date.now() + ttlMs);
       return 'valid';
     }

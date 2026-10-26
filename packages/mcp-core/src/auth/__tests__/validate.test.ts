@@ -18,32 +18,37 @@ describe('createBearerValidator', () => {
 
   it('accepts a token the auth server accepts and sends it to /auth/me', async () => {
     const fn = stubFetch(200);
-    const validate = createBearerValidator('https://api.example.test/');
+    const validate = createBearerValidator('https://api.ferrlabs.com/');
     expect(await validate('fl_a')).toBe('valid');
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe('https://api.example.test/auth/me');
+    expect(url).toBe('https://api.ferrlabs.com/auth/me');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer fl_a');
   });
 
   it.each([401, 403])('rejects a token answered with %i', async (status) => {
     stubFetch(status);
-    expect(await createBearerValidator('https://a.test')('x')).toBe('invalid');
+    expect(await createBearerValidator('https://api.ferrlabs.com')('x')).toBe('invalid');
   });
 
   it.each([500, 502, 429])('reports unavailable on %i', async (status) => {
     stubFetch(status);
-    expect(await createBearerValidator('https://a.test')('x')).toBe('unavailable');
+    expect(await createBearerValidator('https://api.ferrlabs.com')('x')).toBe('unavailable');
+  });
+
+  it('refuses to build a validator for an untrusted or cleartext auth server', () => {
+    expect(() => createBearerValidator('http://api.ferrlabs.com')).toThrow();
+    expect(() => createBearerValidator('https://evil.example.com')).toThrow();
   });
 
   it('reports unavailable when the request fails', async () => {
     stubFetch(new Error('boom'));
-    expect(await createBearerValidator('https://a.test')('x')).toBe('unavailable');
+    expect(await createBearerValidator('https://api.ferrlabs.com')('x')).toBe('unavailable');
   });
 
   it('caches accepted tokens until the ttl expires but never caches rejections', async () => {
     vi.useFakeTimers();
     const fn = stubFetch(200);
-    const validate = createBearerValidator('https://a.test', 1_000);
+    const validate = createBearerValidator('https://api.ferrlabs.com', 1_000);
     await validate('t');
     await validate('t');
     expect(fn).toHaveBeenCalledTimes(1);
@@ -52,7 +57,7 @@ describe('createBearerValidator', () => {
     expect(fn).toHaveBeenCalledTimes(2);
 
     const rejecting = stubFetch(401);
-    const v2 = createBearerValidator('https://a.test');
+    const v2 = createBearerValidator('https://api.ferrlabs.com');
     await v2('bad');
     await v2('bad');
     expect(rejecting).toHaveBeenCalledTimes(2);
