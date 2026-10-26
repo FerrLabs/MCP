@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.14.3] - 2026-10-26
+
+### Bug Fixes
+
+- fix(transport): validate the bearer before building a server (#474)
+
 ## [10.14.2] - 2026-10-25
 
 ### Bug Fixes
