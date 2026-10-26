@@ -154,7 +154,7 @@ Clients get the same value at runtime in the `serverInfo` of the MCP `initialize
 
 ### HTTP transport
 
-By default the server runs over stdio. Set `FERRLABS_MCP_MODE=http` (or pass `--http`) to expose the MCP over Streamable HTTP on `HOST:PORT` (`0.0.0.0:3000` by default), which is the mode the Docker image runs. Requests carry the bearer token in the `Authorization` header. Run the HTTP transport behind a gateway (e.g. Traefik) that terminates TLS and applies rate limiting / request-size caps; do not expose it directly on an untrusted network.
+By default the server runs over stdio. Set `FERRLABS_MCP_MODE=http` (or pass `--http`) to expose the MCP over Streamable HTTP on `HOST:PORT` (`0.0.0.0:3000` by default), which is the mode the Docker image runs. Requests carry the bearer token in the `Authorization` header. Run the HTTP transport behind a gateway (e.g. Traefik) that terminates TLS and applies rate limiting / request-size caps; do not expose it directly on an untrusted network. Each bearer is checked against `GET /auth/me` on the authorization server (`FERRLABS_AUTH_URL`, default `https://api.ferrlabs.com`) before a server is built: a rejected token gets a 401 and an unreachable auth server gets a 503. Accepted tokens are cached for 60 seconds. The token is still forwarded to the product APIs, since the authorization server does not yet issue audience-bound or exchangeable tokens.
 
 Bound to anything other than loopback, the server refuses to start without `FERRLABS_MCP_PUBLIC_URL`. That URL is the only source of the OAuth resource identifier, so a forged `Host` or `X-Forwarded-Host` cannot make the server advertise someone else's host, and its hostname is the default `Host` allowlist:
 
