@@ -9,6 +9,7 @@ import {
   parseList,
   startHttpServer,
 } from '../http.js';
+import type { BearerVerdict } from '../../auth/validate.js';
 
 describe('unauthorizedChallenge', () => {
   const metadataUrl = 'https://mcp.ferrvault.com/.well-known/oauth-protected-resource';
@@ -90,18 +91,25 @@ describe('startHttpServer', () => {
     server = undefined;
   });
 
+  let verdict: BearerVerdict = 'valid';
+  let createdServers = 0;
+
   async function start(requireBearer?: boolean): Promise<number> {
     server = await startHttpServer({
       port: 0,
       host: '127.0.0.1',
       publicUrl: 'https://mcp.ferrlabs.test',
-      createServer: () => new McpServer({ name: 'test', version: '0.0.0' }),
+      createServer: () => {
+        createdServers += 1;
+        return new McpServer({ name: 'test', version: '0.0.0' });
+      },
       requireBearer,
+      validateBearer: async () => verdict,
     });
     return (server.address() as AddressInfo).port;
   }
 
-  function initialize(port: number): Promise<{ status: number; body: string }> {
+  function initialize(port: number, bearer?: string): Promise<{ status: number; body: string }> {
     const payload = JSON.stringify({
       jsonrpc: '2.0',
       id: 1,
@@ -123,6 +131,7 @@ describe('startHttpServer', () => {
             Host: 'mcp.ferrlabs.test',
             'Content-Type': 'application/json',
             Accept: 'application/json, text/event-stream',
+            ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
           },
         },
         (res) => {
@@ -141,6 +150,31 @@ describe('startHttpServer', () => {
     const port = await start();
     const res = await initialize(port);
     expect(res.status).toBe(401);
+  });
+
+  it('refuses a bearer the authorization server rejects, before building a server', async () => {
+    verdict = 'invalid';
+    createdServers = 0;
+    const port = await start();
+    const res = await initialize(port, 'junk');
+    expect(res.status).toBe(401);
+    expect(createdServers).toBe(0);
+  });
+
+  it('answers 503 when the bearer cannot be validated', async () => {
+    verdict = 'unavailable';
+    createdServers = 0;
+    const port = await start();
+    const res = await initialize(port, 'fl_x');
+    expect(res.status).toBe(503);
+    expect(createdServers).toBe(0);
+  });
+
+  it('serves a request carrying a validated bearer', async () => {
+    verdict = 'valid';
+    const port = await start();
+    const res = await initialize(port, 'fl_ok');
+    expect(res.status).toBe(200);
   });
 
   it('serves an MCP request without a bearer when the server opts out of requiring one', async () => {

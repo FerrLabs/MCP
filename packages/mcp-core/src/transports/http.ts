@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runWithAuthContext } from '../auth/context.js';
+import { createBearerValidator, type BearerValidator } from '../auth/validate.js';
 import { isHostAllowed, resolvePublicEndpoint } from './http-host.js';
 
 const MAX_BODY_BYTES = 1_000_000;
@@ -77,6 +78,7 @@ export interface HttpServerOptions {
    * Defaults to `FERRLABS_AUTH_URL` env or `https://api.ferrlabs.com`.
    */
   authorizationServer?: string;
+  validateBearer?: BearerValidator;
 }
 
 class PayloadTooLargeError extends Error {
@@ -126,6 +128,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
   });
   const authServer =
     opts.authorizationServer ?? process.env.FERRLABS_AUTH_URL ?? 'https://api.ferrlabs.com';
+  const validateBearer = opts.validateBearer ?? createBearerValidator(authServer);
   const transports = new Map<string, StreamableHTTPServerTransport>();
 
   function sendUnauthorized(res: ServerResponse): void {
@@ -156,6 +159,24 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
     if (!bearerToken && requireBearer) {
       sendUnauthorized(res);
       return;
+    }
+
+    if (bearerToken) {
+      const verdict = await validateBearer(bearerToken);
+      if (verdict === 'invalid') {
+        sendUnauthorized(res);
+        return;
+      }
+      if (verdict === 'unavailable') {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            error: 'temporarily_unavailable',
+            error_description: 'Could not validate the bearer token with the authorization server.',
+          }),
+        );
+        return;
+      }
     }
 
     const sessionId = (req.headers['mcp-session-id'] as string | undefined) ?? undefined;
