@@ -1,5 +1,8 @@
 packages:
   - 'packages/*'
+
+minimumReleaseAgeExclude:
+  - '@ferrlabs/*'
 injectWorkspacePackages: true
 
 allowBuilds:
