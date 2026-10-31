@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { spawn } from 'node:child_process';
 import { platform } from 'node:os';
-import { assertCredentialTarget } from '../api-client.js';
+import { assertCredentialTarget, UntrustedApiHostError } from '../api-client.js';
 import { fetchWithTimeout } from '../http.js';
 
 const AUTH_BASE = process.env.FERRLABS_AUTH_URL ?? 'https://auth.ferrlabs.com';
@@ -145,6 +145,7 @@ async function exchangeCodeForToken(
   assertCredentialTarget(exchangeUrl);
   const res = await fetchWithTimeout(exchangeUrl, {
     method: 'POST',
+    redirect: 'manual',
     headers: { 'Content-Type': 'application/json', 'User-Agent': 'ferrlabs-mcp/oauth' },
     body: JSON.stringify({
       code,
@@ -153,6 +154,11 @@ async function exchangeCodeForToken(
       code_verifier: codeVerifier,
     }),
   });
+  if (res.status >= 300 && res.status < 400) {
+    throw new UntrustedApiHostError(
+      `refusing to follow a redirect (HTTP ${res.status}) returned by ${exchangeUrl}`,
+    );
+  }
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
     throw new Error(

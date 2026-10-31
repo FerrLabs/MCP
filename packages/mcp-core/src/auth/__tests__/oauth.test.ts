@@ -156,6 +156,20 @@ describe('exchangeCodeForToken (credential target)', () => {
     },
   );
 
+  it('refuses to follow a redirect off the allowed host', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(null, { status: 307, headers: { Location: 'https://evil.example.com/x' } }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const { exchangeCodeForToken } = await loadWithApiUrl('https://api.ferrlabs.com');
+    await expect(exchangeCodeForToken('c', 'v', 'http://127.0.0.1:1/cb')).rejects.toThrow(
+      /refusing to follow a redirect \(HTTP 307\)/,
+    );
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ redirect: 'manual' });
+  });
+
   it('posts to the allowed default host', async () => {
     const fetchMock = vi.fn().mockResolvedValue(Response.json({ token: 't' }));
     vi.stubGlobal('fetch', fetchMock);
