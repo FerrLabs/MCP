@@ -1,16 +1,18 @@
 <div align="center">
 
-# FerrLabs MCP
+<h1><img src=".github/logo.svg" alt="" width="48" height="48" align="absmiddle"> FerrLabs MCP</h1>
 
 **Let your AI assistant drive the FerrLabs suite.**
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server exposing FerrFlow, FerrVault,<br />
 FerrTrack, FerrGrowth, FerrFleet and FerrLens through the unified FerrLabs API.
 
-[![npm](https://img.shields.io/npm/v/@ferrlabs/mcp)](https://www.npmjs.com/package/@ferrlabs/mcp)
+[![Latest release](https://img.shields.io/github/v/release/FerrLabs/MCP)](https://github.com/FerrLabs/MCP/releases/latest)
+[![CI](https://github.com/FerrLabs/MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/FerrLabs/MCP/actions/workflows/ci.yml)
 [![Quality Gate](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=alert_status&token=sqb_df3c6923234b4dc9cc88fdd1b251c8a54c3b7903)](https://sonar.ferrlabs.com/dashboard?id=MCP)
 [![Maintainability](https://sonar.ferrlabs.com/api/project_badges/measure?project=MCP&metric=sqale_rating&token=sqb_df3c6923234b4dc9cc88fdd1b251c8a54c3b7903)](https://sonar.ferrlabs.com/dashboard?id=MCP)
 [![License](https://img.shields.io/github/license/FerrLabs/MCP)](LICENSE)
+[![npm](https://img.shields.io/npm/v/@ferrlabs/mcp)](https://www.npmjs.com/package/@ferrlabs/mcp)
 
 [npm](https://www.npmjs.com/package/@ferrlabs/mcp) | [FerrLabs](https://ferrlabs.com) | [Changelog](https://ferrlabs.com/changelog/)
 
@@ -132,10 +134,13 @@ The org resources enumerate themselves, so a client can browse them. Resource ha
 | `FERRLABS_MCP_NO_OAUTH`           | Set to `1` to disable the OAuth fallback. Then `FERRLABS_API_TOKEN` becomes required.                                                                                                                                                                               | unset                                                                         |
 | `FERRLABS_MCP_TOKEN_PATH`         | Override the path where the OAuth-acquired token is persisted.                                                                                                                                                                                                      | `%APPDATA%\ferrlabs\mcp\token.json` / `~/.config/ferrlabs/mcp/token.json`     |
 | `FERRLABS_MCP_NO_PERSIST`         | Set to `1` to keep the token in memory only (re-auth on every cold start).                                                                                                                                                                                          | unset                                                                         |
-| `FERRLABS_MCP_ALLOWED_API_HOSTS`  | Extra hosts a token may be sent to, comma separated. The FerrLabs product APIs are allowed by default; anything else is refused. Loopback is always allowed.                                                                                                        | —                                                                             |
-| `FERRLABS_MCP_ALLOW_TOKEN_REVEAL` | Set to `1` to let `create_token` mint a token (and `create_server_token` in `@ferrgrowth/mcp`) and return its secret. Off by default: the secret is shown once, so the tool has to put it in its response, and tool results are persisted to the client transcript. | —                                                                             |
+| `FERRLABS_MCP_ALLOWED_API_HOSTS`  | Extra hosts a token may be sent to, comma separated. The FerrLabs product APIs are allowed by default; anything else is refused. Loopback is always allowed.                                                                                                        | unset                                                                        |
+| `FERRLABS_MCP_ALLOW_TOKEN_REVEAL` | Set to `1` to let `create_token` mint a token (and `create_server_token` in `@ferrgrowth/mcp`) and return its secret. Off by default: the secret is shown once, so the tool has to put it in its response, and tool results are persisted to the client transcript. | unset                                                                        |
 | `FERRLABS_MCP_MAX_TOOL_BYTES`     | Ceiling on a single tool response, in bytes. Beyond it the payload is cut and explicitly marked as incomplete.                                                                                                                                                      | `100000`                                                                      |
 | `FERRLABS_MCP_MODE`               | Transport: `stdio` (default) or `http` (Streamable HTTP). `--http` also selects http.                                                                                                                                                                               | `stdio`                                                                       |
+| `FERRLABS_MCP_ALLOWED_ORIGINS`     | Origins the HTTP transport answers with CORS headers, comma separated. Unset means no CORS headers are sent. | unset |
+| `FERRLABS_MCP_STATEFUL`           | Set to `1` to keep MCP sessions on the HTTP transport. Stateless by default. | unset |
+| `FERRLABS_MCP_HTTP_TIMEOUT_MS`    | Timeout of outbound requests to the product APIs, in milliseconds. | `15000` |
 | `PORT`                            | Port for the HTTP transport (`FERRLABS_MCP_MODE=http`).                                                                                                                                                                                                             | `3000`                                                                        |
 | `HOST`                            | Bind address for the HTTP transport.                                                                                                                                                                                                                                | `127.0.0.1` (`0.0.0.0` in the Docker image or with `FERRLABS_MCP_BIND_ALL=1`) |
 | `FERRLABS_MCP_PUBLIC_URL`         | URL clients reach the HTTP transport at. Advertised as the OAuth `resource` and in the 401 challenge; request headers are never used for it. Required when `HOST` is not loopback.                                                                                  | `http://127.0.0.1:$PORT` on loopback                                          |
