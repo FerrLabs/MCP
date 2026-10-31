@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { generatePkcePair, __testOnly } from '../oauth.js';
 import { createHash } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
@@ -56,18 +56,23 @@ describe('bindCallbackListener (port fallback)', () => {
     }
   });
 
-  it('resolves with the bound port when the socket is free', async () => {
+  it('binds the port and ignores a stray callback until the real state arrives', async () => {
     const port = await freePort();
     const bound = await __testOnly.bindCallbackListener(port, 'st');
     expect(bound.port).toBe(port);
-    // Attach a catch handler *before* triggering the rejection so the
-    // unhandled-rejection guard in vitest stays quiet.
-    const callbackSettled = bound.callback.catch((err: Error) => err);
-    const res = await fetch(`http://127.0.0.1:${port}/cb?code=x&state=wrong`);
-    expect(res.status).toBe(400);
-    const settled = await callbackSettled;
-    expect(settled).toBeInstanceOf(Error);
-    expect((settled as Error).message).toMatch(/state mismatch/);
+    let settled = false;
+    bound.callback.then(
+      () => (settled = true),
+      () => (settled = true),
+    );
+    const stray = await fetch(`http://127.0.0.1:${port}/cb?code=x&state=wrong`);
+    expect(stray.status).toBe(400);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(settled).toBe(false);
+
+    const real = await fetch(`http://127.0.0.1:${port}/cb?code=abc&state=st`);
+    expect(real.status).toBe(200);
+    await expect(bound.callback).resolves.toEqual({ code: 'abc', state: 'st' });
   });
 });
 
@@ -122,5 +127,40 @@ describe('bindCallbackListener (port release)', () => {
     expect(again.port).toBe(port);
     again.close();
     agent.destroy();
+  });
+});
+
+describe('exchangeCodeForToken (credential target)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  async function loadWithApiUrl(apiUrl: string) {
+    vi.stubEnv('API_URL', apiUrl);
+    vi.resetModules();
+    return (await import('../oauth.js')).__testOnly;
+  }
+
+  it.each(['https://evil.example.com', 'http://api.ferrlabs.com'])(
+    'refuses to post the code and verifier to %s',
+    async (apiUrl) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+      const { exchangeCodeForToken } = await loadWithApiUrl(apiUrl);
+      await expect(exchangeCodeForToken('c', 'v', 'http://127.0.0.1:1/cb')).rejects.toThrow(
+        /refusing to send a token/,
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it('posts to the allowed default host', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ token: 't' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { exchangeCodeForToken } = await loadWithApiUrl('https://api.ferrlabs.com');
+    await expect(exchangeCodeForToken('c', 'v', 'http://127.0.0.1:1/cb')).resolves.toBe('t');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
