@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { spawn } from 'node:child_process';
 import { platform } from 'node:os';
+import { assertCredentialTarget, UntrustedApiHostError } from '../api-client.js';
 import { fetchWithTimeout } from '../http.js';
 
 const AUTH_BASE = process.env.FERRLABS_AUTH_URL ?? 'https://auth.ferrlabs.com';
@@ -66,7 +67,7 @@ interface BoundListener {
  *
  * The returned `callback` promise lives for the duration of the OAuth
  * flow and resolves when `/cb` is hit with a matching `state`, or rejects
- * on CSRF mismatch / internal error.
+ * on internal error. Requests with a mismatched `state` get a 400 and are ignored.
  */
 function bindCallbackListener(port: number, expectedState: string): Promise<BoundListener> {
   return new Promise((resolveBound, rejectBound) => {
@@ -92,8 +93,6 @@ function bindCallbackListener(port: number, expectedState: string): Promise<Boun
         }
         if (state !== expectedState) {
           res.writeHead(400).end('state mismatch');
-          rejectCallback(new Error('OAuth callback state mismatch (CSRF protection triggered)'));
-          server.close();
           return;
         }
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', Connection: 'close' });
@@ -142,8 +141,11 @@ async function exchangeCodeForToken(
   codeVerifier: string,
   redirectUri: string,
 ): Promise<string> {
-  const res = await fetchWithTimeout(`${API_BASE}/auth/exchange`, {
+  const exchangeUrl = `${API_BASE}/auth/exchange`;
+  assertCredentialTarget(exchangeUrl);
+  const res = await fetchWithTimeout(exchangeUrl, {
     method: 'POST',
+    redirect: 'manual',
     headers: { 'Content-Type': 'application/json', 'User-Agent': 'ferrlabs-mcp/oauth' },
     body: JSON.stringify({
       code,
@@ -152,6 +154,11 @@ async function exchangeCodeForToken(
       code_verifier: codeVerifier,
     }),
   });
+  if (res.status >= 300 && res.status < 400) {
+    throw new UntrustedApiHostError(
+      `refusing to follow a redirect (HTTP ${res.status}) returned by ${exchangeUrl}`,
+    );
+  }
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
     throw new Error(
@@ -170,6 +177,7 @@ export interface RunLoopbackFlowResult {
 
 export const __testOnly = {
   bindCallbackListener,
+  exchangeCodeForToken,
 };
 
 export async function runLoopbackOauthFlow(): Promise<RunLoopbackFlowResult> {
@@ -227,7 +235,7 @@ export async function runLoopbackOauthFlow(): Promise<RunLoopbackFlowResult> {
     const token = await exchangeCodeForToken(code, pkce.verifier, redirectUri);
     return { token };
   } finally {
-    // Every exit closes the listener: a timeout, a CSRF mismatch, a failed
+    // Every exit closes the listener: a timeout, a failed
     // exchange, and the happy path. Leaving it bound is what holds ports
     // 54321/54322 until the process dies, which is the failure the bind
     // error above tells the user to go and clear by hand.
