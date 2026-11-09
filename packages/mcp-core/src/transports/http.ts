@@ -88,7 +88,7 @@ class PayloadTooLargeError extends Error {
   }
 }
 
-async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> {
+async function readJsonBody(req: IncomingMessage): Promise<unknown> {
   if (req.method !== 'POST') return undefined;
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
