@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.14.5] - 2026-11-09
+
+### Refactoring
+
+- refactor: apply sonar quick wins (#489)
+
 ## [10.14.4] - 2026-10-31
 
 ### Bug Fixes
