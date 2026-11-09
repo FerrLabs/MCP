@@ -38,17 +38,15 @@ export async function getToken(): Promise<string> {
     );
   }
 
-  if (!inFlight) {
-    inFlight = (async () => {
-      const { token } = await runLoopbackOauthFlow();
-      await writePersistedToken(token);
-      cached = token;
-      cachedSource = 'oauth';
-      return token;
-    })().finally(() => {
-      inFlight = null;
-    });
-  }
+  inFlight ??= (async () => {
+    const { token } = await runLoopbackOauthFlow();
+    await writePersistedToken(token);
+    cached = token;
+    cachedSource = 'oauth';
+    return token;
+  })().finally(() => {
+    inFlight = null;
+  });
   return inFlight;
 }
 

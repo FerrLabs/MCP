@@ -10,7 +10,7 @@ function balancedElement(html: string, opener: RegExp): string | undefined {
   const open = opener.exec(html);
   if (!open) return undefined;
   const tag = open[1];
-  const tags = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'gi');
+  const tags = new RegExp(String.raw`<(/?)${tag}\b[^>]*>`, 'gi');
   tags.lastIndex = open.index + open[0].length;
   let depth = 1;
   for (let m = tags.exec(html); m; m = tags.exec(html)) {
@@ -25,7 +25,7 @@ export function extractContent(html: string): Extraction {
   if (docs !== undefined) return { kind: 'docs', html: docs };
   const main = balancedElement(html, MAIN_OPEN);
   if (main !== undefined) return { kind: 'main', html: main };
-  return { kind: 'none', html: html.match(/<body\b[\s\S]*/i)?.[0] ?? html };
+  return { kind: 'none', html: /<body\b[\s\S]*/i.exec(html)?.[0] ?? html };
 }
 
 const NAMED_ENTITIES: Readonly<Record<string, string>> = {
@@ -39,9 +39,11 @@ const NAMED_ENTITIES: Readonly<Record<string, string>> = {
 
 function decodeEntities(text: string): string {
   return text.replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (entity, body: string) => {
-    if (body[0] === '#') {
+    if (body.startsWith('#')) {
       const code =
-        body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : Number(body.slice(1));
+        body[1] === 'x' || body[1] === 'X'
+          ? Number.parseInt(body.slice(2), 16)
+          : Number(body.slice(1));
       return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : entity;
     }
     return NAMED_ENTITIES[body.toLowerCase()] ?? entity;
@@ -66,12 +68,12 @@ export function htmlToText(html: string): string {
   const blocks: string[] = [];
   let out = html.replace(/<!--[\s\S]*?-->/g, '');
   for (const tag of DROPPED_ELEMENTS) {
-    out = out.replace(new RegExp(`<${tag}\\b[\\s\\S]*?</${tag}>`, 'gi'), '');
+    out = out.replace(new RegExp(String.raw`<${tag}\b[\s\S]*?</${tag}>`, 'gi'), '');
   }
   out = out
     .replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (_, body: string) => {
       blocks.push(decodeEntities(body.replace(/<[^>]+>/g, '')).replace(/\n+$/, ''));
-      return `\n\n\u0000${blocks.length - 1}\u0000\n\n`;
+      return `\n\n\uE000${blocks.length - 1}\uE000\n\n`;
     })
     .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level: string, body: string) => {
       return `\n\n${'#'.repeat(Number(level))} ${body}\n\n`;
@@ -94,6 +96,6 @@ export function htmlToText(html: string): string {
     .replace(/^-\n+/gm, '- ')
     .replace(/\n{3,}/g, '\n\n')
     .replace(/\n\n(?=- )/g, '\n')
-    .replace(/\u0000(\d+)\u0000/g, (_, index: string) => `\`\`\`\n${blocks[Number(index)]}\n\`\`\``)
+    .replace(/\uE000(\d+)\uE000/g, (_, index: string) => `\`\`\`\n${blocks[Number(index)]}\n\`\`\``)
     .trim();
 }

@@ -20,7 +20,7 @@ const DEFAULT_ALLOWED_API_HOSTS = [
   'api.ferrlens.com',
 ];
 
-const LOOPBACK_HOSTS = ['localhost', '127.0.0.1', '::1'];
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
 interface RequestOptions {
   method?: string;
@@ -106,7 +106,7 @@ export function assertCredentialTarget(url: string): void {
   }
 
   const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  const loopback = LOOPBACK_HOSTS.includes(host);
+  const loopback = LOOPBACK_HOSTS.has(host);
 
   if (!loopback && parsed.protocol !== 'https:') {
     throw new UntrustedApiHostError(
@@ -119,6 +119,11 @@ export function assertCredentialTarget(url: string): void {
       `refusing to send a token to ${host}, which is not an allowed FerrLabs API host. Set FERRLABS_MCP_ALLOWED_API_HOSTS to permit it.`,
     );
   }
+}
+
+function serializeBody(body: unknown): FormData | string | undefined {
+  if (body instanceof FormData) return body;
+  return body ? JSON.stringify(body) : undefined;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -147,7 +152,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const res = await fetchWithTimeout(url, {
     method,
     headers,
-    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+    body: serializeBody(body),
     // Redirects are followed with the credential headers still attached, so a
     // 3xx off an API host walks the token to wherever Location points. No
     // route in these APIs redirects, so treat one as the anomaly it is.

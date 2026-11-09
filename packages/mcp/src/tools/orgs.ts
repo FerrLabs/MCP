@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { apiRequest, toToolText } from '@ferrlabs/mcp-core';
-import { getToken } from '@ferrlabs/mcp-core';
+import { apiRequest, getToken, toToolText } from '@ferrlabs/mcp-core';
 
 interface OrgWithMemberCount {
   id: string;

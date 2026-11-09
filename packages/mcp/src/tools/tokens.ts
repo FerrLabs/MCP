@@ -4,9 +4,9 @@ import {
   apiRequest,
   revealedSecretText,
   secretRevealRefusal,
+  getToken,
   toToolText,
 } from '@ferrlabs/mcp-core';
-import { getToken } from '@ferrlabs/mcp-core';
 
 interface UserProfile {
   id: string;
