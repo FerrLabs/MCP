@@ -35,6 +35,19 @@ describe('unauthorizedChallenge', () => {
     expect(wwwAuthenticate).toContain('error="invalid_token"');
     expect(wwwAuthenticate).toContain(`resource_metadata="${metadataUrl}"`);
   });
+
+  it('names the scopes the server needs so clients request them instead of the IdP default', () => {
+    const { wwwAuthenticate } = unauthorizedChallenge(metadataUrl, [
+      'secrets:read',
+      'secrets:write',
+    ]);
+    expect(wwwAuthenticate).toContain('scope="secrets:read secrets:write"');
+  });
+
+  it('omits the scope parameter when the server declares no scopes', () => {
+    const { wwwAuthenticate } = unauthorizedChallenge(metadataUrl);
+    expect(wwwAuthenticate).not.toContain('scope=');
+  });
 });
 
 describe('resolveAllowedOrigin', () => {
@@ -94,8 +107,9 @@ describe('startHttpServer', () => {
   let verdict: BearerVerdict = 'valid';
   let createdServers = 0;
 
-  async function start(requireBearer?: boolean): Promise<number> {
+  async function start(requireBearer?: boolean, scopes?: readonly string[]): Promise<number> {
     server = await startHttpServer({
+      scopes,
       port: 0,
       host: '127.0.0.1',
       publicUrl: 'https://mcp.ferrlabs.test',
@@ -216,6 +230,29 @@ describe('startHttpServer', () => {
     });
     expect(res.status).toBe(200);
     expect(JSON.parse(res.body).resource).toBe('https://mcp.ferrlabs.test');
+  });
+
+  it('advertises the declared scopes in the protected-resource metadata', async () => {
+    const port = await start(undefined, ['issues:read', 'issues:write']);
+    const res = await get(port, '/.well-known/oauth-protected-resource', {
+      Host: 'mcp.ferrlabs.test',
+    });
+    expect(JSON.parse(res.body).scopes_supported).toEqual(['issues:read', 'issues:write']);
+  });
+
+  it('leaves scopes_supported out of the metadata when no scopes are declared', async () => {
+    const port = await start();
+    const res = await get(port, '/.well-known/oauth-protected-resource', {
+      Host: 'mcp.ferrlabs.test',
+    });
+    expect(JSON.parse(res.body)).not.toHaveProperty('scopes_supported');
+  });
+
+  it('carries the declared scopes in the 401 challenge', async () => {
+    const port = await start(undefined, ['agents:read', 'agents:run']);
+    const res = await get(port, '/mcp', { Host: 'mcp.ferrlabs.test' });
+    expect(res.status).toBe(401);
+    expect(res.wwwAuthenticate).toContain('scope="agents:read agents:run"');
   });
 
   it('points the 401 challenge at the configured public URL', async () => {
