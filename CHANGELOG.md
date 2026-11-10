@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.15.0] - 2026-11-10
+
+### Features
+
+- feat(mcp-core): advertise the scopes a server needs in its OAuth metadata (#491)
+
 ## [10.14.5] - 2026-11-09
 
 ### Refactoring
