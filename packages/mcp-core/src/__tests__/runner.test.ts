@@ -56,4 +56,20 @@ describe('runMcp', () => {
     expect(register).toHaveBeenCalledOnce();
     expect(startStdioServer).toHaveBeenCalledOnce();
   });
+
+  it('hands the declared scopes to the HTTP transport', async () => {
+    vi.stubEnv('FERRLABS_MCP_MODE', 'http');
+    process.argv = ['node', 'index.js'];
+
+    await runMcp({
+      name: 'ferrvault',
+      version: '1.2.3',
+      register: vi.fn(),
+      scopes: ['secrets:read', 'secrets:write'],
+    });
+
+    expect(startHttpServer).toHaveBeenCalledWith(
+      expect.objectContaining({ scopes: ['secrets:read', 'secrets:write'] }),
+    );
+  });
 });

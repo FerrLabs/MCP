@@ -44,12 +44,16 @@ export function defaultBindHost(envHost: string | undefined, bindAll: boolean): 
 const UNAUTHORIZED_DESCRIPTION =
   'Missing or invalid bearer token. Fetch the OAuth protected-resource metadata and run the authorization code + PKCE flow.';
 
-export function unauthorizedChallenge(metadataUrl: string): {
+export function unauthorizedChallenge(
+  metadataUrl: string,
+  scopes: readonly string[] = [],
+): {
   wwwAuthenticate: string;
   body: string;
 } {
+  const scopeParam = scopes.length > 0 ? `, scope="${scopes.join(' ')}"` : '';
   return {
-    wwwAuthenticate: `Bearer error="invalid_token", error_description="${UNAUTHORIZED_DESCRIPTION}", resource_metadata="${metadataUrl}"`,
+    wwwAuthenticate: `Bearer error="invalid_token", error_description="${UNAUTHORIZED_DESCRIPTION}", resource_metadata="${metadataUrl}"${scopeParam}`,
     body: JSON.stringify({
       error: 'invalid_token',
       error_description: UNAUTHORIZED_DESCRIPTION,
@@ -79,6 +83,7 @@ export interface HttpServerOptions {
    */
   authorizationServer?: string;
   validateBearer?: BearerValidator;
+  scopes?: readonly string[];
 }
 
 class PayloadTooLargeError extends Error {
@@ -116,7 +121,7 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
 }
 
 export async function startHttpServer(opts: HttpServerOptions): Promise<Server> {
-  const { port, stateless = true, requireBearer = true } = opts;
+  const { port, stateless = true, requireBearer = true, scopes = [] } = opts;
   const bindAll = process.env.FERRLABS_MCP_BIND_ALL === '1';
   const host = defaultBindHost(opts.host, bindAll);
   const allowedOrigins = parseList(process.env.FERRLABS_MCP_ALLOWED_ORIGINS);
@@ -134,6 +139,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
   function sendUnauthorized(res: ServerResponse): void {
     const { wwwAuthenticate, body } = unauthorizedChallenge(
       `${publicUrl}/.well-known/oauth-protected-resource`,
+      scopes,
     );
     res.writeHead(401, {
       'Content-Type': 'application/json',
@@ -148,6 +154,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
       JSON.stringify({
         resource: publicUrl,
         authorization_servers: [authServer],
+        ...(scopes.length > 0 ? { scopes_supported: scopes } : {}),
         bearer_methods_supported: ['header'],
         resource_documentation: 'https://ferrlabs.com',
       }),
