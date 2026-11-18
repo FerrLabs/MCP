@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.16.0] - 2026-11-18
+
+### Features
+
+- feat(mcp-core): accept live org tokens via /auth/token-info fallback (#500)
+
 ## [10.15.0] - 2026-11-10
 
 ### Features
