@@ -8,13 +8,36 @@ export type BearerValidator = (token: string) => Promise<BearerVerdict>;
 
 const DEFAULT_TTL_MS = 60_000;
 const MAX_CACHED = 1_000;
+const ORG_TOKEN_PREFIX = 'fft_';
+
+async function probe(
+  url: string,
+  token: string,
+  rejectedStatuses: readonly number[],
+): Promise<BearerVerdict> {
+  let status: number;
+  try {
+    const res = await fetchWithTimeout(url, {
+      headers: { Authorization: `Bearer ${token}`, 'x-api-token': token },
+      redirect: 'manual',
+    });
+    status = res.status;
+  } catch {
+    return 'unavailable';
+  }
+  if (status >= 200 && status < 300) return 'valid';
+  return rejectedStatuses.includes(status) ? 'invalid' : 'unavailable';
+}
 
 export function createBearerValidator(
   authServer: string,
   ttlMs: number = DEFAULT_TTL_MS,
 ): BearerValidator {
-  const meUrl = `${authServer.replace(/\/+$/, '')}/auth/me`;
+  const base = authServer.replace(/\/+$/, '');
+  const meUrl = `${base}/auth/me`;
+  const tokenInfoUrl = `${base}/auth/token-info`;
   assertCredentialTarget(meUrl);
+  assertCredentialTarget(tokenInfoUrl);
   const accepted = new Map<string, number>();
 
   return async (token) => {
@@ -25,23 +48,15 @@ export function createBearerValidator(
       accepted.delete(key);
     }
 
-    let status: number;
-    try {
-      const res = await fetchWithTimeout(meUrl, {
-        headers: { Authorization: `Bearer ${token}`, 'x-api-token': token },
-        redirect: 'manual',
-      });
-      status = res.status;
-    } catch {
-      return 'unavailable';
+    let verdict = await probe(meUrl, token, [401, 403]);
+    if (verdict === 'invalid' && token.startsWith(ORG_TOKEN_PREFIX)) {
+      verdict = await probe(tokenInfoUrl, token, [401, 403, 404]);
     }
 
-    if (status >= 200 && status < 300) {
+    if (verdict === 'valid') {
       if (accepted.size >= MAX_CACHED) accepted.delete(accepted.keys().next().value!);
       accepted.set(key, Date.now() + ttlMs);
-      return 'valid';
     }
-    if (status === 401 || status === 403) return 'invalid';
-    return 'unavailable';
+    return verdict;
   };
 }
