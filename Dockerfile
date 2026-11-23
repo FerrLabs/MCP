@@ -5,7 +5,7 @@ ARG PACKAGE
 WORKDIR /app
 ENV HUSKY=0 \
     CI=true
-RUN corepack enable
+RUN npm install -g corepack@0.36.0 && corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 RUN pnpm fetch
 COPY packages packages
