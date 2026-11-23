@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.17.1] - 2026-11-23
+
+### Bug Fixes
+
+- fix(docker): install corepack explicitly, Node 26 no longer bundles it (#510)
+
 ## [10.17.0] - 2026-11-23
 
 ### Features
