@@ -197,6 +197,17 @@ Smoke: 4/4 OK
 
 `@ferrvault/api-mcp` was merged into `@ferrvault/mcp`, which now talks to the FerrVault API directly instead of the unified FerrLabs API. The former `@ferrvault/mcp` tools (`get_vault`, `list_secrets`, `create_secret`, ...) are gone, replaced by the `*_ferrvault_*` tools. See the [FerrVault MCP README](https://github.com/FerrLabs/FerrVault/tree/main/mcp).
 
+## Reading response headers
+
+`apiRequest` from `@ferrlabs/mcp-core` returns the parsed body only. When a tool needs a response header such as `X-Total-Count`, call `apiRequestWithHeaders`, which takes the same arguments and returns `{ data, headers }`, where `headers` is the standard `Headers` object.
+
+```ts
+const { data, headers } = await apiRequestWithHeaders<Issue[]>('/issues', { token });
+const total = headers.get('x-total-count');
+```
+
+`headers.get` returns `null` when the API did not send the header. Errors, redirects and host checks behave exactly as in `apiRequest`.
+
 ## Migrating the sub-MCP package names
 
 The four product sub-MCPs moved to their product's npm scope in 8.0.0. The unified server and the shared core did not move.
