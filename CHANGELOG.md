@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.17.0] - 2026-11-23
+
+### Features
+
+- feat(mcp-core): expose response headers via apiRequestWithHeaders (#509)
+
 ## [10.16.0] - 2026-11-18
 
 ### Features
