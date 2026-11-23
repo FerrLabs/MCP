@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   apiRequest,
+  apiRequestWithHeaders,
   ApiRequestError,
   InvalidApiPathError,
   UnauthorizedError,
@@ -15,13 +16,14 @@ vi.mock('../auth/index.js', () => ({
   invalidateToken: (token: string) => invalidateTokenMock(token),
 }));
 
-function makeResponse(body: unknown, status = 200): Response {
+function makeResponse(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
   const text = body === undefined ? '' : JSON.stringify(body);
   return {
     ok: status >= 200 && status < 300,
     status,
     text: () => Promise.resolve(text),
     json: () => Promise.resolve(body),
+    headers: new Headers(headers),
   } as unknown as Response;
 }
 
@@ -200,5 +202,57 @@ describe('apiRequest', () => {
     await expect(apiRequest('/orgs', { token: 'secret' })).rejects.toBeInstanceOf(
       UntrustedApiHostError,
     );
+  });
+});
+
+describe('apiRequestWithHeaders', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    invalidateTokenMock.mockReset();
+    delete process.env.FERRLABS_MCP_ALLOWED_API_HOSTS;
+  });
+
+  it('returns the parsed body and the response headers', async () => {
+    mockFetch.mockResolvedValue(makeResponse([{ id: 1 }], 200, { 'X-Total-Count': '42' }));
+    const { data, headers } = await apiRequestWithHeaders<{ id: number }[]>('/issues');
+    expect(data).toEqual([{ id: 1 }]);
+    expect(headers.get('x-total-count')).toBe('42');
+  });
+
+  it('exposes a missing header as null instead of throwing', async () => {
+    mockFetch.mockResolvedValue(makeResponse([]));
+    const { headers } = await apiRequestWithHeaders('/issues');
+    expect(headers.get('x-total-count')).toBeNull();
+  });
+
+  it('returns the headers of a 204 response', async () => {
+    mockFetch.mockResolvedValue(makeResponse(undefined, 204, { 'X-Request-Id': 'abc' }));
+    const { data, headers } = await apiRequestWithHeaders('/tokens/1', { method: 'DELETE' });
+    expect(data).toBeUndefined();
+    expect(headers.get('x-request-id')).toBe('abc');
+  });
+
+  it('still throws ApiRequestError on a non-2xx response', async () => {
+    mockFetch.mockResolvedValue(
+      makeResponse({ error: 'Nope', code: 'E_NOPE' }, 403, { 'X-Total-Count': '9' }),
+    );
+    await expect(apiRequestWithHeaders('/issues')).rejects.toMatchObject({
+      name: 'ApiRequestError',
+      status: 403,
+      code: 'E_NOPE',
+    });
+  });
+
+  it('applies the same host and redirect guards as apiRequest', async () => {
+    await expect(
+      apiRequestWithHeaders('/orgs', { token: 't', baseUrl: 'https://evil.example' }),
+    ).rejects.toBeInstanceOf(UntrustedApiHostError);
+    mockFetch.mockResolvedValue(makeResponse(undefined, 302));
+    await expect(apiRequestWithHeaders('/orgs')).rejects.toBeInstanceOf(UntrustedApiHostError);
+  });
+
+  it('leaves apiRequest returning the bare body even when headers are present', async () => {
+    mockFetch.mockResolvedValue(makeResponse({ status: 'ok' }, 200, { 'X-Total-Count': '1' }));
+    await expect(apiRequest('/health')).resolves.toEqual({ status: 'ok' });
   });
 });

@@ -126,7 +126,20 @@ function serializeBody(body: unknown): FormData | string | undefined {
   return body ? JSON.stringify(body) : undefined;
 }
 
+export interface ApiResponse<T> {
+  data: T;
+  headers: Headers;
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { data } = await apiRequestWithHeaders<T>(path, options);
+  return data;
+}
+
+export async function apiRequestWithHeaders<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<ApiResponse<T>> {
   const { method = 'GET', body, token, baseUrl, headers: extraHeaders } = options;
   const base = baseUrl ?? DEFAULT_API_URL;
   assertNoDotSegments(path);
@@ -166,7 +179,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (res.status === 204) {
-    return undefined as T;
+    return { data: undefined as T, headers: res.headers };
   }
 
   if (res.status === 401 && token) {
@@ -194,5 +207,5 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiRequestError(errMsg, res.status, payload?.code);
   }
 
-  return data as T;
+  return { data: data as T, headers: res.headers };
 }

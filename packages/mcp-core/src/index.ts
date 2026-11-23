@@ -1,6 +1,8 @@
 export { runMcp, type RunMcpOptions } from './runner.js';
 export {
   apiRequest,
+  apiRequestWithHeaders,
+  type ApiResponse,
   ApiRequestError,
   UnauthorizedError,
   UntrustedApiHostError,
