@@ -3,7 +3,7 @@ import { createToolHarness, lastRequest, makeResponse, mockFetch } from './harne
 import { registerTokenTools } from '../tokens.js';
 
 const harness = createToolHarness();
-const TOKEN_ID = '0b6f9f0e-6c1d-4f43-9d0e-5a1f7d3c2b11';
+const TOKEN_ID = 'tok_1';
 
 describe('token tools', () => {
   beforeEach(() => {
