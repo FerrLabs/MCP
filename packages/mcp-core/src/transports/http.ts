@@ -16,7 +16,7 @@ const MAX_BODY_BYTES = 1_000_000;
 function extractBearer(req: IncomingMessage): string | undefined {
   const header = req.headers['authorization'];
   if (typeof header !== 'string') return undefined;
-  const match = /^Bearer\s+(.+)$/i.exec(header);
+  const match = /^Bearer\s+(\S.*)$/i.exec(header);
   return match?.[1];
 }
 
@@ -161,6 +161,42 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
     );
   }
 
+  function sendSessionNotFound(res: ServerResponse, sessionId: string): void {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        error: {
+          code: -32001,
+          message: `Session ${sessionId} not found — reinitialize to obtain a new session`,
+        },
+        id: null,
+      }),
+    );
+  }
+
+  async function createTransport(): Promise<{
+    transport: StreamableHTTPServerTransport;
+    disposable?: { server: McpServer; transport: StreamableHTTPServerTransport };
+  }> {
+    let createdSessionId: string | undefined;
+    const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: stateless ? undefined : randomUUID,
+      onsessioninitialized: stateless
+        ? undefined
+        : (newSessionId: string) => {
+            createdSessionId = newSessionId;
+            transports.set(newSessionId, transport);
+          },
+    });
+    transport.onclose = () => {
+      if (createdSessionId) transports.delete(createdSessionId);
+    };
+    const server = opts.createServer();
+    await server.connect(transport);
+    return { transport, disposable: stateless ? { server, transport } : undefined };
+  }
+
   async function handleMcpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const bearerToken = extractBearer(req);
     if (!bearerToken && requireBearer) {
@@ -187,20 +223,10 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
     }
 
     const sessionId = (req.headers['mcp-session-id'] as string | undefined) ?? undefined;
-    let transport = sessionId ? transports.get(sessionId) : undefined;
+    const existing = sessionId ? transports.get(sessionId) : undefined;
 
-    if (sessionId && !transport && !stateless) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(
-        JSON.stringify({
-          jsonrpc: '2.0',
-          error: {
-            code: -32001,
-            message: `Session ${sessionId} not found — reinitialize to obtain a new session`,
-          },
-          id: null,
-        }),
-      );
+    if (sessionId && !existing && !stateless) {
+      sendSessionNotFound(res, sessionId);
       return;
     }
 
@@ -208,26 +234,7 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
     // has to be torn down once the response is written. Left alone, every
     // request adds an McpServer and a transport that live until the process
     // does.
-    let disposable: { server: McpServer; transport: StreamableHTTPServerTransport } | undefined;
-
-    if (!transport) {
-      let createdSessionId: string | undefined;
-      transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: stateless ? undefined : randomUUID,
-        onsessioninitialized: stateless
-          ? undefined
-          : (newSessionId: string) => {
-              createdSessionId = newSessionId;
-              if (transport) transports.set(newSessionId, transport);
-            },
-      });
-      transport.onclose = () => {
-        if (createdSessionId) transports.delete(createdSessionId);
-      };
-      const server = opts.createServer();
-      await server.connect(transport);
-      if (stateless) disposable = { server, transport };
-    }
+    const { transport, disposable } = existing ? { transport: existing } : await createTransport();
 
     const body = await readJsonBody(req);
     try {

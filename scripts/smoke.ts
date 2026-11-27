@@ -185,6 +185,43 @@ function checkVersionFlag(server: ServerUnderTest, entry: string): Check {
   }
 }
 
+function listCheck(
+  name: string,
+  expected: readonly string[],
+  advertised: ReadonlySet<string>,
+  okDetail: string,
+): Check {
+  const missing = expected.filter((item) => !advertised.has(item));
+  return {
+    name,
+    ok: missing.length === 0,
+    detail: missing.length === 0 ? okDetail : `missing: ${missing.join(', ')}`,
+  };
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+async function runLiveCall(client: McpClient, serverName: string, call: LiveCall): Promise<Check> {
+  const result = await client.rpc<ToolResult>('tools/call', {
+    name: call.tool,
+    arguments: call.arguments ?? {},
+  });
+  const text = result.content?.[0]?.text ?? '';
+  const parsed = parseJson(text);
+  const ok = !result.isError && call.check(parsed);
+  return {
+    name: `${serverName}: tools/call ${call.tool}`,
+    ok,
+    detail: ok ? call.describe(parsed) : `unexpected response: ${text.slice(0, 120)}`,
+  };
+}
+
 async function checkServer(server: ServerUnderTest): Promise<Check[]> {
   const checks: Check[] = [];
   const entry = resolve(__dirname, '..', 'packages', server.pkg, 'dist', 'index.js');
@@ -217,65 +254,43 @@ async function checkServer(server: ServerUnderTest): Promise<Check[]> {
     client.notify('notifications/initialized');
 
     const list = await client.rpc<{ tools: { name: string }[] }>('tools/list');
-    const names = new Set(list.tools.map((t) => t.name));
-    const missing = server.expectedTools.filter((n) => !names.has(n));
-    checks.push({
-      name: `${server.serverName}: tools/list`,
-      ok: missing.length === 0,
-      detail:
-        missing.length === 0
-          ? `${list.tools.length} tools registered`
-          : `missing: ${missing.join(', ')}`,
-    });
+    checks.push(
+      listCheck(
+        `${server.serverName}: tools/list`,
+        server.expectedTools,
+        new Set(list.tools.map((t) => t.name)),
+        `${list.tools.length} tools registered`,
+      ),
+    );
 
     if (server.expectedResourceTemplates) {
       const listed = await client.rpc<{ resourceTemplates: { uriTemplate: string }[] }>(
         'resources/templates/list',
       );
-      const advertised = new Set(listed.resourceTemplates.map((r) => r.uriTemplate));
-      const absent = server.expectedResourceTemplates.filter((t) => !advertised.has(t));
-      checks.push({
-        name: `${server.serverName}: resources/templates/list`,
-        ok: absent.length === 0,
-        detail:
-          absent.length === 0
-            ? `${listed.resourceTemplates.length} templates advertised`
-            : `missing: ${absent.join(', ')}`,
-      });
+      checks.push(
+        listCheck(
+          `${server.serverName}: resources/templates/list`,
+          server.expectedResourceTemplates,
+          new Set(listed.resourceTemplates.map((r) => r.uriTemplate)),
+          `${listed.resourceTemplates.length} templates advertised`,
+        ),
+      );
     }
 
     if (server.expectedPrompts) {
       const listed = await client.rpc<{ prompts: { name: string }[] }>('prompts/list');
-      const advertised = new Set(listed.prompts.map((p) => p.name));
-      const absent = server.expectedPrompts.filter((n) => !advertised.has(n));
-      checks.push({
-        name: `${server.serverName}: prompts/list`,
-        ok: absent.length === 0,
-        detail:
-          absent.length === 0
-            ? `${listed.prompts.length} prompts advertised`
-            : `missing: ${absent.join(', ')}`,
-      });
+      checks.push(
+        listCheck(
+          `${server.serverName}: prompts/list`,
+          server.expectedPrompts,
+          new Set(listed.prompts.map((p) => p.name)),
+          `${listed.prompts.length} prompts advertised`,
+        ),
+      );
     }
 
     for (const call of server.liveCalls ?? []) {
-      const result = await client.rpc<ToolResult>('tools/call', {
-        name: call.tool,
-        arguments: call.arguments ?? {},
-      });
-      const text = result.content?.[0]?.text ?? '';
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(text);
-      } catch {
-        parsed = undefined;
-      }
-      const ok = !result.isError && call.check(parsed);
-      checks.push({
-        name: `${server.serverName}: tools/call ${call.tool}`,
-        ok,
-        detail: ok ? call.describe(parsed) : `unexpected response: ${text.slice(0, 120)}`,
-      });
+      checks.push(await runLiveCall(client, server.serverName, call));
     }
   } catch (err) {
     checks.push({
