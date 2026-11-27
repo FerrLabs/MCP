@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { assertCredentialTarget } from '../api-client.js';
 import { fetchWithTimeout } from '../http.js';
+import { trimTrailing } from '../trim.js';
 
 export type BearerVerdict = 'valid' | 'invalid' | 'unavailable';
 
@@ -33,7 +34,7 @@ export function createBearerValidator(
   authServer: string,
   ttlMs: number = DEFAULT_TTL_MS,
 ): BearerValidator {
-  const base = authServer.replace(/\/+$/, '');
+  const base = trimTrailing(authServer, '/');
   const meUrl = `${base}/auth/me`;
   const tokenInfoUrl = `${base}/auth/token-info`;
   assertCredentialTarget(meUrl);

@@ -1,3 +1,5 @@
+import { trimTrailing } from '@ferrlabs/mcp-core';
+
 export type Extraction =
   | { readonly kind: 'docs'; readonly html: string }
   | { readonly kind: 'main'; readonly html: string }
@@ -61,8 +63,48 @@ const DROPPED_ELEMENTS = [
   'button',
   'select',
 ];
-const BLOCK_TAGS =
-  /<\/?(p|div|section|article|main|header|aside|figure|blockquote|details|summary|table|thead|tbody|ul|ol|dl|dt|dd|hr)\b[^>]*>/gi;
+const BLOCK_ELEMENTS = [
+  'p',
+  'div',
+  'section',
+  'article',
+  'main',
+  'header',
+  'aside',
+  'figure',
+  'blockquote',
+  'details',
+  'summary',
+  'table',
+  'thead',
+  'tbody',
+  'ul',
+  'ol',
+  'dl',
+  'dt',
+  'dd',
+  'hr',
+];
+const BLOCK_TAGS = new RegExp(String.raw`</?(${BLOCK_ELEMENTS.join('|')})\b[^>]*>`, 'gi');
+
+function stripTags(text: string): string {
+  let out = '';
+  let from = 0;
+  while (from < text.length) {
+    const open = text.indexOf('<', from);
+    if (open === -1) break;
+    const close = text.indexOf('>', open + 1);
+    if (close === -1) break;
+    if (close === open + 1) {
+      out += text.slice(from, close);
+      from = close;
+      continue;
+    }
+    out += text.slice(from, open);
+    from = close + 1;
+  }
+  return out + text.slice(from);
+}
 
 export function htmlToText(html: string): string {
   const blocks: string[] = [];
@@ -72,7 +114,7 @@ export function htmlToText(html: string): string {
   }
   out = out
     .replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (_, body: string) => {
-      blocks.push(decodeEntities(body.replace(/<[^>]+>/g, '')).replace(/\n+$/, ''));
+      blocks.push(trimTrailing(decodeEntities(stripTags(body)), '\n'));
       return `\n\n\uE000${blocks.length - 1}\uE000\n\n`;
     })
     .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level: string, body: string) => {
@@ -87,9 +129,8 @@ export function htmlToText(html: string): string {
     .replace(/<(td|th)\b[^>]*>/gi, ' | ')
     .replace(/<br\b[^>]*>/gi, '\n')
     .replace(/<\/?code\b[^>]*>/gi, '`')
-    .replace(BLOCK_TAGS, '\n\n')
-    .replace(/<[^>]+>/g, '');
-  return decodeEntities(out)
+    .replace(BLOCK_TAGS, '\n\n');
+  return decodeEntities(stripTags(out))
     .split('\n')
     .map((line) => line.replace(/[ \t]+/g, ' ').trim())
     .join('\n')

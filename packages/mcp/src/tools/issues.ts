@@ -42,8 +42,9 @@ export function registerIssuesTools(server: McpServer) {
       if (page !== undefined) params.set('page', String(page));
       if (per_page !== undefined) params.set('per_page', String(per_page));
       const qs = params.toString();
+      const query = qs ? `?${qs}` : '';
       const issues = await apiRequest<Page<IssueWithDetails>>(
-        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/issues${qs ? `?${qs}` : ''}`,
+        `/orgs/${encodeURIComponent(org_slug)}/projects/${encodeURIComponent(project_slug)}/issues${query}`,
         { token },
       );
       return {

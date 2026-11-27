@@ -26,11 +26,12 @@ jobs:
       pull-requests: write
       packages: read
     name: Test
-    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@0a075f35954063ac01310b4e01543fd7009916e4 # main
+    uses: FerrLabs/.github/.github/workflows/reusable-ci-node.yml@0e16caae3fc74c1a9683f085b69dc31ab8161cd0 # main
     with:
       node-version: '24'
       pnpm-version: ''
       enable-sonar: true
+      sonar-exclusions: '**/node_modules/**,**/dist/**,**/build/**,**/target/**,**/coverage/**,**/.next/**,**/out/**,**/vendor/**,**/*.min.js,**/*.min.css,**/__tests__/**'
       install-args: ''
       enable-lint: true
       lint-script: format:check
@@ -47,7 +48,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: FerrLabs/.github/.github/workflows/reusable-ferrflow-release.yml@0a075f35954063ac01310b4e01543fd7009916e4 # main
+    uses: FerrLabs/.github/.github/workflows/reusable-ferrflow-release.yml@0e16caae3fc74c1a9683f085b69dc31ab8161cd0 # main
     with:
       dry-run: ${{ inputs.dry_run || false }}
     secrets: inherit
