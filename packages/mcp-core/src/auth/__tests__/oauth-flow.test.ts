@@ -194,6 +194,7 @@ describe('runLoopbackOauthFlow', () => {
 
   it('ignores a browser launcher that fails to start', async () => {
     const handlers: Record<string, (err: Error) => void> = {};
+    let stubbedUrl: string | undefined;
     spawnMock.mockImplementation((_cmd: string, args: string[]) => {
       stubbedUrl = args[0] as string;
       return {
@@ -201,7 +202,6 @@ describe('runLoopbackOauthFlow', () => {
         unref: vi.fn(),
       };
     });
-    let stubbedUrl: string | undefined;
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ token: 't' })));
     const runLoopbackOauthFlow = await load();
     const flow = runLoopbackOauthFlow();
