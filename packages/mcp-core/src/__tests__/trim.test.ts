@@ -14,6 +14,8 @@ describe('trimTrailing', () => {
   });
 
   it('is linear on a long run of the trimmed character', () => {
-    expect(trimTrailing(`${'/'.repeat(200_000)}x${'/'.repeat(200_000)}`, '/').length).toBe(200_001);
+    expect(trimTrailing(`${'/'.repeat(200_000)}x${'/'.repeat(200_000)}`, '/')).toHaveLength(
+      200_001,
+    );
   });
 });

@@ -120,6 +120,20 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
   });
 }
 
+function sendSessionNotFound(res: ServerResponse, sessionId: string): void {
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(
+    JSON.stringify({
+      jsonrpc: '2.0',
+      error: {
+        code: -32001,
+        message: `Session ${sessionId} not found — reinitialize to obtain a new session`,
+      },
+      id: null,
+    }),
+  );
+}
+
 export async function startHttpServer(opts: HttpServerOptions): Promise<Server> {
   const { port, stateless = true, requireBearer = true, scopes = [] } = opts;
   const bindAll = process.env.FERRLABS_MCP_BIND_ALL === '1';
@@ -157,20 +171,6 @@ export async function startHttpServer(opts: HttpServerOptions): Promise<Server> 
         ...(scopes.length > 0 ? { scopes_supported: scopes } : {}),
         bearer_methods_supported: ['header'],
         resource_documentation: 'https://ferrlabs.com',
-      }),
-    );
-  }
-
-  function sendSessionNotFound(res: ServerResponse, sessionId: string): void {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        error: {
-          code: -32001,
-          message: `Session ${sessionId} not found — reinitialize to obtain a new session`,
-        },
-        id: null,
       }),
     );
   }
