@@ -4,6 +4,12 @@ All notable changes to `mcp` will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [10.17.3] - 2026-11-28
+
+### Bug Fixes
+
+- fix(core): clear the remaining Sonar violations (#519)
+
 ## [10.17.2] - 2026-11-27
 
 ### Bug Fixes
